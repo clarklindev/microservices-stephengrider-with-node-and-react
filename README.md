@@ -373,16 +373,22 @@ export default CommentList;
 - FIX: you'll need to add a catch block to every request of the event-bus/index.js
 
 ```js
-axios.post("http://localhost:4000/events", event).catch((err) => {
-  console.log(err.message);
-});
-axios.post("http://localhost:4001/events", event).catch((err) => {
-  console.log(err.message);
-});
-axios.post("http://localhost:4002/events", event).catch((err) => {
-  console.log(err.message);
-});
-res.send({ status: "OK" });
+  //POSTS: 4000
+  axios.post("http://localhost:4000/events", event).catch((err) => {
+    console.log(err.message);
+  });
+  
+  //COMMENTS: 4001
+  axios.post("http://localhost:4001/events", event).catch((err) => {
+    console.log(err.message);
+  });
+  
+  //QUERY: 4002
+  axios.post("http://localhost:4002/events", event).catch((err) => {
+    console.log(err.message);
+  });
+
+  res.send({ status: "OK" });
 ```
 
 ### 31. basic event bus implementation
@@ -587,7 +593,7 @@ const fetchPosts = async () => {
 - PROBLEM: the query service itself shouldnt need to understand "HOW TO" update a service. 
 - PROBLEM: because as more and more resources are added, they might have to all update data, (eg. if these other services also have to handle `comments`, then they will all need to handle all the different scenarios in the service too) 
 
-### 41. Option 3 (advised implementation method)
+### 41. Option 3 - query service only listens for update events (advised implementation method)
 - so now the correct way is for the moderation to happen inside the `comments service` itself. it handles all logic around a comment (how to handle and update a comment)
 - FIX: use a generic event (`CommentUpdated`) for all the various events being handled inside Comment service
 - eg. emit same event type `CommentUpdated` for all event types: CommentModerated, CommentUpvoted, CommentDownvoted, CommentPromoted, CommentAnonymized, CommentSearchable, CommentAdvertised
@@ -599,7 +605,252 @@ const fetchPosts = async () => {
 - SOLUTION: in this solution, the query service only needs to know about `CommentUpdated` event.
 
 ### 42. moderation service
+#### CREATE: moderation service
+- the moderation service will watch for events
+- RECEIVE from EventBus -> `CommentCreated` at `/events`
+- ... then later Moderation service needs to SEND out `CommentModerated` event.
 
+```js
+//blog/moderation/index.js
+import axios from 'axios';
+import express from 'express';
+import bodyParser from 'body-parser';
+const app = express();
+app.use(bodyParser.json());
+
+app.post('/events', (req, res)=>{
+
+})
+
+app.listen(4003, ()=>{
+  console.log('listening on 4003');
+});
+```
+
+### 43. adding comment moderation
+#### UPDATE: comment service, query service
+- update Comment service so comments have 'status' property -> `comments.push({ id: commentId, content, status: 'pending' });`
+- emit event -> `CommentCreated` event -> event bus
+
+```js
+//blog/comments/index.js
+//comment sending to event bus (port: 4005)
+//...
+
+await axios.post('http://localhost:4005/events', {
+  type: 'CommentCreated',
+  data: {
+    id: commentId,
+    content,
+    postId: req.params.id,
+    status: 'pending'
+  }
+})
+
+```
+- event bus sends event to `moderation service` AND `query service`
+- the query service immediately processes (stores) the comment 
+
+```js
+//blog/query/index.js
+//...
+app.post('/events', (req, res) => {
+  //...
+
+  if (type === 'CommentCreated') {
+    const { id, content, postId, status } = data;   //includes 'status'
+    const post = posts[postId];
+    post.comments.push({ id, content, status });
+  }
+});
+```
+
+### 45. Handling moderation
+- after comment event is received by event bus, it should be sent to moderation service as well
+
+```js
+//blog/event-bus/index.js
+//...
+
+app.post("/events", (req, res) => {
+  const event = req.body;
+
+  //...
+
+  //MODERATION :4003
+  axios.post("http://localhost:4003/events", event).catch((err) => {
+    console.log(err.message);
+  });
+
+  res.send({ status: "OK" });
+});
+
+//...
+```
+
+- the moderation service should look at `CommentCreated` event's 'content' and check (filter)
+- the moderation service should emit `CommentModerated` with status `approved` OR `rejected`
+- the event will be on req.body: `const {type, data} = req.body`
+- the moderation service will post an `CommentModerated` event to `event bus`.
+
+```js
+//blog/moderation/index.js
+import axios from "axios";
+import express from "express";
+import bodyParser from "body-parser";
+
+const app = express();
+app.use(bodyParser.json());
+
+app.post("/events", async (req, res) => {
+  //req.body will contain event
+  const { type, data } = req.body;
+
+  if (type === "CommentCreated") {
+    const status = data.content.includes("orange") ? "rejected" : "approved";
+
+    await axios.post("https://localhost:4005/events", {
+      type: "CommentModerated",
+      data: {
+        id: data.id,
+        postId: data.postId,
+        status,
+        content: data.content,
+      },
+    });
+  }
+  res.send({});
+})
+.catch((err) => {
+  console.log(err.message);
+});
+
+app.listen(4003, () => {
+  console.log("listening on 4003");
+});
+
+```
+### 46. updating comment content
+- in the comment service (after event bus sends `CommentModerated` event), comment service should update `status`
+- after updating "status", tell other applications by emit `CommentUpdated` event (status should be `approved` or `rejected`)
+
+```js
+//blog/comments/index.js
+const commentsByPostId = {};
+
+app.post('/events', async (req, res)=>{
+  console.log('received event: ', req.body.type);
+
+  const {type, data} = req.body;
+
+  if(type === 'CommentModerated'){  
+    const {postId, id, status, content} = data;
+
+    //find the comments by postId
+    const comments = commentsByPostId[postId];
+
+    //find comment in comments
+    const comment = comments.find(comment => {
+      return comment.id === id;
+    })
+
+    //update comment status
+    comment.status = status;
+
+    //send CommentUpdated event to event bus
+    await axios.post(`http://localhost:4005`, {
+      type: 'CommentUpdated',
+      data: {
+        id,
+        status,
+        postId,
+        content
+      }
+    })
+  }
+  
+  res.send({});
+});
+
+//...
+```
+
+### 47. query service listens for CommentUpdated
+```js
+//blog/query/index.js
+//...
+
+  if(type === 'CommentUpdated'){
+    const {id, content, postId, status} = data;
+    const post = posts[postId];
+    
+    const comment = post.comments.find(comment => {
+      return comment.id === id;
+    });
+    
+    //update the actual content
+    comment.status = status;
+    comment.content = content;
+  }
+
+//...
+```
+### 48. rendering comments by status
+- we update CommentList so that it renders the comments differently depending on its status
+- client/src/CommentList.js
+- if its rejected or pending show something else (not the li element)
+- NOTE: to test `pending` status, shutdown the `moderation/ service` (port:4003)
+- NOTE: if the moderation service was down while the event bus attempted to send an event to it, the event would be lost
+- FIX: deal with the missing events (see lesson 49.)
+
+```js
+import React from "react";
+
+const CommentList = ({ comments }) => {
+
+  const renderedComments = comments.map((comment) => {
+    let content;
+
+    if(comment.status === 'approved'){
+      content = comment.content;
+    }
+
+    if(comment.status === 'pending'){
+      content = 'comment awaiting moderation';
+    }
+
+    if(comment.status === 'rejected'){
+      content = 'this comment has been rejected';
+    }
+
+    return <li key={comment.id}>{content}</li>;
+  });
+
+  return <ul>{renderedComments}</ul>;
+};
+
+export default CommentList;
+
+```
+
+### 49. missing events
+- if the moderation service was down when event bus submitted the event to it
+- what if the `query service` only created at a later stage? syncing?
+
+#### option 1: sync requests
+- syncing by requesting all older posts AND comments
+- CONS - syncronous requests...
+
+#### option 2: direct DB access
+- direct db access (query service has direct access to posts and comments db)
+- CONS - the logic to connect to db needs to be written
+
+#### option 3 (preferred method): store events (Event bus data store)
+- example: query service comes online later stage, it can work if it has access to past events..
+- TODO: when ANY service emits event to event bus, the event is sent to all services BUT `event Store` also stores the event
+- at a later stage, Query service can request past events from `Event bus data store`
+
+### 51. implementing event sync
 
 ## section 03 - running services with docker (30min)
 
