@@ -366,7 +366,7 @@ export default CommentList;
   - Post service -> POST /events ( localhost:4000/events)
   - Comments service -> POST /events ( localhost:4001/events)
   - Query service -> POST/events ( localhost:4002/events)
-- Event bus will receive events from `post` OR `comments` OR `query` and send the same event to the services (\*including the sender)
+- Event bus (port :4005) receive events from `post` OR `comments` OR `query` and send the same event to the services (\*including the sender)
 
 ### 30. node and unhandled promise rejections
 - NOTE: Unhandled Promise Rejections are now treated as errors instead of warnings and will cause the servers to crash.
@@ -450,6 +450,155 @@ app.post('/events', (req, res)=>{
 });
 
 ```
+
+### 35. Data query service
+- /query/index.js
+- service which allows listing of post with its comments
+- query service will not emit events (no need for axios)
+- route handlers for query service:
+  - GET /posts (posts + comments)
+  - POST /events (receive events type "CommentCreated" and "PostCreated")
+
+### 36. parsing incoming events
+- query/index.js
+- events of type `PostCreated` and events of type `CommentCreated`:
+
+```js
+if (type === 'PostCreated') {
+  const { id, title } = data;
+  posts[id] = { id, title, comments: [] };
+}
+
+if (type === 'CommentCreated') {
+  const { id, content, postId } = data;
+  const post = posts[postId];
+  post.comments.push({ id, content });
+}
+```
+
+- example of `posts` object
+```js
+posts === {
+  'ghgu443': {
+    id: 'ghgu443',
+    title : "post title",
+    comments: [
+      {
+        id: 'klfjfs3',
+        content: "comment!"
+      }
+    ]
+  },
+  'ghgsad12': {
+    id: 'ghgu443',
+    title : "post title",
+    comments: [
+      {
+        id: 'klfjfs3',
+        content: "comment!"
+      }
+    ]
+  }
+}
+```
+
+```js
+//query/index.js
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+
+const app = express();
+app.use(bodyParser.json());
+app.use(cors());
+
+const posts = {};
+
+app.get('/posts', (req, res) => {
+  res.send(posts);
+});
+
+app.post('/events', (req, res) => {
+  const { type, data } = req.body;
+
+  if (type === 'PostCreated') {
+    const { id, title } = data;
+
+    posts[id] = { id, title, comments: [] };
+  }
+
+  if (type === 'CommentCreated') {
+    const { id, content, postId } = data;
+
+    const post = posts[postId];
+    post.comments.push({ id, content });
+  }
+
+  console.log(posts);
+
+  res.send({});
+});
+
+app.listen(4002, () => {
+  console.log('Listening on 4002');
+});
+
+
+```
+
+### 37. using query service
+- TODO: client (react app) for reading data -> swop out reaching to `Posts service` and `Comments service` and get data directly from `query service` :4002
+- this means client/src/PostList.js will hit the query service at port 4002
+```js
+const fetchPosts = async () => {
+  const res = await axios.get("http://localhost:4002/posts");
+
+  setPosts(res.data);
+};
+```
+
+- this means CommentList wont send another query (it was depending on postId to fetch all comments of a post)
+```js
+<CommentList comments={post.comments} />
+```
+
+### 38. simple feature
+- adding a feature: idea of comment moderation (filtering comments eg. with "orange" word) 
+- comments get "status" property: `pending` (awaiting moderation), `approved`, `rejected` 
+- assuming moderation will take some time
+
+### 39. issues with commenting filter
+#### Option 1 - Moderation communicates event creation to query service (CURRENT DESIGN)
+- user submits comment 
+1. comment service persists the data and submits `CommentCreated` event (to event bus)
+2. event bus then sends event to all services (including moderation service)
+3. moderation service has to complete  before it returns a message ( type `CommentModerated` -> status (eg `approved`)) to event Bus
+4. event bus then sends ( type `CommentModerated` -> status (eg `approved`)) event all services of app (including query service)
+- PROBLEM: the problem is moderation is not instant and can take time (eg if human required to moderate), design like this everything stops until moderation step is complete
+
+### 40. Option 2
+#### Option 2 - Moderation updates status at both comments AND query services
+1. comment service persists the data and submits `CommentCreated` event (to event bus)
+2. event bus then sends event to all services (including moderation service) 
+  * AND query service (where the event will be processed and persisted default status: `pending`) while it waits for moderation
+3. moderation service has to complete  before it returns a message ( type `CommentModerated` -> status (eg `approved`)) to event Bus
+4. event bus then sends ( type `CommentModerated` -> status (eg `approved`)) event all services of app (including query service)
+5. query service updates its status to "approved"
+- PROBLEM: the query service itself shouldnt need to understand "HOW TO" update a service. 
+- PROBLEM: because as more and more resources are added, they might have to all update data, (eg. if these other services also have to handle `comments`, then they will all need to handle all the different scenarios in the service too) 
+
+### 41. Option 3 (advised implementation method)
+- so now the correct way is for the moderation to happen inside the `comments service` itself. it handles all logic around a comment (how to handle and update a comment)
+- FIX: use a generic event (`CommentUpdated`) for all the various events being handled inside Comment service
+- eg. emit same event type `CommentUpdated` for all event types: CommentModerated, CommentUpvoted, CommentDownvoted, CommentPromoted, CommentAnonymized, CommentSearchable, CommentAdvertised
+- so the steps are the same as OPTION 2, BUT.. 
+- step 4. the comment service handles and processes all comment related events.
+- because comment service made an update to a comment a generic event `CommentUpdated` is emitted and sent to event Bus
+- event bus sends event off to query service
+- query updates itself with new prop values
+- SOLUTION: in this solution, the query service only needs to know about `CommentUpdated` event.
+
+### 42. moderation service
 
 
 ## section 03 - running services with docker (30min)
