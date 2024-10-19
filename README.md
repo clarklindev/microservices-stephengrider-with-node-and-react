@@ -956,6 +956,39 @@ app.listen(4002, async () => {
 
 ## section 03 - running services with docker (30min)
 
+### 53. deployment issues
+- WE HAVE: 
+  - services (each its own app with port)
+  - each service can access each others service via `event Bus`
+  - how to deploy? rent a virtual machine (transfer apps to it)
+    - with virtual machine you can spin up addtional services (eg. comment service 1,2,3) on `load balancer` on the virtual machine
+      - CONS - new service requires additional ports which need to be added and assigned in `Event Bus`.
+    - but you can also spread the service across additional virtual machine
+      - CONS - if its on a different virtual machine, need to access its `IP address` instead of `localhost`
+- FIX: we need to find a way to keep track of all services running in application
+
+### 54. docker
+- NOTE: [Section 24 - Basics of Docker (3hr3min)](#section-24---basics-of-docker-3hr3min)
+- docker uses containers (isolated computing environment - contains everything required to run an app)
+- each docker container runs a service
+- additional copies of a service -> spins up additional docker container
+- Docker solves the assumptions made about environment (eg. assumption npm is installed and node is installed)
+- assumption user knows startup commands to run app
+
+### 55. kubernetes
+- kubernetes is used to run a bunch of containers together (via configuration files)
+
+  #### cluster
+  - kubernetes cluster is a set of virtual machines (with varying amounts of virtual machines) AKA nodes
+  - the services in the nodes still communicate with the `Event bus`
+  - requests are handled by a `common communcation chanel` in the cluster -> it figures out how and where to send events
+
+  #### Master
+  - a `master` - manages everything in the cluster (these virtual machines)
+
+  #### Config
+  - the configuration includes instructions on how to run the service -> which is passed to master
+
 ## section 04 - orchestrating collections of services with kubernetes (3hr25min)
 
 ## section 05 - architecture of multiservice apps (1hr6min)
@@ -997,6 +1030,18 @@ app.listen(4002, async () => {
 ## section 23 - CI/CD (2hr17min)
 
 ## section 24 - basics of Docker (3hr3min)
+### 535. why use docker?
+- docker makes it easy to install and run software without worrying about setup or dependencies
+
+### 536. what is docker?
+- docker ecosystem: 
+  - docker client, 
+  - docker server, 
+  - docker machine, 
+  - docker images, 
+  - docker hub, 
+  - docker compose
+
 
 ## section 25 - basics of typescript (5hr42min)
 
