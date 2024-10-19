@@ -989,6 +989,9 @@ app.listen(4002, async () => {
   #### Config
   - the configuration includes instructions on how to run the service -> which is passed to master
 
+### 56. dont know docker? 
+- see [Section 24 - Basics of Docker (3hr3min)](#section-24---basics-of-docker-3hr3min)
+
 ## section 04 - orchestrating collections of services with kubernetes (3hr25min)
 
 ## section 05 - architecture of multiservice apps (1hr6min)
@@ -1030,18 +1033,7 @@ app.listen(4002, async () => {
 ## section 23 - CI/CD (2hr17min)
 
 ## section 24 - basics of Docker (3hr3min)
-### 535. why use docker?
-- docker makes it easy to install and run software without worrying about setup or dependencies
-
-### 536. what is docker?
-- docker ecosystem: 
-  - docker client, 
-  - docker server, 
-  - docker machine, 
-  - docker images, 
-  - docker hub, 
-  - docker compose
-
+- this section externalized to its own repository: [basics of docker](https://github.com/clarklindev/docker-stephen-grider-basics-of-docker.git)
 
 ## section 25 - basics of typescript (5hr42min)
 
