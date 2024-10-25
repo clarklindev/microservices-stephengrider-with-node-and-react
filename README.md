@@ -1022,19 +1022,27 @@ app.listen(4002, async () => {
 ### 58. dockerizing the post service
 - blog/posts/Dockerfile
 
+#### Troubleshoot
+note: it is `CMD ["npm", "start"]` NOT `CMD ["npm": "start"]`
+
 ```Dockerfile
 # blog/posts/Dockerfile
-FROM node:alphine
+FROM node:14-alphine
 
 WORKDIR /app
 COPY package.json ./
 RUN npm install
 COPY ./ ./
 
-CMD ["npm": "start"]
+CMD ["npm", "start"]
 
 ```
 - .gitignore -> the files/folders to ignore when building an image
+- run docker eg. id of created image is `cddd85607be243e2b0dd28007520b223dc69477c2423f37663dfe3a2580a78ae`
+
+```cmd
+docker run cddd85607be243e2b0dd28007520b223dc69477c2423f37663dfe3a2580a78ae 
+```
 
 ![dockerising post service](exercise_files/udemy-docker-section03-58.dockerising-post-service.png)
 
@@ -1049,8 +1057,16 @@ CMD ["npm": "start"]
 
 ### 60. dockerizing the other services
 - the other services in blog/ have the same node setup and command to start the service so you can copy+paste files from Post service:
-  - .dockerignore
+  - .dockerignore (node_modules)
   - Dockerfile
+
+#### test
+```cmd
+//event-bus/
+
+docker build -t stephengrider/event-bus .
+docker run stephengrider/event-bus
+```
 
 ## section 04 - orchestrating collections of services with kubernetes (3hr25min)
 
