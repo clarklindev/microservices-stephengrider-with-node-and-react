@@ -992,6 +992,66 @@ app.listen(4002, async () => {
 ### 56. dont know docker? 
 - see [Section 24 - Basics of Docker (3hr3min)](#section-24---basics-of-docker-3hr3min)
 
+### 57. notes about docker build output and buildkit
+- TODO: building a Docker image of our Posts service
+- the most recent versions of Docker will now have "Buildkit" enabled by default.
+- buildkit docker build output:
+
+```cmd
+<!-- Now, with Buildkit, the final step would say: -->
+
+ => => exporting layers                                                      
+ => => writing image sha256:ee59c34ada9890ca09145cc88ccb25d32b677fc3b61e921  0.0s
+ 
+```
+#### Disabling Buildkit to match course
+- Click the Docker Icon your systray
+- Select "Preferences"
+- Select "Docker Engine"
+
+```
+{
+  "features": {
+    "buildkit": false
+  },
+  "experimental": false
+}
+```
+- Apply and Restart.
+
+### 58. dockerizing the post service
+- blog/posts/Dockerfile
+
+```Dockerfile
+# blog/posts/Dockerfile
+FROM node:alphine
+
+WORKDIR /app
+COPY package.json ./
+RUN npm install
+COPY ./ ./
+
+CMD ["npm": "start"]
+
+```
+- .gitignore -> the files/folders to ignore when building an image
+
+![dockerising post service](exercise_files/udemy-docker-section03-58.dockerising-post-service.png)
+
+### 59. review some basic commands
+![running services with docker](exercise_files/udemy-docker-section03-59.running-services-with-docker.png)
+- docker build -t docker-id/name-of-project .
+- docker run docker-id/name-of-project
+- docker run -it docker-id/posts sh
+- docker ps
+- docker exec -it container-id sh
+- docker logs
+
+### 60. dockerizing the other services
+- the other services in blog/ have the same node setup and command to start the service so you can copy+paste files from Post service:
+  - .dockerignore
+  - Dockerfile
+
 ## section 04 - orchestrating collections of services with kubernetes (3hr25min)
 
 ## section 05 - architecture of multiservice apps (1hr6min)
