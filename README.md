@@ -954,7 +954,7 @@ app.listen(4002, async () => {
 - This approach enhances reliability, scalability, and maintainability by allowing teams to develop, deploy, and scale services independently. 
 - It also promotes data encapsulation and efficient event-driven communication, reducing the need for excessive server calls.
 
-## section 03 - running services with docker (30min)
+## Section 03 - running services with docker (30min)
 
 ### 53. deployment issues
 - WE HAVE: 
@@ -1068,7 +1068,7 @@ docker build -t stephengrider/event-bus .
 docker run stephengrider/event-bus
 ```
 
-## section 04 - orchestrating collections of services with kubernetes (3hr25min)
+## Section 04 - orchestrating collections of services with kubernetes (3hr25min)
 
 ## 62. installing kubernetes
 - Kubernetes -> tool for running a bunch of different containers
@@ -1155,7 +1155,8 @@ Unable to connect to the server: dial tcp [::1]:8080: connectex: No connection c
   - unless its only for testing purposes
 
 ### 67. - creating a pod
-- we use `apply` command to create
+- we use `apply` command to create container in kubernetes cluster 
+- NOTE: later we correct this and say `DEPLOYMENTS` manage pods in kubernetes cluster
 - TODO: create a config file -> create a pod that runs a container from the `Posts service`
 - NOTE: ensure Docker is running
 - TODO: rebuild the docker image of posts (with version): `docker build -t stephengrider/posts:0.0.1 .` 
@@ -1233,13 +1234,17 @@ Set-Alias k Kubectl
 - Verify Your Aliases -> `Get-Alias`
 
 ### 72. DEPLOYMENTS
-- kubernetes Deployments job is to maintain the number of running pods specified
-- deployment takes care of pod updates (creates updated pods -> replaces old pod instances with updated -> delete old pods)
-- you mainly read deployment logs
+- instead of creating pods directly in kubernetes cluster, we create a deployment
+- deployment -> kubernetes object that manages a set of pods
+- kubernetes Deployments job is:
+  1. maintain the number of running pods specified
+  2. deployment takes care of pod updates (creates updated pods -> replaces old pod instances with updated -> delete old pods)
+- you mainly use deployments by reading deployment logs
 
 ### 73. creating a deployment
 - config file for deployment
 - //blog/infra/k8s/posts-depl.yaml (note: `depl` stands for deployment)
+- replicas -> number of pods to create running a particular image.
 - NOTE: deployments have to figure out which pods it has to manage (`selector`, `metadata` help with this)
 - selector -> look at all pods with label `x`
 - template->metadata -> specify that pod will have label of `x`
@@ -1265,6 +1270,7 @@ spec:
       containers:
       - name: posts
         image: stephengrider/posts:0.0.1
+
         resources:
           limits:
             memory: "128Mi"
@@ -1272,56 +1278,120 @@ spec:
 
 ```
 - you can apply the posts-depl.yaml to the kubernetes cluster
-- from blog/infra/k8s/
-```
+- from blog/infra/k8s/ folder:
+- create the pod...
+
+```cmd
 Kubectl apply -f posts-depl.yaml
 ```
 - expect cmd status update `deployment.apps/posts-depl created`
 
 ### 74. common commands around deployments
+- deployment commands  
+![kubernetes deployment commands](exercise_files/udemy-docker-section04-74-deployment-commands.png)
+
+- `kubectl get deployments`
+- `kubectl get pods`
+- `kubectl delete pod posts-depl-7f7567b88c-fmr2q`
+  - if you delete a pod created by deployment, the deployment will re-create the pod
+  - after pod deleted, if you run `kubectl get pods` again, you will see a new pod with different name eg. name `posts-depl-7f7567b88c-5nkbv`
+
+  ```cmd out
+  NAME                          READY   STATUS    RESTARTS       AGE
+  posts                         1/1     Running   1 (3m3s ago)   4h18m
+  posts-depl-7f7567b88c-5nkbv   1/1     Running   0              49s
+  ```
+- `kubectl describe deployment [depl name]` -> import part is `events`
+- `kubectl apply -f [config file name]` -> deploy to kubernetes
+- `kubectl delete deployment [depl name]` -> pods related to deployment are also deleted
+- `kubectl delete pod posts` -> do not create pods manually (if anything happens, you wont have way to start them back up)
+  
+### 75. updating deployments
+#### METHOD 1 (PREFERED METHOD IS METHOD 2)
+- NOTE: Method 2 is preffered because method 1 relies on updating the version number in config
+
+#### STEPS 
+1. make changes to project code
+2. rebuild image (tag NEW image version): 
+  ```cmd
+  //blog/posts/
+  docker build -t stephengrider/posts:0.0.5 .
+  ```
+3. in deployment config -> update version of the image
+  ```yaml
+  <!-- blog/infra/k8s/posts-depl.yaml -->
+  
+  <!-- ... -->
+
+  spec:
+    containers:
+      - name: posts
+        image: stephengrider/posts:0.0.5 
+  ```
+
+
+4. tell kubernetes to use this updated file:
+- `kubectl apply -f [depl file name]`
+  ```cmd
+  //infra/k8s/
+  kubectl apply -f posts-depl.yaml
+  kubectl get deployments
+  kubectl get pods
+  kubectl logs posts-depl-7488f87775-vph87
+
+  ```
+
+#### METHOD 2
+- tells kubernetes to automatically get the latest version
+1. the deployment must be making use of the `latest` tag in pod spec section
+2. make an update to your code
+3. build the image
+4. push image to docker hub
+5. run command `kubectl rollout restart deployment [depl_name]`
+---
 
 ## section 05 - architecture of multiservice apps (1hr6min)
-
-
+---
 ## section 06 - leveraging a cloud environment for development (47min)
-
+---
 ## section 07 - response normalisation strategies (1hr58min)
-
+---
 ## section 08 - database management and modeling (1hr27min)
-
+---
 ## section 09 - authentication strategies and options (2hr48min)
-
+---
 ## section 10 - testing isolated microservices (1hr22min)
-
+---
 ## section 11 - integrating a server side rendered react app (3hr01min)
-
+---
 ## section 12 - code sharing and re-use between services (52min)
-
+---
 ## section 13 - create-read-update-destroy server setup (2hr28min)
-
+---
 ## section 14 - NATS streaming server - an event bus implementation (2hr57min)
-
+---
 ## section 15 - connecting to NATS in a nodejs world (1hr22min)
-
+---
 ## section 16 - managing a NATS client (1hr37min)
-
+---
 ## section 17 - cross-service data replication in action (2hr44min)
-
+---
 ## section 18 - understanding event flow (30min)
-
+---
 ## section 19 - listening for events and handling concurrency issues (4hr13min)
-
+---
 ## section 20 - worker services (1hr36min)
-
+---
 ## section 21 - handling payments (2hr40min)
-
+---
 ## section 22 - back to the client (1hr43min)
-
+---
 ## section 23 - CI/CD (2hr17min)
-
+---
 ## section 24 - basics of Docker (3hr3min)
 - this section externalized to its own repository: [basics of docker](https://github.com/clarklindev/docker-stephen-grider-basics-of-docker.git)
-
+---
 ## section 25 - basics of typescript (5hr42min)
-
+---
 ## section 26 - bonus (1min)
+---
