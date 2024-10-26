@@ -1147,6 +1147,91 @@ Unable to connect to the server: dial tcp [::1]:8080: connectex: No connection c
 ![udemy-docker-section04-65-kubernetes-terminology.png](exercise_files/udemy-docker-section04-65-kubernetes-terminology.png)
 
 ### 66. kubernetes config file
+- the config file kubernetes uses to create (pods, services, deployments)
+- (pods, services, deployments) are collectively known as `Objects`
+- written in YAML
+- always store these config with project source code (they are documentation)
+- NOTE: you can create `objects` without config file - BUT DONT DO THIS..
+  - unless its only for testing purposes
+
+### 67. - creating a pod
+- we use `apply` command to create
+- TODO: create a config file -> create a pod that runs a container from the `Posts service`
+- NOTE: ensure Docker is running
+- TODO: rebuild the docker image of posts (with version): `docker build -t stephengrider/posts:0.0.1 .` 
+
+```cmd out
+ => => exporting layers 0.3s 
+ => => writing image sha256:1dbeadbb183283db3ceee72c451ea79f3e83d33ab384292d7b60c62e74c1b734 0.0s 
+ => => naming to docker.io/stephengrider/posts:0.0.1 0.0s 
+```
+- TODO: create a directory in project folder: `infra` infrastructure
+- TODO: create a folder inside infra -> `k8s` short for kubernetes 
+- TODO: create a posts.yaml file (NOTE: indentation is important in YAML)
+
+```yaml
+//blog/infra/k8s/posts.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: posts
+spec:
+  containers:
+  - name: posts
+    image: stephengrider/posts:0.0.1
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+
+```
+- tell kubernetes to use this config file
+- go to k8s folder -> tell kubernetes to use this config file:
+- note: .yaml (call apply with file name and file extension)
+
+```cmd
+//blog/infra/k8s/
+kubectl apply -f posts.yaml
+```
+- should get: `pod/posts created`
+
+### look at pods running inside cluster
+
+```cmd
+kubectl get pods
+```
+
+### 69. PODS - understanding pod specs
+- note: the `-` dash under `containers` means its an array (so there could be more containers added)
+- note: `name` can be anything you decide
+- NOTE: spec -> `image` if you specify `:latest` or dont specify, it assumes to fetch from docker-hub, if you specify version, will first check local computer for the image.
+![kubernetes pod spec](exercise_files/udemy-docker-section04-69-pod-spec.png)
+
+### 70. common kubectl commands
+- just as Docker has its own commands, Kubectl is commands for containers
+![common Kubectl commands](exercise_files/udemy-docker-section04-70-common-kubectl-commands.png)
+- `kubectl apply -f posts.yaml`
+- `kubectl exec -it posts sh`
+- `kubectl delete pod posts`
+- `kubectl get pods`
+- `kubectl describe pod [podname]` -> look at events inside pod
+
+### 71. kubectl alias
+
+#### Powershell
+- to create an alias, open powershell -> `$PROFILE`
+-` C:\Users\<user>\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`
+- create profile if it doesnt exist: `New-Item -Path $PROFILE -ItemType File -Force` -> `C:\Users\<user>\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`
+- Open the Profile in a Text Editor: Use Notepad (or any text editor): `notepad $PROFILE`
+- Add Your Aliases: In the opened profile file, add your Set-Alias commands. For example:
+
+```
+Set-Alias k Kubectl
+```
+- To apply the changes immediately without restarting PowerShell, run: `. $PROFILE`
+- Verify Your Aliases -> `Get-Alias`
+
+### 72. DEPLOYMENTS
 
 
 ## section 05 - architecture of multiservice apps (1hr6min)
