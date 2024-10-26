@@ -1088,8 +1088,69 @@ docker run stephengrider/event-bus
   - RECOMMENDED -> Minikube 
 
 ## 64. kubernetes tour
+- NOTE: make sure Docker is running (NOT AS ADMINISTRATOR but normal user)
+- NOTE: for me, windows 11 kubernetes option from docker-desktop took a while to startup
+```
+kubectl version
+```
+
+```cmd out
+PS C:\Users\laptop> kubectl version
+Client Version: v1.30.2
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.30.2
+```
+- Docker-desktop -> you should see 'kubernetes running'  
+![docker-desktop kubernetes running status](exercise_files/udemy-docker-section04-64-a-kubernetes-tour.png)
+
+### TROUBLESHOOT
+```
+PS C:\Windows\system32> kubectl version
+Client Version: v1.30.2
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Unable to connect to the server: dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.
+```
+#### Windows
+- `kubectl config get-contexts` -> `kubectl config use-context docker-desktop`
+- on Windows 11 -> from Q&A -> The only thing that worked for me was while in Docker Desktop I clicked on the "Troubleshoot" bug icon at the top. Then clicked the "Clean / Purge data" button. In the pop-up I selected all three check boxes ("Hyper-V", "WSL 2", "Windows Containers") and clicked the "Delete" button. After it completed Docker and Kubes status both went green.
+- deleted the .kube folder in my user directory
+- Delete the folder (hidden folder) `C:\ProgramData\DockerDesktop\pki` OR `C:\Users\<user_name>\AppData\Local\Docker\pki`
+- update kube config file `c:\Users\<user folder>\.kube\config` -> update clusters server -> `server: https://localhost:6443`
+- AS ADMINISTRATOR: c:\Windows\System32\drivers\etc\hosts
+
+```
+127.0.0.1 kubernetes.docker.internal
+127.0.0.1 docker-for-desktop
+```
+
+#### Docker desktop for mac
+- [Q&A](https://www.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19099722#questions/10956202) - By default, the server address for the cluster in the kube config file is set to `https://kubernetes.docker.internal:<port number>`. For Docker Desktop for Mac version 2.3.0.3 and K8s version 1.16.5, this server address needs to be changed to `https://localhost:<port number>`, where the port number is usually something like 6443. Once I made this change to the server address, I was finally able to connect to the local kube server and use the kubectl command without any issues.
+- kubernetes takes the docker image created and `deploys` and `manages` this instance of image (as a container) in the kubernetes cluster (node -> Virtual Machine)
+- a config file for kubernetes -> tells it how to manage the image and host it as container in `kubernetes cluster of nodes`
+- config also describes the access rights
+- `kubectl` is tool used to interact with the kubernetes cluster
+- kubernetes tries to find the image (described in config file) first from local computer
+- if it cant find it, then it looks in docker-hub 
+
+#### terminology
+- NOTE: a `pod` OR `container` by definition is more or less the same thing. 
+  - pod -> wraps a container
+  - pod -> can have multiple containers inside of it
+- Deployment -> kubernetes creates a `deployment` to manage the containers (pods) 
+  - it takes in the config file
+  - makes sure correct number of pods 
+  - and makes sure they are running
+- Kubernetes service -> gives access to running pods/containers (via easy url) -> manages access of these pods (microservices) to other nodes in the kubernetes cluster
+  - ie. other services in kubernetes cluster reach out to the service instead of directly accessing other pods
+
+### 65. summary of kubernetes terminology
+![udemy-docker-section04-65-kubernetes-terminology.png](exercise_files/udemy-docker-section04-65-kubernetes-terminology.png)
+
+### 66. kubernetes config file
+
 
 ## section 05 - architecture of multiservice apps (1hr6min)
+
 
 ## section 06 - leveraging a cloud environment for development (47min)
 
