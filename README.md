@@ -1170,7 +1170,8 @@ Unable to connect to the server: dial tcp [::1]:8080: connectex: No connection c
 - TODO: create a posts.yaml file (NOTE: indentation is important in YAML)
 
 ```yaml
-//blog/infra/k8s/posts.yaml
+# blog/infra/k8s/posts.yaml
+
 apiVersion: v1
 kind: Pod
 metadata:
@@ -1232,7 +1233,52 @@ Set-Alias k Kubectl
 - Verify Your Aliases -> `Get-Alias`
 
 ### 72. DEPLOYMENTS
+- kubernetes Deployments job is to maintain the number of running pods specified
+- deployment takes care of pod updates (creates updated pods -> replaces old pod instances with updated -> delete old pods)
+- you mainly read deployment logs
 
+### 73. creating a deployment
+- config file for deployment
+- //blog/infra/k8s/posts-depl.yaml (note: `depl` stands for deployment)
+- NOTE: deployments have to figure out which pods it has to manage (`selector`, `metadata` help with this)
+- selector -> look at all pods with label `x`
+- template->metadata -> specify that pod will have label of `x`
+- spec -> pod specs
+
+```yaml
+# blog/infra/k8s/posts-depl.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: posts-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: posts
+  template:
+    metadata:
+      labels:
+        app: posts
+    spec:
+      containers:
+      - name: posts
+        image: stephengrider/posts:0.0.1
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+
+```
+- you can apply the posts-depl.yaml to the kubernetes cluster
+- from blog/infra/k8s/
+```
+Kubectl apply -f posts-depl.yaml
+```
+- expect cmd status update `deployment.apps/posts-depl created`
+
+### 74. common commands around deployments
 
 ## section 05 - architecture of multiservice apps (1hr6min)
 
