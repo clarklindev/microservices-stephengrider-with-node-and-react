@@ -1070,6 +1070,25 @@ docker run stephengrider/event-bus
 
 ## section 04 - orchestrating collections of services with kubernetes (3hr25min)
 
+## 62. installing kubernetes
+- Kubernetes -> tool for running a bunch of different containers
+- give kubernetes configuration to instruct it how to run AND how to interact with each other
+
+- Install option -> Docker for Windows/Mac 
+  #### Windows -> enable kubernetes
+  - RECOMMENDED -> Windows users should use -> Docker Desktop with WSL2
+  - docker toolbox icon -> preferences -> kubernetes -> enable kubernetes -> restart
+  #### mac 
+  - RECOMMENDED -> macOS users should use Docker Desktops kubernetes instead of Minikube
+
+## 63. NOTE on MiniKube
+- Install option -> Install method with Docker-Toolbox (STATUS: unstable) or Linux (need to install [minikube](kubernetes.io/docs/tasks/tools/install-minikube))
+  - Minikube is an alternative option to using Docker Desktop's built-in Kubernetes.
+  #### Linux
+  - RECOMMENDED -> Minikube 
+
+## 64. kubernetes tour
+
 ## section 05 - architecture of multiservice apps (1hr6min)
 
 ## section 06 - leveraging a cloud environment for development (47min)
