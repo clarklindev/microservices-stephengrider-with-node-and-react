@@ -1,4 +1,5 @@
-# Microservices
+# Microservices 
+- Build, deploy, and scale an E-Commerce app using Microservices built with Node, React, Docker and Kubernetes
 
 - [microservices-with-node-js-and-react](https://www.udemy.com/course/microservices-with-node-js-and-react/)
 
@@ -1455,6 +1456,77 @@ spec:
 on MAC -> `Docker Toolbox with minikube` -> using minikube -> run `minikube ip` -> gives an ip ->  to access service - eg. ip:[NodePort]/posts
 OR
 on WIN -> `Docker for windows` -> use localhost:[NodePort]/posts
+
+### 80. setting up Cluster IP service
+- GOAL of cluster IP service is to expose a pod to other pods in the kubernetes cluster
+  - each pod has/is governed by a `cluster ip service` 
+- the app has `posts` which sends event to `event-bus` which then sends events to all other services
+- TODO: setup service to allow `posts` and `event-bus` to communicate with each other
+- pods in kubernetes cluster gets assigned ip address so we dont know ahead of time the ip.
+- `Posts pod` sends request to `cluster ip service` which governs access to the `Event-bus` pod 
+- `Event-bus pod` sends request to `cluster ip service` which governs access to the `Posts` pod
+- tool that automates the wiring up of `cluster ip service` to pod.  
+
+![posts + event-bus communication](exercise_files/udemy-docker-section04-80-posts+eventbus-communication.png)  
+
+1. build image for event-bus
+2. push to docker-hub
+3. create deployment for event-bus (auto creates pod)
+4. create cluster ip service -> for event-bus AND for posts
+5. wire it up
+
+### 81. build a deployment for the event bus
+
+1. build image for event-bus
+- from blog/event-bus/ folder:
+```
+docker build -t stephengrider/event-bus .
+```
+
+2. push to docker-hub
+```
+docker push stephengrider/event-bus
+```
+
+3. create a deployment for event-bus
+- infra/k8s/event-bus-depl.yaml
+- the config is almost identical to posts-depl.yaml
+- copy and paste posts-depl.yaml and then replace 'posts' with 'event-bus'
+```yaml
+# infra/k8s/event-bus-depl.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-bus-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-bus
+  template:
+    metadata:
+      labels:
+        app: event-bus
+    spec:
+      containers:
+      - name: event-bus
+        image: stephengrider/event-bus:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+```
+- deploy to kubernetes: goto infra/k8s/ folder -> `kubectl apply -f event-bus-depl.yaml`
+- get all pods: `kubectl get pods`
+```cmd
+NAME                             READY   STATUS    RESTARTS       AGE
+event-bus-depl-d8998657d-bg9tc   1/1     Running   0              27s
+posts-depl-68fd57c6c4-hlmr9      1/1     Running   1 (102m ago)   15h
+```
+
+4. create cluster ip service -> for event-bus AND for posts
+- the pods can technically communicate with each other BUT the ip address is variable so cant know this ahead-of-time...therefore we use `cluster ip service` to give us url
+- 
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
