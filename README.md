@@ -1526,6 +1526,134 @@ posts-depl-68fd57c6c4-hlmr9      1/1     Running   1 (102m ago)   15h
 
 4. create cluster ip service -> for event-bus AND for posts
 - the pods can technically communicate with each other BUT the ip address is variable so cant know this ahead-of-time...therefore we use `cluster ip service` to give us url
+
+### 82. Adding clusterIP services
+- creating a cluster ip service for each pod/container (Posts and Event-bus)
+- can create a deployment config for each service (1 config per service) 
+OR 
+- PREFERRED -> combine into single config 
+  - put the `cluster ip service` config inside the `deployment` file its related to 
+  - separate with `---`
+
+```yaml
+# blog/infra/k8s/event-bus-depl.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-bus-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-bus
+  template:
+    metadata:
+      labels:
+        app: event-bus
+    spec:
+      containers:
+      - name: event-bus
+        image: clarklindev/event-bus:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: event-bus-srv
+spec:
+  selector: 
+    app: event-bus
+  ports:
+    - name: event-bus
+      protocol: TCP
+      port: 4005
+      targetPort: 4005
+
+```
+- from infra/k8s/event-bus-depl.yaml -> `kubectl apply -f event-bus-depl.yaml`
+- kubernetes picks up that ONLY event-bus-srv was added...
+
+```cmd-output
+deployment.apps/event-bus-depl unchanged
+service/event-bus-srv created
+```
+```cmd
+kubectl get services
+```
+- note `event-bus-srv` -> type is `ClusterIP`
+
+```cmd-output
+NAME            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+event-bus-srv   ClusterIP   10.108.175.133   <none>        4005/TCP         2m10s
+kubernetes      ClusterIP   10.96.0.1        <none>        443/TCP          29h
+posts-srv       NodePort    10.109.124.251   <none>        4000:30345/TCP   4h24m
+```
+
+- NOTE: with the posts-depl.yaml -> `posts-srv` is already used for NodePort so we use `posts-cluster-ip-srv` for the `cluster ip service`
+
+```yaml
+# blog/infra/k8s/posts-depl.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: posts-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: posts
+  template:
+    metadata:
+      labels:
+        app: posts
+    spec:
+      containers:
+      - name: posts
+        image: stephengrider/posts:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: posts-cluster-ip-srv
+spec:
+  selector: 
+    app: posts
+  ports:
+    - name: posts
+      protocol: TCP
+      port: 4000
+      targetPort: 4000
+
+```
+- from blog/infra/k8s -> `kubectl apply -f posts-depl.yaml`
+
+```cmd-output
+deployment.apps/posts-depl unchanged
+service/posts-cluster-ip-srv created
+```
+
+- from blog/infra/k8s
+```cmd
+kubectl get services
+```
+```cmd-output
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+event-bus-srv          ClusterIP   10.108.175.133   <none>        4005/TCP         14m
+kubernetes             ClusterIP   10.96.0.1        <none>        443/TCP          30h
+posts-cluster-ip-srv   ClusterIP   10.107.163.55    <none>        4000/TCP         36s
+posts-srv              NodePort    10.109.124.251   <none>        4000:30345/TCP   4h36m
+```
+
+### 83. how to communicate between services
 - 
 
 ---
