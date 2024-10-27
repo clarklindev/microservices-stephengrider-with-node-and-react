@@ -1402,7 +1402,6 @@ docker push stephengrider/posts
 ```
 
 ```cmd
-//blog/posts/
 kubectl get deployments
 ```
 ```cmd out

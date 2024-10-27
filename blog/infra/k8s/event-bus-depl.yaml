@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: event-bus
-        image: clarklindev/event-bus:latest
+        image: stephengrider/event-bus:latest
         resources:
           limits:
             memory: "128Mi"
