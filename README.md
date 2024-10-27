@@ -1697,6 +1697,44 @@ await axios.post('http://event-bus-srv:4005/events', {
 - event-bus to posts' cluster ip service of name: `posts-cluster-ip-srv`
 - event-bus will request: `http://posts-cluster-ip-srv:4000`
 
+### 84. updating service addresses
+- from blog/infra/k8s/ -> `kubectl get services` to list services/ports
+- so in the projects we can now change the url when pods/cluster reach out to other pods/cluster using the service name:
+- eg. `posts` code TO `event bus` -> requests should use the service -> `http://event-bus-srv:4005`
+- eg. `event-bus` code TO `posts` -> requests should use the service -> `http://posts-cluster-ip-srv:4000`
+
+- after changes... from event-bus/ folder:
+  - build: `docker build -t stephengrider/event-bus . `
+  - push to docker-hub: `docker push stephengrider/event-bus`
+
+- after changes... from posts/ folder:
+  - build: `docker build -t stephengrider/posts .`
+  - push to docker-hub: `docker push stephengrider/posts`
+
+- `kubectl get deployments` 
+```
+NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+event-bus-depl   1/1     1            1           4h38m
+posts-depl       1/1     1            1           29h
+```
+
+- Deployments:
+- `kubectl rollout restart deployment event-bus-depl`
+- `kubectl rollout restart deployment posts-depl`
+
+
+### 85. verifying communication
+- `kubectl get pods`
+
+```
+NAME                             READY   STATUS    RESTARTS   AGE
+event-bus-depl-696fbdbb6-pjt7x   1/1     Running   0          41s
+posts-depl-6cd968bbff-xvdq6      1/1     Running   0          30s
+```
+
+TODO: test with postman by making a request to `post` micro-service (`posts-depl-6cd968bbff-xvdq6`).    
+TODO: check `event-bus-depl-696fbdbb6-pjt7x` and `posts-depl-6cd968bbff-xvdq6` are exchanging events by looking at logs
+
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
 ---

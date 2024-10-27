@@ -13,7 +13,7 @@ app.post("/events", (req, res) => {
   events.push(event);
 
   //POSTS: 4000
-  axios.post("http://localhost:4000/events", event).catch((err) => {
+  axios.post("http://posts-cluster-ip-srv:4000/events", event).catch((err) => {
     console.log(err.message);
   });
 
