@@ -1654,7 +1654,48 @@ posts-srv              NodePort    10.109.124.251   <none>        4000:30345/TCP
 ```
 
 ### 83. how to communicate between services
-- 
+
+- from blog/infra/k8s
+```cmd
+kubectl get services
+```
+
+```cmd-output
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+event-bus-srv          ClusterIP   10.108.175.133   <none>        4005/TCP         14m
+kubernetes             ClusterIP   10.96.0.1        <none>        443/TCP          30h
+posts-cluster-ip-srv   ClusterIP   10.107.163.55    <none>        4000/TCP         36s
+posts-srv              NodePort    10.109.124.251   <none>        4000:30345/TCP   4h36m
+```
+
+#### communicate: posts TO event bus
+- so in posts/ project index.js after sending data to /posts, a call is made to event-bus (:4005)
+
+```js
+// /posts/index.js
+// await axios.post('http://localhost:4005/events', {
+//   type:'PostCreated',
+//   data:{
+//     id, title
+//   }
+// });
+
+// UPDATE TO
+await axios.post('http://event-bus-srv:4005/events', {
+  type:'PostCreated',
+  data:{
+    id, title
+  }
+});
+```
+- and localhost:4005 only worked when we loaded from local computer
+- when using kubernetes, this wont work -> `posts/` needs to reach out and access `cluster ip service` of `event-bus`:
+- posts to event-bus' cluster ip service of name: `event-bus-srv`
+- posts will request: `http://event-bus-srv:4005`  
+
+### communicate: event-bus TO posts
+- event-bus to posts' cluster ip service of name: `posts-cluster-ip-srv`
+- event-bus will request: `http://posts-cluster-ip-srv:4000`
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
