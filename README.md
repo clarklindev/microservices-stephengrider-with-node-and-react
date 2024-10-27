@@ -1340,16 +1340,123 @@ Kubectl apply -f posts-depl.yaml
   kubectl logs posts-depl-7488f87775-vph87
 
   ```
-
+### 76. preferred deployment method
 #### METHOD 2
 - tells kubernetes to automatically get the latest version
-1. the deployment must be making use of the `latest` tag in pod spec section
-2. make an update to your code
-3. build the image
-4. push image to docker hub
-5. run command `kubectl rollout restart deployment [depl_name]`
----
+1. the deployment ALWAYS uses the `latest` tag in pod `spec` section (or image version should be omitted)
 
+```yaml
+//blog/infra/k8s
+# ...
+
+    spec:
+      containers:
+      - name: posts
+        image: stephengrider/posts:latest
+
+# ...
+```
+- need to apply it to kubernetes cluster to let it know to use latest image
+- blog/infra/k8s -> `kubectl apply -f posts-depl.yaml`
+- `kubectl get deployments`
+
+2. make an update to your code
+
+3. rebuild the image 
+```cmd
+//blog/posts/
+docker build -t stephengrider/posts .
+```
+4. push image to docker hub
+NOTE: you need to be logged-in on docker-desktop / docker-hub
+```
+//blog/posts/
+docker push stephengrider/posts
+```
+
+```cmd
+//blog/posts/
+kubectl get deployments
+```
+```cmd out
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+posts-depl   1/1     1            1           9h
+```
+
+5. tell deployment to use this latest version
+- run command: `kubectl rollout restart deployment [depl_name]`
+```cmd
+//posts/
+kubectl rollout restart deployment posts-depl
+kubectl get deployments
+kubectl get pods 
+
+kubectl logs posts-depl-7b87fbf7f4-clzk7
+
+```
+### 77. networking with services
+
+#### Access a pod with a running container through a service
+- Services in kubernetes is an object which is configured via config file (just like pods and deployments)
+- Services used to setup communication (event bus) between pods or communicate with a pod from outside the cluster
+
+#### 4 types of services
+
+![Kubernetes - types of services](exercise_files/udemy-docker-section04-77-types-of-services.png)
+
+1. cluster IP -> (we use often) sets up an easy to remember url to access a pod (only exposes pods in the cluster)
+  - for communication between pods in a kubernetes cluster.
+2. Node port -> makes pods accessible from outside the cluster. (usually for dev purpose only)
+3. load balancer -> (we use often) make a pod accessible from outside the cluster. (correct way to expose pod to outside world)
+4. external name -> redirects an in-cluster request to CNAME url ..
+
+### 78. creating a NodePort service
+- Node Port -> service for single pod setup 
+- create config file and apply to cluster
+- label/selector of config file -> is similar to html/css selector
+- nodeport service - it needs to know the apps to expose (`selector: app: posts`), and `posts-depl.yaml` has already defined this label of `posts`
+- ports are all the ports to expose (its what the apps' server port is listening on)
+
+```yaml
+# infra/k8s/posts-srv.yaml
+apiVersion: v1
+kind: Service
+metadata: 
+  name: posts-srv
+spec:
+  type: NodePort
+  selector: 
+    app: posts
+  ports:
+    - name: posts
+      protocol: TCP
+      port: 4000
+      targetPort: 4000
+```
+- targetPort vs Port:  
+- NOTE: the Port and TargetPort do not have to be the same.
+![udemy-docker-section04-78-nodeport-service.png](exercise_files/udemy-docker-section04-78-nodeport-service.png)
+
+### 79. Accessing NodePort services
+- DOCKER IS RUNNING
+- infra/k8s/posts-srv.yaml -> can be applied to the kubernetes cluster
+- from infra/k8s/ directory: `kubectl apply -f posts-srv.yaml` -> "[service created]"
+
+- TODO: list all services -> `kubectl get services` -> results: `kubernetes` (default service) and `posts-srv`
+  - NOTE: `posts-srv` has type `NodePort` 
+  - NOTE: has port 4000:30345/TCP (the 3xxxx port is randomly assigned)
+  - NodePort -> we use the 3xxxx port range to access the service from outside the cluster
+- to see what is the node port, you can run describe command on posts-srv ->  `kubectl describe service posts-srv` 
+
+#### access posts pod
+1. get NodePort -> `kubectl describe service posts-srv` -> get NodePort
+
+2. 
+on MAC -> `Docker Toolbox with minikube` -> using minikube -> run `minikube ip` -> gives an ip ->  to access service - eg. ip:[NodePort]/posts
+OR
+on WIN -> `Docker for windows` -> use localhost:[NodePort]/posts
+
+---
 ## section 05 - architecture of multiservice apps (1hr6min)
 ---
 ## section 06 - leveraging a cloud environment for development (47min)
