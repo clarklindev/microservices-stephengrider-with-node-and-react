@@ -1056,6 +1056,32 @@ docker run cddd85607be243e2b0dd28007520b223dc69477c2423f37663dfe3a2580a78ae
 - docker exec -it container-id sh
 - docker logs
 
+- is going to remove all docker images that you have on your PC
+`docker rmi $(docker images -a -q)`
+
+- deletes deployment
+`kubectl delete deployment <deployment_name>`
+
+- is going to create an image without any precached stuff. 
+`docker build --no-cache -t <your_tag>/posts .` 
+
+- pushes to docker image storage 
+`docker push <your_tag>/posts`
+
+- to recreate deployment. It is going to fetch new image from remote.
+`kubectl apply posts-depl.yaml`
+
+### list all docker images
+- list all docker images: `docker images -a`
+
+### deleting image by id
+- `docker rmi -f <image_id>`
+
+#### delete all images with tags `<none>`
+-If you want to remove all images with `<none>` tags in one go: 
+- `docker rmi -f $(docker images -q -f "dangling=true")`
+
+
 ### 60. dockerizing the other services
 - the other services in blog/ have the same node setup and command to start the service so you can copy+paste files from Post service:
   - .dockerignore (node_modules)
@@ -1732,8 +1758,40 @@ event-bus-depl-696fbdbb6-pjt7x   1/1     Running   0          41s
 posts-depl-6cd968bbff-xvdq6      1/1     Running   0          30s
 ```
 
-TODO: test with postman by making a request to `post` micro-service (`posts-depl-6cd968bbff-xvdq6`).    
+TODO: test with postman by making a request to `post` micro-service.    
 TODO: check `event-bus-depl-696fbdbb6-pjt7x` and `posts-depl-6cd968bbff-xvdq6` are exchanging events by looking at logs
+- when we do make a post, `post` should reach out to `event-bus-srv` (event-bus service) emit an event. 
+- then use `kubectl logs event-bus-depl-696fbdbb6-pjt7x`
+
+- NOTE: we are trying to reach NodePort (posts-srv (for dev purpose)) 
+  - to get the NodePort (3xxxx port number): 
+    `kubectl get services` 
+```
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+event-bus-srv          ClusterIP   10.108.175.133   <none>        4005/TCP         156m
+kubernetes             ClusterIP   10.96.0.1        <none>        443/TCP          32h
+posts-cluster-ip-srv   ClusterIP   10.107.163.55    <none>        4000/TCP         143m
+posts-srv              NodePort    10.109.124.251   <none>        4000:30345/TCP   6h59m
+```
+- to reach `posts-srv` NodePort:  in windows POSTMAN -> `http://localhost:30345/posts`
+  - headers -> Content-Type -> `application/json`
+  - body -> raw -> json -> `{ "title": "POST" }`
+
+- revision of docker commands:
+<!-- is going to remove all docker images that you have on your PC -->
+`docker rmi $(docker images -a -q)`
+
+<!-- deletes deployment -->
+`kubectl delete deployment <deployment_name>`
+
+<!-- is going to create an image without any precached stuff. -->
+`docker build --no-cache -t <your_tag>/posts .` 
+
+<!-- pushes to docker image storage -->
+`docker push <your_tag>/posts`
+
+<!-- to recreate deployment. It is going to fetch new image from remote. -->
+`kubectl apply posts-depl.yaml`
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
