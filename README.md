@@ -1852,6 +1852,53 @@ Listening on 4000
 received event:  PostCreated
 ```
 
+### 86. adding Query, moderation, comments services
+- TODO (For each service - in respective project folders...):
+  1. - update their urls to reachout to `event-bus-srv` (infra/k8s/event-bus-depl.yaml) instead of event-bus at `localhost:4005/events`
+  2. - build image
+    - blog/comments/ -> `docker build -t clarklindev/comments .` -> `docker push clarklindev/comments`
+    - blog/moderation/ -> `docker build -t clarklindev/moderation .` -> `docker push clarklindev/moderation`
+    - blog/query/ -> `docker build -t clarklindev/query .` -> `docker push clarklindev/query`
+  3. - push to Docker-hub
+  4. - create a `deployment` and `cluster_ip service` for each:
+    - create `infra/k8s/comments-depl.yaml` *can copy from event-bus-depl.yaml (change reference to "event-bus" and update port `4001`)
+    - create `infra/k8s/query-depl.yaml` *can copy from event-bus-depl.yaml (change reference to "event-bus" and update port `4002`)
+    - create `infra/k8s/moderation-depl.yaml` *can copy from event-bus-depl.yaml (change reference to "event-bus" and update port `4003`)
+
+  - apply to cluster
+    - from 'infra/k8s/' folder...
+    - to apply ALL config files at once: `kubectl apply -f .`
+    ```cmd-out
+    deployment.apps/comments-depl created
+    service/comments-srv created
+    deployment.apps/event-bus-depl unchanged
+    service/event-bus-srv unchanged
+    deployment.apps/moderation-depl created
+    service/moderation-srv created
+    deployment.apps/posts-depl unchanged
+    service/posts-cluster-ip-srv unchanged
+    service/posts-srv unchanged
+    deployment.apps/query-depl created
+    service/query-srv created
+    ```
+
+  - `kubectl get pods` (list running containers in kubernetes cluster) -> should have status of "Running"
+    ```cmd-out
+    NAME                               READY   STATUS    RESTARTS   AGE
+    comments-depl-6d46896699-xgrjg     1/1     Running   0          88s
+    event-bus-depl-785cf644c5-wjzz4    1/1     Running   0          80m
+    moderation-depl-5847bbbd45-8jw75   1/1     Running   0          88s
+    posts-depl-558dbf9486-qc9sw        1/1     Running   0          80m
+    query-depl-5bf4fdd49f-45cbc        1/1     Running   0          88s
+    ```
+    - if a pod is not running `kubectl describe pod <podname>`
+
+  5. - update eventbus to send event to:
+      `http://localhost:4001/events` -> `comments`
+      `http://localhost:4002/events` -> `query`, 
+      `http://localhost:4003/events` -> `moderation`, 
+  
+
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
 ---
