@@ -1062,7 +1062,7 @@ docker run cddd85607be243e2b0dd28007520b223dc69477c2423f37663dfe3a2580a78ae
 - deletes deployment
 `kubectl delete deployment <deployment_name>`
 
-- is going to create an image without any precached stuff. 
+- is going to create an image without any pre-cached stuff. 
 `docker build --no-cache -t <your_tag>/posts .` 
 
 - pushes to docker image storage 
@@ -1078,6 +1078,8 @@ docker run cddd85607be243e2b0dd28007520b223dc69477c2423f37663dfe3a2580a78ae
 - `docker rmi -f <image_id>`
 
 #### delete all images with tags `<none>`
+- docker image prune
+
 -If you want to remove all images with `<none>` tags in one go: 
 - `docker rmi -f $(docker images -q -f "dangling=true")`
 
@@ -1101,18 +1103,20 @@ docker run stephengrider/event-bus
 - Kubernetes -> tool for running a bunch of different containers
 - give kubernetes configuration to instruct it how to run AND how to interact with each other
 
-- Install option -> Docker for Windows/Mac 
+- Install option -> Docker for Windows / Mac /linux
   #### Windows -> enable kubernetes
   - RECOMMENDED -> Windows users should use -> Docker Desktop with WSL2
   - docker toolbox icon -> preferences -> kubernetes -> enable kubernetes -> restart
+
   #### mac 
   - RECOMMENDED -> macOS users should use Docker Desktops kubernetes instead of Minikube
+
+  #### Linux
+  - RECOMMENDED -> Minikube 
 
 ## 63. NOTE on MiniKube
 - Install option -> Install method with Docker-Toolbox (STATUS: unstable) or Linux (need to install [minikube](kubernetes.io/docs/tasks/tools/install-minikube))
   - Minikube is an alternative option to using Docker Desktop's built-in Kubernetes.
-  #### Linux
-  - RECOMMENDED -> Minikube 
 
 ## 64. kubernetes tour
 - NOTE: make sure Docker is running (NOT AS ADMINISTRATOR but normal user)
@@ -1127,7 +1131,8 @@ Client Version: v1.30.2
 Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
 Server Version: v1.30.2
 ```
-- Docker-desktop -> you should see 'kubernetes running'  
+- Docker-desktop -> you should see 'kubernetes running' (status bar)  
+
 ![docker-desktop kubernetes running status](exercise_files/udemy-docker-section04-64-a-kubernetes-tour.png)
 
 ### TROUBLESHOOT
@@ -1193,8 +1198,8 @@ Unable to connect to the server: dial tcp [::1]:8080: connectex: No connection c
  => => writing image sha256:1dbeadbb183283db3ceee72c451ea79f3e83d33ab384292d7b60c62e74c1b734 0.0s 
  => => naming to docker.io/stephengrider/posts:0.0.1 0.0s 
 ```
-- TODO: create a directory in project folder: `infra` infrastructure
-- TODO: create a folder inside infra -> `k8s` short for kubernetes 
+- TODO: create the directories in project folder: `infra/k8s` infrastructure
+- NOTE: `k8s` short for kubernetes 
 - TODO: create a posts.yaml file (NOTE: indentation is important in YAML)
 
 ```yaml
@@ -1222,7 +1227,8 @@ spec:
 //blog/infra/k8s/
 kubectl apply -f posts.yaml
 ```
-- should get: `pod/posts created`
+- should get: `pod/posts created`.
+- NOTE: later we use deployments (posts-depl.yaml)
 
 ### look at pods running inside cluster
 
@@ -1265,7 +1271,13 @@ Set-Alias k Kubectl
 - deployment -> kubernetes object that manages a set of pods
 - kubernetes Deployments job is:
   1. maintain the number of running pods specified
-  2. deployment takes care of pod updates (creates updated pods -> replaces old pod instances with updated -> delete old pods)
+  2. deployment takes care of pod updates:
+
+  #### update STEPS:
+  1. create updated pods 
+  2. replace old pod instances with updated 
+  3. delete old pods
+
 - you mainly use deployments by reading deployment logs
 
 ### 73. creating a deployment
@@ -1331,7 +1343,7 @@ Kubectl apply -f posts-depl.yaml
 - `kubectl describe deployment [depl name]` -> import part is `events`
 - `kubectl apply -f [config file name]` -> deploy to kubernetes
 - `kubectl delete deployment [depl name]` -> pods related to deployment are also deleted
-- `kubectl delete pod posts` -> do not create pods manually (if anything happens, you wont have way to start them back up)
+- `kubectl delete pod posts` -> do not create pods manually/directly (if anything happens, you wont have way to start them back up)
   
 ### 75. updating deployments
 #### METHOD 1 (PREFERED METHOD IS METHOD 2)
@@ -1431,8 +1443,8 @@ kubectl logs posts-depl-7b87fbf7f4-clzk7
 ![Kubernetes - types of services](exercise_files/udemy-docker-section04-77-types-of-services.png)
 
 1. cluster IP -> (we use often) sets up an easy to remember url to access a pod (only exposes pods in the cluster)
-  - for communication between pods in a kubernetes cluster.
-2. Node port -> makes pods accessible from outside the cluster. (usually for dev purpose only)
+  - for communication between pods in a kubernetes cluster. eg. `infra/k8s/poSts-depl.yaml`, `infra/k8s/event-bus-depl.yaml`
+2. Node port -> makes pods accessible from outside the cluster. (usually for dev purpose only) - eg. `infra/k8s/posts-srv.yaml`
 3. load balancer -> (we use often) make a pod accessible from outside the cluster. (correct way to expose pod to outside world)
 4. external name -> redirects an in-cluster request to CNAME url ..
 
@@ -1468,19 +1480,49 @@ spec:
 - infra/k8s/posts-srv.yaml -> can be applied to the kubernetes cluster
 - from infra/k8s/ directory: `kubectl apply -f posts-srv.yaml` -> "[service created]"
 
-- TODO: list all services -> `kubectl get services` -> results: `kubernetes` (default service) and `posts-srv`
+- TODO: list all services -> `kubectl get services` 
+  results: 
+    `kubernetes` (default service) 
+    `posts-srv`
+    ...
   - NOTE: `posts-srv` has type `NodePort` 
   - NOTE: has port 4000:30345/TCP (the 3xxxx port is randomly assigned)
   - NodePort -> we use the 3xxxx port range to access the service from outside the cluster
+    - REMINDER: this nodePort (3xxxx) is just for development purposes
 - to see what is the node port, you can run describe command on posts-srv ->  `kubectl describe service posts-srv` 
 
-#### access posts pod
-1. get NodePort -> `kubectl describe service posts-srv` -> get NodePort
+#### access posts pod (from outside the cluster)
+1. get the NodePort: `kubectl describe service posts-srv`
+
+```cmd
+Name:                     posts-srv
+Namespace:                default
+Labels:                   <none>
+Annotations:              <none>
+Selector:                 app=posts
+Type:                     NodePort
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.109.124.251
+IPs:                      10.109.124.251
+Port:                     posts  4000/TCP
+TargetPort:               4000/TCP
+NodePort:                 posts  30345/TCP
+Endpoints:                10.1.0.71:4000
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
+```
+- NOTE: `NodePort:                 posts  30345/TCP`
 
 2. 
 on MAC -> `Docker Toolbox with minikube` -> using minikube -> run `minikube ip` -> gives an ip ->  to access service - eg. ip:[NodePort]/posts
+
 OR
-on WIN -> `Docker for windows` -> use localhost:[NodePort]/posts
+
+on WIN -> `Docker for windows` -> use http://localhost:[NodePort]/posts
+ - ie to access this posts pod (kubernetes cluster) via nodePort from the outside: 
+  - browser -> `http://localhost:30345/posts`
 
 ### 80. setting up Cluster IP service
 - GOAL of cluster IP service is to expose a pod to other pods in the kubernetes cluster
@@ -1550,7 +1592,7 @@ posts-depl-68fd57c6c4-hlmr9      1/1     Running   1 (102m ago)   15h
 ```
 
 4. create cluster ip service -> for event-bus AND for posts
-- the pods can technically communicate with each other BUT the ip address is variable so cant know this ahead-of-time...therefore we use `cluster ip service` to give us url
+- the pods can technically communicate with each other BUT the ip address is variable so cant know this ahead-of-time...therefore we use a `cluster ip service` to give us url
 
 ### 82. Adding clusterIP services
 - creating a cluster ip service for each pod/container (Posts and Event-bus)
@@ -1666,18 +1708,6 @@ deployment.apps/posts-depl unchanged
 service/posts-cluster-ip-srv created
 ```
 
-- from blog/infra/k8s
-```cmd
-kubectl get services
-```
-```cmd-output
-NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
-event-bus-srv          ClusterIP   10.108.175.133   <none>        4005/TCP         14m
-kubernetes             ClusterIP   10.96.0.1        <none>        443/TCP          30h
-posts-cluster-ip-srv   ClusterIP   10.107.163.55    <none>        4000/TCP         36s
-posts-srv              NodePort    10.109.124.251   <none>        4000:30345/TCP   4h36m
-```
-
 ### 83. how to communicate between services
 
 - from blog/infra/k8s
@@ -1714,7 +1744,7 @@ await axios.post('http://event-bus-srv:4005/events', {
 });
 ```
 - and localhost:4005 only worked when we loaded from local computer
-- when using kubernetes, this wont work -> `posts/` needs to reach out and access `cluster ip service` of `event-bus`:
+- when using kubernetes, this wont work -> `posts/` needs to reach out and access `event-bus-srv` (cluster ip service) of `event-bus`:
 - posts to event-bus' cluster ip service of name: `event-bus-srv`
 - posts will request: `http://event-bus-srv:4005`  
 
@@ -1742,7 +1772,8 @@ NAME             READY   UP-TO-DATE   AVAILABLE   AGE
 event-bus-depl   1/1     1            1           4h38m
 posts-depl       1/1     1            1           29h
 ```
-
+#### rollout deployments to kubernetes
+- tell kubernetes to redeploy
 - Deployments:
 - `kubectl rollout restart deployment event-bus-depl`
 - `kubectl rollout restart deployment posts-depl`
@@ -1772,9 +1803,21 @@ kubernetes             ClusterIP   10.96.0.1        <none>        443/TCP       
 posts-cluster-ip-srv   ClusterIP   10.107.163.55    <none>        4000/TCP         143m
 posts-srv              NodePort    10.109.124.251   <none>        4000:30345/TCP   6h59m
 ```
-- to reach `posts-srv` NodePort:  in windows POSTMAN -> `http://localhost:30345/posts`
+- to reach `posts-srv` NodePort:  
+
+#### POSTMAN
+in windows POSTMAN -> `http://localhost:30345/posts`
   - headers -> Content-Type -> `application/json`
   - body -> raw -> json -> `{ "title": "POST" }`
+
+- EXPECTED SERVER RESPONSE:
+- status -> 201 Created
+```json
+{
+    "id": "bf1be6ef",
+    "title": "POST"
+}
+```
 
 - revision of docker commands:
 <!-- is going to remove all docker images that you have on your PC -->

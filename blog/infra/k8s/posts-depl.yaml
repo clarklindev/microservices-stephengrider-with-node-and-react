@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: posts
-        image: stephengrider/posts:latest
+        image: clarklindev/posts:latest
         resources:
           limits:
             memory: "128Mi"
