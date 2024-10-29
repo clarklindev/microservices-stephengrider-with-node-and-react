@@ -1897,7 +1897,111 @@ received event:  PostCreated
       `http://localhost:4001/events` -> `comments`
       `http://localhost:4002/events` -> `query`, 
       `http://localhost:4003/events` -> `moderation`, 
-  
+
+  - build: `docker build -t clarklindev/event-bus .`
+  - push to docker-hub: `docker push clarklindev/event-bus`
+  - get deployments: `kubectl get deployments`
+  ```cmd-out
+  NAME              READY   UP-TO-DATE   AVAILABLE   AGE
+  comments-depl     1/1     1            1           40m
+  event-bus-depl    1/1     1            1           36h
+  moderation-depl   1/1     1            1           40m
+  posts-depl        1/1     1            1           36h
+  query-depl        1/1     1            1           40m
+  ```
+
+  - deploy: `kubectl rollout restart deployment event-bus-depl`
+  - check pods: `kubectl get pods`
+
+### 87. testing communication
+- `kubectl get services`
+
+```
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+comments-srv           ClusterIP   10.101.55.88     <none>        4001/TCP         8m56s
+event-bus-srv          ClusterIP   10.108.175.133   <none>        4005/TCP         43h
+kubernetes             ClusterIP   10.96.0.1        <none>        443/TCP          3d1h
+moderation-srv         ClusterIP   10.102.123.71    <none>        4003/TCP         8m56s
+posts-cluster-ip-srv   ClusterIP   10.107.163.55    <none>        4000/TCP         43h
+posts-srv              NodePort    10.109.124.251   <none>        4000:30345/TCP   47h
+query-srv              ClusterIP   10.102.225.172   <none>        4002/TCP         8m56s
+```
+
+1. make changes to code: update the urls: 
+
+```js
+//blog/event-bus/index.js
+
+//...
+  //POSTS: 4000
+  axios.post("http://posts-cluster-ip-srv:4000/events", event).catch((err) => {
+    console.log(err.message);
+  });
+
+  //COMMENTS: 4001
+  axios.post("http://comments-srv:4001/events", event).catch((err) => {
+    console.log(err.message);
+  });
+
+  //QUERY: 4002
+  axios.post("http://query-srv:4002/events", event).catch((err) => {
+    console.log(err.message);
+  });
+
+  //MODERATION :4003
+  axios.post("http://moderation-srv:4003/events", event).catch((err) => {
+    console.log(err.message);
+  });
+
+//...
+```
+2. from blog/event-bus/ -> `docker build -t clarklindev/event-bus .`
+3. push to docker-hub: `docker push clarklindev/event-bus`
+4. rollout deployment to kubernetes cluster
+  - get deployments: `kubectl get deployments`
+  - kubectl rollout restart deployment [depl_name]: `kubectl rollout restart deployment event-bus-depl`
+
+```cmd-out
+deployment.apps/event-bus-depl restarted
+```
+- confirm restart:
+```
+NAME                              READY   STATUS    RESTARTS   AGE
+comments-depl-7f7cb8ff45-h82sx    1/1     Running   0          5m41s
+event-bus-depl-6dfd488465-6sd94   1/1     Running   0          58s
+moderation-depl-dc8b4f9b7-fkqn9   1/1     Running   0          5m41s
+posts-depl-75bf6b79db-zvm98       1/1     Running   0          5m41s
+query-depl-849cf684bf-pw8r8       1/1     Running   0          5m41s
+```
+
+- we test using POSTMAN:
+  - testing that `comments`, `query` and `moderation` receive events from `event-bus`
+  - test by re-making a post via NodePort to event-bus: 
+    - POST http://localhost:NodePort/posts -> headers -> Content-Type: `application/json`, body: RAW json: `{"title" : "POSTS"}`
+
+    ```cmd-out
+    NAME                              READY   STATUS    RESTARTS   AGE
+    comments-depl-7f7cb8ff45-h82sx    1/1     Running   0          37m
+    event-bus-depl-7cf5c8c5b8-z9zsc   1/1     Running   0          12m
+    moderation-depl-dc8b4f9b7-fkqn9   1/1     Running   0          37m
+    posts-depl-75bf6b79db-zvm98       1/1     Running   0          37m
+    query-depl-849cf684bf-pw8r8       1/1     Running   0          37m
+    ```
+
+    - check logs (`kubectl get pods`) -> `kubectl logs [name of pod]`
+      - `kubectl logs comments-depl-7f7cb8ff45-h82sx` -> Listening on 4001   received event:  PostCreated
+      - `kubectl logs moderation-depl-dc8b4f9b7-fkqn9` -> listening on 4003 
+      - `kubectl logs query-depl-849cf684bf-pw8r8` -> listening on 4002   processing event: PostCreated
+
+- TROUBLESHOOT: if you are not receiving the desired output from logs,
+  - FIX: [restart deployment](https://www.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19099844#questions/11700948)
+
+```cmd
+kubectl rollout restart deployment query-depl
+```
+
+### 88. load balancer services
+- 
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
