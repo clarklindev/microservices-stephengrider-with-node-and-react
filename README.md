@@ -1835,6 +1835,23 @@ in windows POSTMAN -> `http://localhost:30345/posts`
 <!-- to recreate deployment. It is going to fetch new image from remote. -->
 `kubectl apply posts-depl.yaml`
 
+
+- get pods `kubectl get pods`
+```
+NAME                              READY   STATUS    RESTARTS   AGE
+event-bus-depl-785cf644c5-wjzz4   1/1     Running   0          9m51s
+posts-depl-558dbf9486-qc9sw       1/1     Running   0          9m44s
+```
+- TODO: vieW logs
+  - `kubectl logs posts-depl-558dbf9486-qc9sw`
+- EXPECTED -> communication back from event-bus service via `posts-clusterip-srv` -> received event:  PostCreated
+
+```cmd
+v55
+Listening on 4000
+received event:  PostCreated
+```
+
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
 ---
