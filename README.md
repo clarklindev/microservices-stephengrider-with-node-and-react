@@ -2001,7 +2001,51 @@ kubectl rollout restart deployment query-depl
 ```
 
 ### 88. load balancer services
-- 
+- integrating the react application with kubernetes
+  1. put in pod (Dockerfile)
+  2. put in kubernetes cluster
+  3. purpose of react app is to initially generate html/css/js 
+    - AFTER, the react-app is not relevant.. (ie. does not connect/communicate with other pods)
+- 2 options for react app to communicate with kubernetes pods
+  - OPTION 1 (DO NOT DO THIS): 
+    - create a `Node Port Service` for each pod (therefore exposing the pod to outside world)
+    - WHY its bad: opening a port with each Node Port and then this needs to be updated in react
+  - OPTION 2 (PREFERED METHOD): 
+  ![option 2](exercise_files/udemy-docker-section04-88.load-balancer-services-option2.png)  
+    - create a `load balancer service` (single point of entry into kubernetes cluster) 
+    - the react app is going to make request to load balancer service 
+    - the load balancer routes requests to appropriate pod (each pod still has a (cluster ip service))
+
+### 89. load balancer and ingress
+
+- load balancer service 
+![load balancer service](exercise_files/udemy-docker-section04-89.load-balancer.png)  
+  - tells kubernetes cluster to reachout to its cloud provider (aws/google cloud/azure ...) and provision a `load balancer`:
+  - goal is to get traffic into single pod
+  - create a config file for loader balancer service
+  - add to cluster with `kubectl apply ...`
+  - note: load balancer is outside the cluster
+  
+- ingress / ingress controller 
+![ingress controller](exercise_files/udemy-docker-section04-89.ingress-controller.png)
+  - pod with set of routing rules to distribute traffic to other services -> pods
+
+### 90. Ingress Nginx Installation Info
+- NB: required mandatory command that needed to be run for all providers has been removed.
+- the environment-specific commands (Docker Desktop, Minikube, etc) is all that is required. 
+- NOTE: 
+  - install -> `Ingress Nginx` / NOT `Nginx Ingress` 
+
+### Docker desktop
+- https://kubernetes.github.io/ingress-nginx/deploy/#quick-start
+- Copy the command from the `If you don't have Helm or if you prefer a yaml manifest) section`
+
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0-beta.0/deploy/static/provider/cloud/deploy.yaml
+```
+
+### 91. ingress Nginx 
+- what it does? install `load balancer service` AND `ingress`
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
