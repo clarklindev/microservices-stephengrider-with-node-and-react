@@ -2431,8 +2431,105 @@ service/client-srv created
 
 ### 98. unique route paths
 - setting up routing rules for all other microservices inside kubernetes cluster (infra/k8s/ingress-srv.yaml)
-- currently it only caters for path: /posts
-- 
+- currently it only caters for path: /posts  
+![ingress controller routing](exercise_files/udemy-docker-section04-97-ingress-routing-unique-routing-paths.png)
+- NOTE: ingress-nginx cannot do routing based on method of request (GET, POST, etc) only the path.. so there is not enough information to know which pod events should reach (post or query)
+
+- FIX: update the path eg. /path/create is for POST posts in client/ and posts/
+- 1. TODO: update `blog/client/src/PostCreate.js`
+```js
+//blog/client/src/PostCreate.js
+await axios.post("http://posts.com/posts/create", {title});
+```
+- 2. TODO: update `blog/posts/index.js`
+  - update to posts/create
+```js
+//blog/posts/index.js
+app.post('/posts/create', async (req, res) => {});
+```
+
+### client/ updates
+- TODO: from blog/client/ re-build image: `docker build -t clarklindev/client .`
+- TODO: push to docker-hub: `docker push clarklindev/client`
+- deploy to kubernetes cluster: `kubectl rollout restart deployment client-depl`
+
+### posts/ updates
+- TODO: from blog/posts/ re-build image: `docker build -t clarklindev/posts .`
+- TODO: push to docker-hub: `docker push clarklindev/posts`
+- deploy to kubernetes cluster: `kubectl rollout restart deployment posts-depl`
+
+### 99. final route config (ingress controller)
+- blog/infra/ingress-srv.yaml
+- TODO: update the routing paths
+- NOTE: nginx does not support wildcard colon syntax `/posts/:id/comments` (you have to use regex)
+  - FIX: wildcard fix -> `:id` becomes `?(.*)`
+- NOTE: UPDATE TO YAML STRUCTURE -> `kubernetes.io/ingress.class` annotation should be removed and replaced by the ingressClassName field under the spec:
+- NOTE: `path: /?(.*)` order in array -> has to be at the end (so it only tries to match paths after it has tried all other paths)
+
+```yaml
+# infra/k8s/ingress-srv.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-srv
+  annotations:
+  # kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: posts.com
+      http:
+        paths:
+          - path: /posts/create
+            pathType: Prefix
+            backend:
+              service:
+                name: posts-cluster-ip-srv
+                port:
+                  number: 4000
+          - path: /posts
+            pathType: Prefix
+            backend:
+              service:
+                name: query-srv
+                port:
+                  number: 4002
+          - path: /posts/?(.*)/comments
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: comments-srv
+                port:
+                  number: 4001
+          - path: /?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: client-srv
+                port:
+                  number: 3000
+```
+- from infra/k8s/ folder re-apply the `ingress-srv.yaml`
+```cmd
+kubectl apply -f ingress-srv.yaml
+```
+```cmd-out
+ingress.networking.k8s.io/ingress-srv configured
+```
+
+```cmd
+kubectl get pods
+```
+```cmd-out
+NAME                               READY   STATUS    RESTARTS   AGE
+client-depl-64dd74bb74-bg5rm       1/1     Running   0          7s
+comments-depl-6d46896699-hz5x8     1/1     Running   0          3h33m
+event-bus-depl-d8998657d-gnn4w     1/1     Running   0          3h33m
+moderation-depl-5847bbbd45-q9np7   1/1     Running   0          3h33m
+```
+
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
