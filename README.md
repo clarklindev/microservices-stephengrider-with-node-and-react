@@ -2549,7 +2549,16 @@ query-depl-5bf4fdd49f-w2nsj        1/1     Running   0          3h55m
 - Skaffold automates a lot of tasks in a kubernetes dev environment
 - makes it super easy to update code in a running pod
 - makes it easy to create/delete objects tied to a project at once
+
+#### install
 - [skaffold.dev](http://skaffold.dev)
+- download
+- do SHA check `certutil -hashfile skaffold-windows-amd64.exe SHA256` against: `https://github.com/GoogleContainerTools/skaffold/releases` and download the .sha256
+- rename to `skaffold.exe` 
+- copy to `c:\Program Files\skaffold\skaffold.exe`
+- add to system environment variables path: `c:\Program Files\skaffold\`
+- open powershell
+- `skaffold` to test
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
