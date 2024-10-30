@@ -1472,7 +1472,7 @@ spec:
       targetPort: 4000
 ```
 - targetPort vs Port:  
-- NOTE: the Port and TargetPort do not have to be the same.
+- NOTE: the Port and TargetPort do not have to be the same.  
 ![udemy-docker-section04-78-nodeport-service.png](exercise_files/udemy-docker-section04-78-nodeport-service.png)
 
 ### 79. Accessing NodePort services
@@ -2010,7 +2010,7 @@ kubectl rollout restart deployment query-depl
   - OPTION 1 (DO NOT DO THIS): 
     - create a `Node Port Service` for each pod (therefore exposing the pod to outside world)
     - WHY its bad: opening a port with each Node Port and then this needs to be updated in react
-  - OPTION 2 (PREFERED METHOD): 
+  - OPTION 2 (PREFERED METHOD):  
   ![option 2](exercise_files/udemy-docker-section04-88.load-balancer-services-option2.png)  
     - create a `load balancer service` (single point of entry into kubernetes cluster) 
     - the react app is going to make request to load balancer service 
@@ -2018,7 +2018,7 @@ kubectl rollout restart deployment query-depl
 
 ### 89. load balancer and ingress
 
-- load balancer service 
+- load balancer service  
 ![load balancer service](exercise_files/udemy-docker-section04-89.load-balancer.png)  
   - tells kubernetes cluster to reachout to its cloud provider (aws/google cloud/azure ...) and provision a `load balancer`:
   - goal is to get traffic into single pod
@@ -2026,7 +2026,7 @@ kubectl rollout restart deployment query-depl
   - add to cluster with `kubectl apply ...`
   - note: load balancer is outside the cluster
   
-- ingress / ingress controller 
+- ingress / ingress controller  
 ![ingress controller](exercise_files/udemy-docker-section04-89.ingress-controller.png)
   - pod with set of routing rules to distribute traffic to other services -> pods
 
@@ -2036,16 +2036,314 @@ kubectl rollout restart deployment query-depl
 - NOTE: 
   - install -> `Ingress Nginx` / NOT `Nginx Ingress` 
 
+### deleting infra/k8s
+- used to delete all Kubernetes resources defined in the files located in the infra/k8s/ directory.
+```
+kubectl delete -f infra/k8s/
+```
+
 ### Docker desktop
+- NOTE: DOCKER IS RUNNING...
 - https://kubernetes.github.io/ingress-nginx/deploy/#quick-start
 - Copy the command from the `If you don't have Helm or if you prefer a yaml manifest) section`
+- check with `kubectl get all -n ingress-nginx` to get all in `ingress-nginx` namespace
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0-beta.0/deploy/static/provider/cloud/deploy.yaml
+kubectl get all -n ingress-nginx
 
+```
+#### troubleshoot
+- NOTE: if you delete kubernetes resources in infra/k8s, this command needs to be called again...
 ```
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0-beta.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
+- The YAML manifest in the command above was generated with helm template, so you will end up with almost the same resources as if you had used Helm to install the controller.
+- looking at the yaml, notice: it is creating an load balancer (Kind: service)
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.12.0-beta.0
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  externalTrafficPolicy: Local
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - appProtocol: http
+    name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  - appProtocol: https
+    name: https
+    port: 443
+    protocol: TCP
+    targetPort: https
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+  type: LoadBalancer
+```
+
 ### 91. ingress Nginx 
 - what it does? install `load balancer service` AND `ingress`
+- Name: [ingress-nginx](https://kubernetes.github.io/ingress-nginx/) NOT `kubernetes-ingress`
+- quickstart - https://kubernetes.github.io/ingress-nginx/deploy/#quick-start
+
+### 92. Ingress v1 API Required Update + pathType Warning
+- https://kubernetes.io/docs/concepts/services-networking/ingress/
+- changes since beta:
+  1. A pathType needs to be added
+  2. How we specify the backend service name and port has changed
+  3. The kubernetes.io/ingress.class annotation should be removed and replaced by the ingressClassName field under the spec:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-srv
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: posts.com
+      http:
+        paths:
+          - path: /posts
+            pathType: Prefix
+            backend:
+              service:
+                name: posts-cluster-ip-srv
+                port:
+                  number: 4000
+```
+### TROUBLESHOOT:
+- WARNING: `Cannot be used with pathType Prefix Warning`
+- if you see a warning in your terminal:
+```
+Warning: path /posts/?{.*}/comments cannot be used with pathType Prefix
+Warning: path /?{.*} cannot be used with pathType Prefix
+```
+
+- This is not an error and only a warning and does not cause a failure of the project. If you wish to suppress the warning and follow the latest guidance, then, you can use the ImplementationSpecific pathType as explained in the updated docs:
+- https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#strict-validate-path-type
+- So, for any path that makes use of a regex, you would use `ImplementationSpecific` instead of `Prefix`.
+
+eg:
+
+```yaml
+          - path: /posts/?(.*)/comments
+            pathType: ImplementationSpecific
+```
+
+### 93. writing ingress config files
+- we created an `ingress controller` through `ingress-nginx` inside the kubernetes cluster
+- TODO: teach the controller routing rules via config file with some rules.
+- then we feed this config into the cluster which will then be discovered by `ingress controller`
+- ingress controller updates its internal set of routing rules
+- from infra/k8s/ folder:
+- note: `host: posts.com` means any incoming from posts.com
+- note: - from `path: /posts` we are sending to event to service `posts-cluster-ip-srv`
+- TODO: apply infra/k8s/ingress-srv.yaml: `kubectl apply -f ingress-srv.yaml`:
+
+```cmd-out
+ingress.networking.k8s.io/ingress-srv created
+```
+
+```yaml
+//infra/k8s/ingress-srv.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-srv
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: posts.com
+      http:
+        paths:
+          - path: /posts
+            pathType: Prefix
+            backend:
+              service:
+                name: posts-cluster-ip-srv
+                port:
+                  number: 4000
+
+```
+
+### 94. Important Note About Port 80
+- we will be editing our hosts file so that we can access posts.com/posts in our browser
+- TODO: ensure installed the ingress-nginx controller for your particular Kubernetes client.
+- TODO: identify if something is running on port 80 and shut it down
+
+#### TROUBLESHOOT - Windows
+- Windows Pro users, both SQL Server Reporting Services (MSSQLSERVER) and the World Wide Web Publishing Service / IIS Server have been the most common services causing a conflict.
+
+- Using Powershell with elevated permissions:
+```cmd
+netstat -anb
+
+```
+- Scroll to the top of the returned output and find the listing for port 80.
+- If Docker is properly listening on port 80 you should see:
+
+```
+TCP   0.0.0.0:80   0.0.0.0:0   LISTENING
+```
+
+### 95. hosts file tweak
+- ingress-srv.yaml config: `host -> posts.com` explained:
+- you can host many different domains inside a single kubernetes cluster (infrastructure for different domains hosted at single kubernetes cluster)
+- ingress-nginx assumes you can host multiple apps at different domains 
+  - `host: posts.com` -> is saying the config to follow... is tied to app hosted at `posts.com`
+
+```yaml
+    - host: posts.com
+      http:
+        paths:
+          - path: /posts
+            pathType: Prefix
+            backend:
+              service:
+                name: posts-cluster-ip-srv
+                port:
+                  number: 4000
+```
+
+#### dev environment
+- so in dev environment, we have to trick our app that when it tries to connect to posts.com, its actually connecting to localhost
+- host file location: 
+  - win -> c:\windows\system32\drivers\etc\hosts
+  - macOS/Linux -> /etc/hosts
+- AS ADMIN: open hosts -> add `127.0.0.1 posts.com`
+- meaning when we try connect to posts.com, it connects to 127.0.0.1 instead and apply the ingress-nginx routing to `posts-cluster-ip-srv`
+
+
+```
+# Copyright (c) 1993-2009 Microsoft Corp.
+#
+# This is a sample HOSTS file used by Microsoft TCP/IP for Windows.
+#
+# This file contains the mappings of IP addresses to host names. Each
+# entry should be kept on an individual line. The IP address should
+# be placed in the first column followed by the corresponding host name.
+# The IP address and the host name should be separated by at least one
+# space.
+#
+# Additionally, comments (such as these) may be inserted on individual
+# lines or following the machine name denoted by a '#' symbol.
+#
+# For example:
+#
+#      102.54.94.97     rhino.acme.com          # source server
+#       38.25.63.10     x.acme.com              # x client host
+
+# localhost name resolution is handled within DNS itself.
+#	127.0.0.1       localhost
+#	::1             localhost
+# Added by Docker Desktop
+192.168.221.177 host.docker.internal
+192.168.221.177 gateway.docker.internal
+# To allow the same kube context to work on the host and the container:
+127.0.0.1 kubernetes.docker.internal
+127.0.0.1 docker-for-desktop
+# End of section
+
+127.0.0.1 posts.com
+localhost posts.com
+```
+
+#### Troubleshoot
+- Flush the DNS Cache (Optional):
+- Open Command Prompt as Administrator (search for "cmd," right-click, and select "Run as administrator").
+
+```cmd
+ipconfig /flushdns
+```
+
+#### Troubleshoot
+- [posts.com/posts](https://www.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/26492690#questions/11251253)
+- NOTE: The LoadBalancer service allows external access to the Ingress Controller, listening on ports 80 and 443 (https)
+- add `127.0.0.1 posts.com` in hosts file
+- fix:  ingress-srv.yaml -> reference to `posts-clusterip-srv` change to `posts-cluster-ip-srv`
+- from infra/k8s/folder: `kubectl apply -f ingress-srv.yaml`
+- or delete then apply: `kubectl delete -f infra/k8s/` then  `kubectl apply -f ingress-srv.yaml`
+- if at anypoint you delete required Kubernetes resources defined in the files located in the infra/k8s/ directory, you need to recall step in lesson 90 about 'if you dont have Helm... or prefer YAML': check lesson: 90. Important - DO NOT SKIP - Ingress Nginx Installation Info 
+- Copy the command from the `If you don't have Helm or if you prefer a yaml manifest) section` 
+
+``` 
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0-beta.0/deploy/static/provider/cloud/deploy.yaml
+```
+
+```cmd-out
+namespace/ingress-nginx created
+serviceaccount/ingress-nginx created
+serviceaccount/ingress-nginx-admission created
+role.rbac.authorization.k8s.io/ingress-nginx created
+role.rbac.authorization.k8s.io/ingress-nginx-admission created
+clusterrole.rbac.authorization.k8s.io/ingress-nginx created
+clusterrole.rbac.authorization.k8s.io/ingress-nginx-admission created
+rolebinding.rbac.authorization.k8s.io/ingress-nginx created
+rolebinding.rbac.authorization.k8s.io/ingress-nginx-admission created
+clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx created
+clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx-admission created
+configmap/ingress-nginx-controller created
+service/ingress-nginx-controller created
+service/ingress-nginx-controller-admission created
+deployment.apps/ingress-nginx-controller created
+job.batch/ingress-nginx-admission-create created
+job.batch/ingress-nginx-admission-patch created
+ingressclass.networking.k8s.io/nginx created
+validatingwebhookconfiguration.admissionregistration.k8s.io/ingress-nginx-admission created
+```
+
+- check with kubectl get all -n ingress-nginx to get all in `ingress-nginx` namespace 
+NOTE: something must show up when you call this...
+
+specifically something about `ingress-nginx`  
+
+![kubectl get all -n ingress-nginx](exercise_files/udemy-docker-section04-95.ingress-nginx.png)
+
+#### STEP 1:
+- TODO: get the 3xxxx port number
+
+```
+kubectl get services
+```
+
+#### STEP 2:
+- POSTMAN: 
+- TODO: create a post to http://localhost:<3x port>/posts
+  - headers: Content-Type application/json
+  - body: RAW json { "title": "POST" }
+
+#### STEP 3:
+- NOTE: there is not port specified in URL
+- EXPECTED: http://posts.com/posts
+
+```
+{
+  "c27a0eeb": {
+    "id": "c27a0eeb",
+    "title": "POST"
+  },
+  "03f69564": {
+    "id": "03f69564",
+    "title": "POST"
+  }
+}
+```
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)

@@ -1,0 +1,4 @@
+exercise_files
+blog/**/node_modules
+blog/**/build
+blog/**/dist
