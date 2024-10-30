@@ -16,10 +16,6 @@ spec:
       containers:
       - name: client
         image: clarklindev/client:latest
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
 
 ---
 apiVersion: v1

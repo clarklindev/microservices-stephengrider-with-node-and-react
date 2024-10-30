@@ -2368,7 +2368,7 @@ ENV WDS_SOCKET_PORT=0
 - TODO: 
 1. create react app image
 ```cmd
-//blog/clinet/
+//blog/client/
 docker build -t clarklindev/client .
 ```
 - push to dockerhub
@@ -2399,10 +2399,10 @@ spec:
       containers:
       - name: client
         image: clarklindev/client:latest
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
+        # resources:
+        #   limits:
+        #     memory: "128Mi"
+        #     cpu: "500m"
 
 ---
 apiVersion: v1
@@ -2451,6 +2451,7 @@ app.post('/posts/create', async (req, res) => {});
 ### client/ updates
 - TODO: from blog/client/ re-build image: `docker build -t clarklindev/client .`
 - TODO: push to docker-hub: `docker push clarklindev/client`
+- `kubectl rollout restart deployment <deployment-name>`
 - deploy to kubernetes cluster: `kubectl rollout restart deployment client-depl`
 
 ### posts/ updates
@@ -2524,12 +2525,31 @@ kubectl get pods
 ```
 ```cmd-out
 NAME                               READY   STATUS    RESTARTS   AGE
-client-depl-64dd74bb74-bg5rm       1/1     Running   0          7s
-comments-depl-6d46896699-hz5x8     1/1     Running   0          3h33m
-event-bus-depl-d8998657d-gnn4w     1/1     Running   0          3h33m
-moderation-depl-5847bbbd45-q9np7   1/1     Running   0          3h33m
+client-depl-8647d5b9d8-ddhdf       1/1     Running   0          20s
+comments-depl-6d46896699-hz5x8     1/1     Running   0          3h55m
+event-bus-depl-d8998657d-gnn4w     1/1     Running   0          3h55m
+moderation-depl-5847bbbd45-q9np7   1/1     Running   0          3h55m
+posts-depl-54b6b8cb6b-jx84w        1/1     Running   0          50m
+query-depl-5bf4fdd49f-w2nsj        1/1     Running   0          3h55m
 ```
 
+- visiting: posts.com  
+![posts.com](exercise_files/udemy-docker-section04-99-posts.com.png)
+
+### summary
+- up to this point in codebase, if we want to make a change
+- have to:
+1. rebuild
+2. deploy to docker-hub
+3. redeploy to kubernetes
+
+- there is better way to automate updates to code inside the kubernetes cluster called `Skaffold`
+
+### 100. Skaffold introduction
+- Skaffold automates a lot of tasks in a kubernetes dev environment
+- makes it super easy to update code in a running pod
+- makes it easy to create/delete objects tied to a project at once
+- [skaffold.dev](http://skaffold.dev)
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
