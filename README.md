@@ -1093,8 +1093,8 @@ docker run cddd85607be243e2b0dd28007520b223dc69477c2423f37663dfe3a2580a78ae
 ```cmd
 //event-bus/
 
-docker build -t stephengrider/event-bus .
-docker run stephengrider/event-bus
+docker build -t clarklindev/event-bus .
+docker run clarklindev/event-bus
 ```
 
 ## Section 04 - orchestrating collections of services with kubernetes (3hr25min)
@@ -1191,12 +1191,12 @@ Unable to connect to the server: dial tcp [::1]:8080: connectex: No connection c
 - NOTE: later we correct this and say `DEPLOYMENTS` manage pods in kubernetes cluster
 - TODO: create a config file -> create a pod that runs a container from the `Posts service`
 - NOTE: ensure Docker is running
-- TODO: rebuild the docker image of posts (with version): `docker build -t stephengrider/posts:0.0.1 .` 
+- TODO: rebuild the docker image of posts (with version): `docker build -t clarklindev/posts:0.0.1 .` 
 
 ```cmd out
  => => exporting layers 0.3s 
  => => writing image sha256:1dbeadbb183283db3ceee72c451ea79f3e83d33ab384292d7b60c62e74c1b734 0.0s 
- => => naming to docker.io/stephengrider/posts:0.0.1 0.0s 
+ => => naming to docker.io/clarklindev/posts:0.0.1 0.0s 
 ```
 - TODO: create the directories in project folder: `infra/k8s` infrastructure
 - NOTE: `k8s` short for kubernetes 
@@ -1212,7 +1212,7 @@ metadata:
 spec:
   containers:
   - name: posts
-    image: stephengrider/posts:0.0.1
+    image: clarklindev/posts:0.0.1
     resources:
       limits:
         memory: "128Mi"
@@ -1308,7 +1308,7 @@ spec:
     spec:
       containers:
       - name: posts
-        image: stephengrider/posts:0.0.1
+        image: clarklindev/posts:0.0.1
 
         resources:
           limits:
@@ -1354,7 +1354,7 @@ Kubectl apply -f posts-depl.yaml
 2. rebuild image (tag NEW image version): 
   ```cmd
   //blog/posts/
-  docker build -t stephengrider/posts:0.0.5 .
+  docker build -t clarklindev/posts:0.0.5 .
   ```
 3. in deployment config -> update version of the image
   ```yaml
@@ -1365,7 +1365,7 @@ Kubectl apply -f posts-depl.yaml
   spec:
     containers:
       - name: posts
-        image: stephengrider/posts:0.0.5 
+        image: clarklindev/posts:0.0.5 
   ```
 
 
@@ -1391,7 +1391,7 @@ Kubectl apply -f posts-depl.yaml
     spec:
       containers:
       - name: posts
-        image: stephengrider/posts:latest
+        image: clarklindev/posts:latest
 
 # ...
 ```
@@ -1404,13 +1404,13 @@ Kubectl apply -f posts-depl.yaml
 3. rebuild the image 
 ```cmd
 //blog/posts/
-docker build -t stephengrider/posts .
+docker build -t clarklindev/posts .
 ```
 4. push image to docker hub
 NOTE: you need to be logged-in on docker-desktop / docker-hub
 ```
 //blog/posts/
-docker push stephengrider/posts
+docker push clarklindev/posts
 ```
 
 ```cmd
@@ -1547,12 +1547,12 @@ on WIN -> `Docker for windows` -> use http://localhost:[NodePort]/posts
 1. build image for event-bus
 - from blog/event-bus/ folder:
 ```
-docker build -t stephengrider/event-bus .
+docker build -t clarklindev/event-bus .
 ```
 
 2. push to docker-hub
 ```
-docker push stephengrider/event-bus
+docker push clarklindev/event-bus
 ```
 
 3. create a deployment for event-bus
@@ -1577,7 +1577,7 @@ spec:
     spec:
       containers:
       - name: event-bus
-        image: stephengrider/event-bus:latest
+        image: clarklindev/event-bus:latest
         resources:
           limits:
             memory: "128Mi"
@@ -1681,7 +1681,7 @@ spec:
     spec:
       containers:
       - name: posts
-        image: stephengrider/posts:latest
+        image: clarklindev/posts:latest
         resources:
           limits:
             memory: "128Mi"
@@ -1759,12 +1759,12 @@ await axios.post('http://event-bus-srv:4005/events', {
 - eg. `event-bus` code TO `posts` -> requests should use the service -> `http://posts-cluster-ip-srv:4000`
 
 - after changes... from event-bus/ folder:
-  - build: `docker build -t stephengrider/event-bus . `
-  - push to docker-hub: `docker push stephengrider/event-bus`
+  - build: `docker build -t clarklindev/event-bus . `
+  - push to docker-hub: `docker push clarklindev/event-bus`
 
 - after changes... from posts/ folder:
-  - build: `docker build -t stephengrider/posts .`
-  - push to docker-hub: `docker push stephengrider/posts`
+  - build: `docker build -t clarklindev/posts .`
+  - push to docker-hub: `docker push clarklindev/posts`
 
 - `kubectl get deployments` 
 ```
@@ -2344,6 +2344,93 @@ kubectl get services
   }
 }
 ```
+### 96. Important Note to Add Environment Variable
+- TODO: add react app to kubernetes cluster
+- React app will be running in a Docker container.
+- create-react-app currently has two bugs that prevent it from running correctly in a docker container:
+  1. [React-Scripts] v3.4.1 fails to start in Docker
+  2. websocket connection appears to be hardcoded to port 3000
+- FIX: add two environment variables to the Dockerfile in the client folder
+- add to blog/client/Dockerfile:
+
+```yaml
+# Add the following lines
+#...
+ENV CI=true
+ENV WDS_SOCKET_PORT=0
+
+#...
+```
+### 97. deploying the react app
+- NOTE: the updates to host file is only for development env, once deployed this is not necessary
+- the reactapp should connect to `posts.com` instead of `localhost:<port>`
+- NOTE: the port is also removed eg. `localhost:4000/posts` becomes `http://posts.com/posts`
+- TODO: 
+1. create react app image
+```cmd
+//blog/clinet/
+docker build -t clarklindev/client .
+```
+- push to dockerhub
+```cmd
+docker push clarklindev/client 
+```
+
+2. create a config for deployment
+- infra/k8s/client-depl.yaml
+- note: update port (create-react-app is hosted on port 3000)
+
+```yaml
+# infra/k8s/client-depl.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+      - name: client
+        image: clarklindev/client:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: client-srv
+spec:
+  selector: 
+    app: client
+  ports:
+    - name: client
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+
+```
+
+3. deploy to kubernetes cluster
+  - from infra/k8s/ folder: `kubectl apply -f client-depl.yaml`
+```cmd-out
+deployment.apps/client-depl created
+service/client-srv created
+```
+
+4. make a `cluster ip service` so nginx can direct traffic to the pod (react app)
+
+### 98. unique route paths
+- 
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
