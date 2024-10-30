@@ -1045,10 +1045,10 @@ CMD ["npm", "start"]
 docker run cddd85607be243e2b0dd28007520b223dc69477c2423f37663dfe3a2580a78ae 
 ```
 
-![dockerising post service](exercise_files/udemy-docker-section03-58.dockerising-post-service.png)
+![dockerising post service](exercise_files/udemy-docker-section03-58-dockerising-post-service.png)
 
 ### 59. review some basic commands
-![running services with docker](exercise_files/udemy-docker-section03-59.running-services-with-docker.png)
+![running services with docker](exercise_files/udemy-docker-section03-59-running-services-with-docker.png)
 - docker build -t docker-id/name-of-project .
 - docker run docker-id/name-of-project
 - docker run -it docker-id/posts sh
@@ -2011,7 +2011,7 @@ kubectl rollout restart deployment query-depl
     - create a `Node Port Service` for each pod (therefore exposing the pod to outside world)
     - WHY its bad: opening a port with each Node Port and then this needs to be updated in react
   - OPTION 2 (PREFERED METHOD):  
-  ![option 2](exercise_files/udemy-docker-section04-88.load-balancer-services-option2.png)  
+  ![option 2](exercise_files/udemy-docker-section04-88-load-balancer-services-option2.png)  
     - create a `load balancer service` (single point of entry into kubernetes cluster) 
     - the react app is going to make request to load balancer service 
     - the load balancer routes requests to appropriate pod (each pod still has a (cluster ip service))
@@ -2019,7 +2019,7 @@ kubectl rollout restart deployment query-depl
 ### 89. load balancer and ingress
 
 - load balancer service  
-![load balancer service](exercise_files/udemy-docker-section04-89.load-balancer.png)  
+![load balancer service](exercise_files/udemy-docker-section04-89-load-balancer.png)  
   - tells kubernetes cluster to reachout to its cloud provider (aws/google cloud/azure ...) and provision a `load balancer`:
   - goal is to get traffic into single pod
   - create a config file for loader balancer service
@@ -2027,7 +2027,7 @@ kubectl rollout restart deployment query-depl
   - note: load balancer is outside the cluster
   
 - ingress / ingress controller  
-![ingress controller](exercise_files/udemy-docker-section04-89.ingress-controller.png)
+![ingress controller](exercise_files/udemy-docker-section04-89-ingress-controller.png)
   - pod with set of routing rules to distribute traffic to other services -> pods
 
 ### 90. Ingress Nginx Installation Info
@@ -2313,7 +2313,7 @@ NOTE: something must show up when you call this...
 
 specifically something about `ingress-nginx`  
 
-![kubectl get all -n ingress-nginx](exercise_files/udemy-docker-section04-95.ingress-nginx.png)
+![kubectl get all -n ingress-nginx](exercise_files/udemy-docker-section04-95-ingress-nginx.png)
 
 #### STEP 1:
 - TODO: get the 3xxxx port number
@@ -2430,6 +2430,8 @@ service/client-srv created
 4. make a `cluster ip service` so nginx can direct traffic to the pod (react app)
 
 ### 98. unique route paths
+- setting up routing rules for all other microservices inside kubernetes cluster (infra/k8s/ingress-srv.yaml)
+- currently it only caters for path: /posts
 - 
 
 ---
