@@ -16,7 +16,7 @@ spec:
       containers:
       - name: client
         image: clarklindev/client:latest
-
+        
 ---
 apiVersion: v1
 kind: Service

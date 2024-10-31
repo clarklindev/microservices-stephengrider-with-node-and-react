@@ -2681,12 +2681,49 @@ build:
 ```
 
 ### 103. skaffold startup
+- NOTE: Docker is running
 
-#### startup skaffold:
-- from the project folder (where skaffold.yaml is located): 
+#### startup skaffold
+- TODO: build docker images -> from the project folder: blog/ (where skaffold.yaml is located)
+
 ```cmd
 skaffold dev
 ```
+
+#### TROUBLESHOOT
+- note: in the config, if you specify resources for the container... and you dont allocate enough, the build will timeout:
+
+```cmd-out
+[client] The build failed because the process exited too early. This probably means the system ran out of memory or someone called `kill -9` on the process.
+```
+- so either remove it or allocate more resources..
+```yaml
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+```
+
+
+
+### AFTER BUILD
+- visit: `http://posts.com/`
+- NOTE: Reminder Create React App -> picks up on changes to react project folder -> rebuild app -> refresh browser  
+- NOTE: here all other pod apps' containers (eg. comments) -> run with `nodemon ...` (which restarts project when changes occur)
+- NOTE: skaffold also redeploys when it picks up on folder updates
+- but if you dont use `nodemon` (and only use `node` to start project) and only have that skaffold re-deploys, this will not reflect changes
+
+#### NOTE: 
+- If you're using Skaffold to manage your microservices and it detects changes in your code, it will attempt to rebuild and redeploy your application. However, if your pod doesn't use a file watcher like Nodemon (or a similar tool) to automatically restart the application when code changes occur, you won't see those changes reflected in your running pod.
+- Skaffold: Skaffold watches for changes in your local files, builds the image, and deploys it to your Kubernetes cluster.
+- Nodemon: Nodemon automatically restarts your Node.js application when it detects changes in the code.
+- NOTE: there are times that changes arent detected in containers 
+
+### STOPPING SKAFFOLD
+- CTRL+C -> stops skaffold -> cleanup deployment objects
+
+### summary
+- skaffold automates the process of kubernetes deployments and container management
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
