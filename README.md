@@ -7,10 +7,12 @@
 
 ## Table of contents
 
+### Microservices and Docker/Kubernetes/Skaffold
 - [Section 01 - Fundamental Ideas Around Microservices (46min)](#section-01---fundamental-ideas-around-microservices-46min)
 - [Section 02 - A Mini Microservices App (3hr35min)](#section-02---a-mini-microservices-app-3hr35min)
 - [Section 03 - Running Services with Docker (30min)](#section-03---running-services-with-docker-30min)
 - [Section 04 - Orchestrating Collections of Services with Kubernetes (3hr25min)](#section-04---orchestrating-collections-of-services-with-kubernetes-3hr25min)
+
 - [Section 05 - Architecture of Multiservice Apps (1hr6min)](#section-05---architecture-of-multiservice-apps-1hr6min)
 - [Section 06 - Leveraging a Cloud Environment for Development (47min)](#section-06---leveraging-a-cloud-environment-for-development-47min)
 - [Section 07 - Response Normalisation Strategies (1hr58min)](#section-07---response-normalisation-strategies-1hr58min)
@@ -36,12 +38,18 @@
 
 ---
 
-## Section 01 - fundamental ideas around Microservices (46min)
+#### Section 1-4 summary
+- learnt about movement of data between services
+- sync and async communication
+- async deals with communicating changes using events sent to an event bus
+- with async - each service is self sufficient (independent of other services)
+- docker - package services
+- kubernetes -> deploy + scale services
 
+## Section 01 - fundamental ideas around Microservices (46min)
 - each feature gets its own `service` (database)
 
 ### Database-per-service
-
 - services do NOT directly access other services database (database-per-service pattern)
   - services can run independently of other services (reliability (single point of failure): db failure -> all fail, and difficult to scale (seperate db so only scale what is needed))
   - database schema changes wont affect other services
@@ -2727,6 +2735,25 @@ skaffold dev
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)
+### 105. big ticket items (CONS of section 1-4)
+- duplicate code (express server setup) 
+  FIX -> build a central library (npm package for common code) to share code between projects
+
+- hard to picture flow of events between services
+  FIX -> define our events in shared library
+
+- hard to remember what properties events should have
+  FIX -> use Typescript
+
+- hard to test event flows
+  FIX -> write tests (automation)
+
+- all of kubernetes was running on computer
+  FIX -> running kubernetes cluster in cloud / Skaffold workflow
+
+- event order execution
+  FIX -> code for concurrency
+
 ---
 ## section 06 - leveraging a cloud environment for development (47min)
 ---
