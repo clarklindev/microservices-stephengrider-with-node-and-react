@@ -2546,11 +2546,11 @@ query-depl-5bf4fdd49f-w2nsj        1/1     Running   0          3h55m
 - there is better way to automate updates to code inside the kubernetes cluster called `Skaffold`
 
 ### 100. Skaffold introduction
-- Skaffold automates a lot of tasks in a kubernetes dev environment
+- Skaffold automates a lot of tasks in a kubernetes `dev` environment
 - makes it super easy to update code in a running pod
 - makes it easy to create/delete objects tied to a project at once
 
-#### install
+#### install Skaffold AND add to path
 - [skaffold.dev](http://skaffold.dev)
 - download
 - do SHA check `certutil -hashfile skaffold-windows-amd64.exe SHA256` against: `https://github.com/GoogleContainerTools/skaffold/releases` and download the .sha256
@@ -2559,6 +2559,134 @@ query-depl-5bf4fdd49f-w2nsj        1/1     Running   0          3h55m
 - add to system environment variables path: `c:\Program Files\skaffold\`
 - open powershell
 - `skaffold` to test
+
+### 101. Skaffold API version Update
+- list API versions that are supported by the version of Skaffold you have installed
+```
+skaffold schema list
+```
+- upgrade skaffold config
+- This will print an updated version of your Skaffold config to the terminal so that you can copy-paste or review and update as needed
+- [skaffold fix](https://skaffold.dev/docs/references/cli/#skaffold-fix) -> Update "skaffold.yaml" in the current folder to the latest version
+```
+skaffold fix
+```
+- The main difference between the two APIs is that the `deploy` and `kubectl` fields no longer exist:
+
+- this is the updated: 
+```yaml
+//updated
+apiVersion: skaffold/v4beta3
+kind: Config
+manifests:
+  rawYaml:
+    - ./infra/k8s/*
+...
+```
+- this is the old way...   
+```yaml
+//old method
+apiVersion: skaffold/v2alpha3
+kind: Config
+deploy:
+  kubectl:
+    manifests:
+      - ./infra/k8s/*
+```
+
+### 102. skaffold setup
+- we setup up skaffold with a config file
+- config tells skaffold how to manage all the projects inside cluster
+- NOTE: skaffold runs outside kubernetes cluster
+```
+mainfests: 
+  - ./infra/k8s/*
+```
+- tells skaffold there is a collection of config files for kubernetes in `infra/k8s/` and it should watch the .yaml files
+- changes to any of the yaml files will cause skaffold to automatically `apply` the config to the kubernetes cluster
+  - ie. you wont have to call: `kubectl apply -f [config file.yaml]`
+- this also ensures when skaffold starts up, the config files in the manifest setting will be applied
+- ensure delete objects related to config files created by kubernetes cluster
+- `build local push:false` (see skaffold.yaml) -> disable uploading to docker hub
+- `artifacts:` - is an array (each entry) -> telling skaffold about project it needs to maintain
+  - specifically (in code below...) it is saying there is a pod running out of client/ directory
+  - when code changes `context: client` in client directory,  skaffold will take those changes and update the pod
+  - 
+    - 2 ways to update pod:
+      1. `- src: "src/**/*.js"` if change in javascript file, skaffold will put it directly in the pod
+      2. other updates in client/ that dont match `src:` -> scaffold will try re-build entire image eg. new package dependency added
+- NOTE: REMINDER yaml indentation is important
+- NOTE: only the react app has `src/` directory, everything else (comments, event-bus, moderation, posts, query) should match just `*.js`
+
+```yaml
+# /blog/skaffold.yaml
+apiVersion: skaffold/v4beta3
+kind: Config
+manifests:
+  rawYaml:
+    - ./infra/k8s/*
+build:
+  local:
+    push: false
+  artifacts:
+    - image: clarklindev/client
+      context: client
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*.js"
+            dest: .
+    - image: clarklindev/comments
+      context: comments
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "*.js"
+            dest: .
+    - image: clarklindev/event-bus
+      context: event-bus
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "*.js"
+            dest: .
+    - image: clarklindev/moderation
+      context: moderation
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "*.js"
+            dest: .
+    - image: clarklindev/posts
+      context: posts
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "*.js"
+            dest: .
+    - image: clarklindev/query
+      context: query
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "*.js"
+            dest: .
+
+```
+
+### 103. skaffold startup
+
+#### startup skaffold:
+- from the project folder (where skaffold.yaml is located): 
+```cmd
+skaffold dev
+```
 
 ---
 ## section 05 - architecture of multiservice apps (1hr6min)

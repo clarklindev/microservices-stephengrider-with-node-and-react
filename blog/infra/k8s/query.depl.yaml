@@ -15,7 +15,6 @@ spec:
       containers:
       - name: query
         image: clarklindev/query:latest
-
 ---
 apiVersion: v1
 kind: Service
