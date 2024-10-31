@@ -2754,6 +2754,82 @@ skaffold dev
 - event order execution
   FIX -> code for concurrency
 
+### 106. App overview
+- StubHub - users selling tickets to concerts/sport events to other users
+- TODO: build a ticketing app (Stubhub clone)
+  - list events
+  - click on event
+    - select date
+      - ticket price -> checkout
+  - concurrency - lock ticket during intention to purchase ticket
+
+### APP FEATURES
+- list a ticket for an event  
+![list tickets](exercise_files/udemy-docker-section05-106-screen01-view-ticket-listings.png)  
+
+- sign up  
+![sign up](exercise_files/udemy-docker-section05-106-screen02-sign-up.png)  
+
+- sign in  
+![sign in](exercise_files/udemy-docker-section05-106-screen03-sign-in.png)  
+
+- logged-in  
+![logged-in](exercise_files/udemy-docker-section05-106-screen04-logged-in-nav.png)
+
+- ticket details  
+![ticket details](exercise_files/udemy-docker-section05-106-screen06-ticket-detail.png)
+
+- payment  
+![payment](exercise_files/udemy-docker-section05-106-screen07-payment.png)
+  
+- card details for payment  
+![card details for payment](exercise_files/udemy-docker-section05-106-screen08-card-details-for-payment.png)
+
+- others can purchase this ticket
+- anyone can list/buy tickets
+- when buying a ticket (go to checkout BUT before payment)-> ticket is locked (for x time) while user attempts to pay (ticket wont be shown to others )
+- failure to purchase within timeframe will unlock ticket
+- ticket seller can update ticket prices if not locked
+
+### 107. resource types
+- App design 
+  1. User store (user , password)
+  2. ticket (title, price, userId, orderId) NOTE: userId is seller; orderId is purchase queue
+  3. Order(intent to purchase ticket) (userId is seller, status (created|cancelled|awaitingpayment|completed), ticketId, expiresAt)
+  4. Charge (orderId, status(created|failed|completed), amount, stripeId, stripeRefundId)
+
+### 108. service types
+- Types of services in App
+- auth (related to user authentication signup|signin|signout)
+- tickets (ticket create|edit|whether ticket can be edited)
+- orders (order creation|edit)
+- expiration (watch for orders to be created, cancels after 15min)
+- payments (handles credit card payments, cancels orders if payment fails, completes if payment succeeds - order/payment failed)
+
+### 109. Events and architecture design
+#### App Events
+- UserCreated
+- UserUpdated
+
+- OrderCreated
+- OrderCancelled
+- OrderExpirred
+
+- TicketCreated
+- TicketUpdated
+
+- ChargeCreated  
+
+![diagram of services](exercise_files/udemy-docker-section05-109-architecture-design.png)
+
+- client uses nextjs
+- all services will use node and mongodb, 
+  - `expiration service` will use Redis
+- services make use of a "common library" npm module
+- for event-bus: NATS Streaming server
+
+ 
+
 ---
 ## section 06 - leveraging a cloud environment for development (47min)
 ---
