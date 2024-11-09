@@ -2961,7 +2961,11 @@ resources:
 
 ---
 
+---
+
 ## section 05 - architecture of multiservice apps (1hr6min)
+
+- folder: `/ticketing`
 
 ### 105. big ticket items (CONS of section 1-4)
 
@@ -3056,9 +3060,20 @@ resources:
 
 ![diagram of services](exercise_files/udemy-docker-section05-109-architecture-design.png)
 
+- Note: the structure of this project
+
+  - client (nextjs)
+  - common
+  - auth service (mongodb)
+  - tickets service (mongodb)
+  - orders service (mongodb)
+  - payments service (mongodb)
+  - expiration service (redis)
+  - NATS Streaming sever
+
 - client uses nextjs
 - all services will use node and mongodb,
-  - `expiration service` will use Redis
+- `expiration service` will use Redis
 - services make use of a "common library" npm module
 - for event-bus: NATS Streaming server
 
@@ -3066,7 +3081,38 @@ resources:
 
 - see [Section 25 - Basics of Typescript (5hr42min)](#section-25---basics-of-typescript-5hr42min)
 
----
+### 111. auth service setup
+
+![udemy-docker-section05-111-auth-service.png](exercise_files/udemy-docker-section05-111-auth-service.png)
+
+- authentication routes:
+
+  - POST -> /api/users/signup
+  - POST -> /api/users/signin
+  - POST -> /api/users/signout
+  - GET -> /api/users/currentuser
+
+- folders:
+
+  - ticketing
+    - auth
+
+- `pnpm i typescript express ts-node-dev @types/express`
+
+#### ts-node-dev
+
+- builds on top of ts-node and introduces features such as fast re-compilation (incremental compilation - meaning it only recompiles the files that have changed) and hot-reloading.
+- using npx: `npx tsc --init` -> creates typescript config
+- NOTE: a global install of typescript is required to run tsc from the terminal -> `tsc --init` -> creates typescript config
+
+#### running the app
+
+- using exercise_files/ticketing/auth
+- note: it is using npm (default package-lock.json). if you use pnpm, you need to convert the npm lock files so pnpm can install the correct package versions: `pnpm import`
+- then you can delete package-lock.json
+- if you run -> it will complain that there is no body-parser so install it (as well as @types/body-parser):
+- `pnpm i body-parser @types/body-parser`
+- `pnpm run start` -> console outputs `Listening on port 3000!`
 
 ## section 06 - leveraging a cloud environment for development (47min)
 
