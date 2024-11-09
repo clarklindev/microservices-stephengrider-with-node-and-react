@@ -2198,7 +2198,7 @@ kubectl rollout restart deployment query-depl
   - note: load balancer is outside the cluster
 - ingress / ingress controller  
   ![ingress controller](exercise_files/udemy-docker-section04-89-ingress-controller.png)
-  - pod with set of routing rules to distribute traffic to other services -> pods
+  - ingress -> pod with set of routing rules to distribute traffic to other services -> pods
 
 ### 90. Ingress Nginx Installation Info
 
@@ -3102,7 +3102,7 @@ resources:
 #### ts-node-dev
 
 - builds on top of ts-node and introduces features such as fast re-compilation (incremental compilation - meaning it only recompiles the files that have changed) and hot-reloading.
-- using npx: `npx tsc --init` -> creates typescript config
+- using npx: `npx tsc --init` -> creates typescript config (without needing global typescript)
 - NOTE: a global install of typescript is required to run tsc from the terminal -> `tsc --init` -> creates typescript config
 
 #### running the app
@@ -3113,6 +3113,260 @@ resources:
 - if you run -> it will complain that there is no body-parser so install it (as well as @types/body-parser):
 - `pnpm i body-parser @types/body-parser`
 - `pnpm run start` -> console outputs `Listening on port 3000!`
+
+### 112. auth k8s setup (auth kubernetes setup)
+
+#### STEP 1 - build docker image
+
+- TODO: create Dockerfile -> build docker image (adds to dockerhub)
+- NOTE: DOCKER IS RUNNING / internet connected
+
+##### pnpm docker command
+
+- this sets up a workdirectory of `/app`,
+- copies everything from current auth directory into that folder and adds start command
+- `.dockerignore` - ignore folder: `node_modules`
+- if you use pnpm, the Dockerfile is different to npm Dockerfile
+- pnpm requires atleast `node:18-alpine`
+- `docker build -t stephengrider/auth .` (use your own docker id)
+
+```Dockerfile
+# Use an official Node.js image
+FROM node:18-alpine
+# Install pnpm
+RUN npm install -g pnpm
+# Set working directory
+WORKDIR /app
+# Copy package.json and pnpm-lock.yaml (pnpm's lockfile)
+COPY package.json pnpm-lock.yaml ./
+# Install dependencies with pnpm
+RUN pnpm install
+# Copy the rest of the application code
+COPY . .
+# Expose the application port
+EXPOSE 3000
+# Run the app
+CMD ["pnpm", "start"]
+```
+
+##### basic Dockerfile
+
+```Dockerfile
+FROM node:alpine
+WORKDIR /app
+COPY package.json .
+RUN npm install
+COPY . .
+CMD ["npm", "start"]
+```
+
+#### STEP2: kubernetes deployment
+
+- TODO: to allow running auth service in kubernetes
+- `infra/k8s/auth-depl.yaml`
+- also define the kubernetes service -> service gives access to a pod
+
+##### kubernetes deployment -> step 1 of 2 - setup selector
+
+- the purpose of this selector is to tell deployment how to find the pods it should create
+
+```yaml
+#...
+selector:
+  matchLabels:
+    app: auth
+#...
+```
+
+##### kubernetes deployment -> step 2 of 2 - setup template
+
+- how to create each pod the template will create
+- note the `template -> labels -> app` is matching up with `selector -> app`
+
+```yaml
+#...
+template:
+  metadata:
+    labels:
+      app: auth
+  spec:
+    containers:
+      - name: auth
+        image: clarklindev/auth:latest
+```
+
+##### add a kubernetes service for auth
+
+- /infra/k8s/auth-depl.yaml
+- the selector tells the service how to find the pods that its supposed to govern access to
+- no type is set as 'cluster ip' is default and allows communication to the service from anything running in the cluster
+
+```yaml
+# /infra/k8s/auth-depl.yaml
+#...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-srv
+spec:
+  selector:
+    app: auth
+  ports:
+    - name: auth
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+```
+
+### 113. adding skaffold
+
+#### STEP 3 - adding skaffold config
+
+- function of skaffold:
+  - watch infra/ anytime there is a change to config, it will apply to cluster
+  - code updates in auth directory, will sync with the appropriate running container inside cluster
+- note: this is the new skaffold v2+ syntax, it lists all the directories we want to sync
+
+```yaml
+manifests:
+  rawYaml:
+    - ./infra/k8s/*
+```
+
+- purpose of skaffold is to:
+
+  1. find all the things to put in the cluster
+  2. build
+  3. put them in the kubernetes cluster
+  4. handle live-code reload
+
+- create ticketing/skaffold.yaml
+- do not push to dockerhub (default)
+- artifacts lists all images to put in cluster
+  - context -> folder that contains all code for this image
+- sync -> tells skaffold how to handle any file changes
+  - src -> folder to watch
+  - `dest: .` -> where to sync to - inside running container
+
+```yaml
+apiVersion: skaffold/v4beta3
+kind: Config
+manifests:
+  rawYaml:
+    - ./infra/k8s/*
+build:
+  local:
+    push: false
+  artifacts:
+    - image: clarklindev/auth
+      context: auth
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+```
+
+##### running skaffold
+
+- from ticketing/ (where skaffold.yaml should be)
+- NOTE: DOCKER IS RUNNING
+- `skaffold dev`
+
+### 114. NOTE: code reload
+
+- update package script
+
+```json
+ts-node-dev --poll src/index.ts
+```
+
+### 115. ingress controller/routing
+
+- to access anything inside cluster, can either
+  1. setup a node port
+  2. set up ingress controller for routing within the cluster
+- add the route to index.ts
+
+```ts
+//src/index.ts
+
+app.get('/api/users/currentuser', (req, res) => {
+  res.send('hi there');
+});
+```
+
+### 116. ingress-Nginx setup
+
+- kubernetes.github.io/ingress-nginx (to setup ingress nginx)
+- this sets up forwarding of requests /api/users to service
+- `nginx.ingress.kubernetes.io/use-regex: 'true'` this says there will be regex in the paths of the file
+- RECALL: rules -> host is a pretend domain from local machine `ticketing.dev`
+- send incoming to `auth-srv` service on port `3000`
+
+```yaml
+# infra/k8s/ingress-srv.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-service
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ticketing.dev
+      http:
+        paths:
+          - path: /api/users/?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: auth-srv
+                port:
+                  number: 3000
+```
+
+### 117. host file and security
+
+- you have to edit the host file (on local machine) for dev setup (route a path to localhost)
+- `c:\windows\System32\Drivers\etc\hosts`
+- set localhost to what was put in ingress -> rules -> host eg. ticketing.dev
+- accessing ticketing.dev will route to localhost (127.0.0.1)
+
+```hosts
+127.0.0.1 ticketing.dev
+```
+
+- after setting this up should be able to visit: `ticketing.dev/api/users/currentuser`
+
+#### security warning
+
+![udemy-docker-section05-117-security-warning.png](exercise_files/udemy-docker-section05-117-security-warning.png)
+
+- NB!
+- WHY? nginx is a webserver that tries to use https connection
+- by default it uses a self-signed certificate (chrome browser does not trust this)
+- FIX: goto the window, click anywhere inside where the security warning is and type `thisisunsafe`
+- exected output: `hi there` which is what was set in `auth/src/index.ts`:
+
+```ts
+//auth/src/index.ts
+app.get('/api/users/currentuser', (req, res) => {
+  res.send('hi there');
+});
+```
+
+#### summary
+
+- so at this point you have automated:
+  - docker image build
+  - containerization and upload to dockerhub
+  - automated image fetching for kubernetes cluster
+  - using skaffold to deploy everthing with single command `skaffold dev`
+  - access your url (on local development) via host file and routing setup (ingres-nginx)
 
 ## section 06 - leveraging a cloud environment for development (47min)
 
