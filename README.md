@@ -3370,7 +3370,63 @@ app.get('/api/users/currentuser', (req, res) => {
 
 ## section 06 - leveraging a cloud environment for development (47min)
 
----
+- OPTIONAL SECTION BUT...
+
+### 118. Note on remote development
+
+- TODO: to learn about how to deploy to google cloud environment. sound exciting? then follow along
+- REQUIRED -> google cloud requires credit card
+
+### 119. remote dev with skaffold
+
+- current architecture  
+  ![udemy-docker-section06-119-remote-dev-with-skaffold-local.png](exercise_files/udemy-docker-section06-119-remote-dev-with-skaffold-local.png)
+
+- cloud architecture  
+  ![udemy-docker-section06-119-remote-dev-with-skaffold-cloud.png](exercise_files/udemy-docker-section06-119-remote-dev-with-skaffold-cloud.png)
+- NOTE: skaffold was developed by teams at google (tight-integration with google cloud)
+- there are 2 types of changes that skaffold handles
+
+  #### 1. synced file changes
+
+  - ( updates of .ts in working project folder mentioned in skaffold.yaml `sync` -> src: `src/**/*.ts`)
+
+  ![udemy-docker-section06-119-remote-dev-with-skaffold-handled-updates-option1.png](exercise_files/udemy-docker-section06-119-remote-dev-with-skaffold-handled-updates-option1.png)
+
+  - no rebuild of image (skaffold takes file and inserts it in the pod of kubernetes cluster)
+
+  #### 2. un-synced file changes
+
+  - (all other changes not mentioned in skaffold.yaml -> sync)
+
+  - causes complete rebuild of image and re-deploy in cluster
+  - skaffold detects changes that are not synced -> reaches out to service in google cloud (called `google cloud build`)
+    - its purpose is to build docker images
+    - skaffold takes files for project + Dockerfile -> uploads to google cloud build -> Docker builder builds images.
+    - GOAL: decrease resources used on local computer
+    - skaffold then reaches out to deployment to inform that new image is available and rebuild pods with latest image
+
+  ![udemy-docker-section06-119-remote-dev-with-skaffold-handled-updates-option2.png](exercise_files/udemy-docker-section06-119-remote-dev-with-skaffold-handled-updates-option2.png)
+
+- SETUP
+  - TODO: google cloud account
+  - TODO: set up kubernetes cluster on google cloud
+  - configure google cloud build
+  - configure skaffold to use google cloud build + remote cluster
+
+### 120. free google cloud credits
+
+- https://cloud.google.com/free
+- signup for $300 free credits
+
+### 121. initial google account setup
+
+- create account
+- create a new project
+
+### 122. kubernetes cluster creation
+
+-
 
 ## section 07 - response normalisation strategies (1hr58min)
 
