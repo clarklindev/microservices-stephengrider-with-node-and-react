@@ -3506,6 +3506,35 @@ Pick configuration to use:
   - update to paid tier
   - adjust: filter 'ssd-total-storage' -> `REGION` -> xxx -> update storage gb
 
+### 125. installing Gcloud context
+
+![udemy-docker-section06-125-install-gcloud-context.png](exercise_files/udemy-docker-section06-125-install-gcloud-context.png)
+
+- you can run `kubectl` locally or in cloud `gcloud components install kubectl`
+- NOTE: DOCKER IS RUNNING
+- then run `gcloud container clusters get-credentials <cluster name>`
+
+- example:
+
+```cmd
+gcloud container clusters get-credentials ticketing-dev
+```
+
+- to see if context was created, right-click docker icon (taskbar) -> kubernetes-context -> [NEW ENTRY]
+- NOTE: you can use this to switch kubernetes config context for `kubectl` commands
+
+#### TROUBLESHOOT
+
+- `CRITICAL: ACTION REQUIRED: gke-gcloud-auth-plugin, which is needed for continued use of kubectl, was not found or is not executable. Install gke-gcloud-auth-plugin for use with kubectl by following https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_plugin`
+- FIX: Install required plugins `gcloud components install gke-gcloud-auth-plugin`
+- RETRY: `gcloud container clusters get-credentials ticketing-dev`
+- EXPECTED:
+
+```cmd-out
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for ticketing-dev.
+```
+
 ## section 07 - response normalisation strategies (1hr58min)
 
 ---
