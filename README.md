@@ -3426,7 +3426,85 @@ app.get('/api/users/currentuser', (req, res) => {
 
 ### 122. kubernetes cluster creation
 
--
+- NOTE: THIS COSTS MONEY
+  - https://cloud.google.com/free/docs/free-cloud-features#kubernetes-engine
+- https://console.cloud.google.com
+- create project
+- create a kubernetes cluster (select Kubernetes engine)
+  - cluster basics -> (switch to default cluster (SELECT THIS) / switch to autopilot cluster (CHEAPER-google manages infrastructure))
+    - `name`
+    - `location type` -> zonal -> zone (select)
+    - `master version` (kubernetes version) -> target: `regular (recommended)` / version: `default`
+  - node pools -> default-pool
+    - number of nodes -> 3
+    - nodes -> machine configuration -> `general purpose` -> `N1` series
+    - machine type -> `g1-small`
+  - TODO: click `create`
+
+### 123. Kubectl Contexts
+
+- local pc -> `kubectl get pods`
+- Todo: Connect to cluster in google cloud?
+  - connect by changing config connection settings (Kubectl Contexts)
+  - add new context via `google cloud dashboard` OR `google cloud sdk`
+
+### install google cloud SDK
+
+![udemy-docker-section06-123-kubectl-contexts.png](exercise_files/udemy-docker-section06-123-kubectl-contexts.png)
+
+- `https://cloud.google.com/sdk/docs/install-sdk` -> download SDK -> google cloud cli:
+
+### install
+
+- download: `https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe`
+- Optional: `https://cloud.google.com/apis/docs/cloud-client-libraries`
+
+### 124. initializing GCloud Sdk
+
+- GOOGLE CLOUD sdk - purpose is to teach Kubectl how to connect to clusters
+- `cloud.google.com/sdk/docs/quickstarts`
+
+### test gcloud is installed
+
+- test sdk: `gcloud`
+
+### login gcloud
+
+```
+gcloud auth login
+```
+
+- redirects you on browser to google login (same account as where we created gcloud project)
+- if successful, result message: you are now logged in as [email address] your current project is `[none]` you can change this setting by running: `gcloud config set project PROJECT_ID`
+
+### configure project
+
+- `gcloud init`
+
+```
+Pick configuration to use:
+ [1] Re-initialize this configuration [default] with new settings
+ [2] Create a new configuration
+```
+
+- give name to configuration eg. `ticketing-dev`
+- select google account
+- ...gives list of all projects in account
+- select `project ID` (see google cloud dashboard -> projects)
+- select region -> YES
+- select region set when creating cluster (if you dont remember check google dashboard -> kubernetes engine)
+  - you can change region `gcloud config set compute/region NAME`
+  - you can change zone `gcloud config set compute/zone NAME`
+
+#### TROUBLESHOOT - creating cluster
+
+- error: `Insufficient regional quota to satisfy request: resource "SSD_TOTAL_GB"`
+
+- Fix OPTION 1 - change the ssd storage space required if running 3 nodes (free tier given 250gb -> 250/3 -> 83gb)
+
+- Fix option 2: `https://console.cloud.google.com/iam-admin/quotas?usage=USED&project=xxx`
+  - update to paid tier
+  - adjust: filter 'ssd-total-storage' -> `REGION` -> xxx -> update storage gb
 
 ## section 07 - response normalisation strategies (1hr58min)
 
