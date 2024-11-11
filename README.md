@@ -3679,6 +3679,10 @@ skaffold dev
   - select history
   - clicking on the build link
 
+#### shutdown kubernetes on gcloud
+
+- shut down the kluster on gcloud -> kubernetes engine -> clusters -> delete
+
 ## section 07 - response normalisation strategies (1hr58min)
 
 ---
