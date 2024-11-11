@@ -4,10 +4,13 @@ manifests:
   rawYaml:
     - ./infra/k8s/*
 build:
-  local:
-    push: false
+  # local:
+  #   push: false
+  googleCloudBuild:
+    projectId: golden-index-441407-u9
   artifacts:
-    - image: clarklindev/auth
+    # - image: clarklindev/auth
+    - image: asia.gcr.io/golden-index-441407-u9/auth
       context: auth
       docker:
         dockerfile: Dockerfile

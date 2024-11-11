@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: auth
-          image: clarklindev/auth:latest
+          # image: clarklindev/auth:latest/auth
+          image: asia.gcr.io/golden-index-441407-u9/auth
 
 ---
 apiVersion: v1
