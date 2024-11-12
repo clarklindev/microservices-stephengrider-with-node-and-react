@@ -37,7 +37,13 @@
 ### Server-side Rendered (SSR) React app
 
 - [Section 11 - Integrating a Server Side Rendered React App (3hr01min)](#section-11---integrating-a-server-side-rendered-react-app-3hr01min)
+
+### Code-sharing and re-use
+
 - [Section 12 - Code Sharing and Re-use Between Services (52min)](#section-12---code-sharing-and-re-use-between-services-52min)
+
+### CRUD server
+
 - [Section 13 - Create-Read-Update-Destroy Server Setup (2hr28min)](#section-13---create-read-update-destroy-server-setup-2hr28min)
 
 ### NATS
@@ -3720,9 +3726,13 @@ skaffold dev
 
 #### shutdown kubernetes on gcloud
 
-- shut down the kluster on gcloud -> kubernetes engine -> clusters -> delete
+- shut down the cluster on gcloud -> kubernetes engine -> clusters -> delete
 
 ## section 07 - response normalisation strategies (1hr58min)
+
+### 130. creating route handlers
+
+- route handlers -> each route gets its own file
 
 ---
 
