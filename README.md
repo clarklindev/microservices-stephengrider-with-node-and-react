@@ -3732,7 +3732,69 @@ skaffold dev
 
 ### 130. creating route handlers
 
-- route handlers -> each route gets its own file
+- this lesson is about express routing -> creating files for each route
+
+#### current routing
+
+- folder: /auth/src/index.ts
+
+```ts
+import express from 'express';
+import { json } from 'body-parser';
+
+const app = express();
+app.use(json());
+
+app.get('/api/users/currentuser', (req, res) => {
+  res.send('hi there');
+});
+
+app.listen(3000, () => {
+  console.log('Listening on port 3000!!!!!!');
+  console.log('visit: https://ticketing.dev/api/users/currentuser');
+});
+```
+
+#### updated routing
+
+- TODO: update route handlers -> each route gets its own file `/auth/src/routes/[x]`
+
+- folder: /auth/src/routes/ and add a file for each route:
+  - src/routes/current-user.ts
+  - src/routes/signin.ts
+  - src/routes/signout.ts
+  - src/routes/signup.ts
+
+```ts
+//auth/src/routes/current-user.ts
+import express from 'express';
+const router = express.Router();
+router.get('/api/users/currentuser', () => {});
+export { router as currentUserRouter };
+```
+
+```ts
+//auth/src/index.ts
+import express from 'express';
+import { json } from 'body-parser';
+import { currentUserRouter } from './routes/current-user'; //import the route
+
+const app = express();
+app.use(json());
+
+app.use(currentUserRouter); //use the route
+
+app.listen(3000, () => {
+  console.log('Listening on port 3000!!!!!!');
+  console.log('visit: https://ticketing.dev/api/users/currentuser');
+});
+```
+
+### 131. scaffolding routes
+
+- src/routes/signin.ts
+- src/routes/signout.ts
+- src/routes/signup.ts
 
 ---
 
