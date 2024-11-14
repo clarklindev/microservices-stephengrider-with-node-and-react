@@ -4045,6 +4045,8 @@ app.use(errorHandler);
 //src/routes/signup.ts
 
 //...
+//NOTE THERE IS UPDATED CODE LATER...
+
 if (!errors.isEmpty()) {
   //   return res.status(400).send(errors.array());
   throw new Error('invalid email or password');
@@ -4065,6 +4067,8 @@ if (!errors.isEmpty()) {
 
 ```ts
 //section05-ticketing/auth/src/middlewares/error-handler.ts
+//NOTE: UPDATED CODE LATER...
+
 import { Request, Response, NextFunction } from 'express';
 
 export const errorHandler = (
@@ -4098,6 +4102,196 @@ throw error;
   - create subclass DatabaseConnectionError
 
 ![udemy-docker-section07-140-encoding-more-info-errors.png](exercise_files/udemy-docker-section07-140-encoding-more-info-errors.png)
+
+### 141. Subclassing for custom errors
+
+#### RequestValidationError
+
+- auth/src/errors/request-validation-error.ts
+
+```ts
+//request-validation-error.ts
+import { ValidationError } from 'express-validator';
+
+export class RequestValidationError extends Error {
+  constructor(private errors: ValidationError[]) {
+    super();
+
+    //only because we are extending a built in class
+    Object.setPrototypeOf(this, RequestValidationError.prototype);
+  }
+}
+
+//usage: throw new RequestValidationError(errors);
+```
+
+#### DatabaseConnectionError
+
+- auth/src/errors/database-connection-error.ts
+
+```ts
+//database-connection-error.ts
+import { ValidationError } from 'express-validator';
+
+export class DatabaseConnectionError extends Error {
+  reason = 'Error connecting to database';
+
+  constructor() {
+    super();
+
+    //only because we are extending a built in class
+    Object.setPrototypeOf(this, DatabaseConnectionError.prototype);
+  }
+}
+
+//usage: throw new DatabaseConnectionError(reason);
+```
+
+#### using the errors
+
+- src/routes/signup.ts
+
+```ts
+import express, { Request, Response } from 'express';
+import { body, validationResult } from 'express-validator';
+
+import { RequestValidationError } from '../errors/request-validation-error';
+import { DatabaseConnectionError } from '../errors/database-connection-error';
+
+const router = express.Router();
+
+router.post(
+  '/api/users/signup',
+  [
+    body('email').isEmail().withMessage('Email must be valid'),
+    body('password')
+      .trim()
+      .isLength({ min: 4, max: 20 })
+      .withMessage('password must be between 4 and 20 characters'),
+  ],
+
+  //validation using express-validator
+  (req: Request, res: Response) => {
+    //return the error to requestor
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      throw new RequestValidationError(errors.array());
+    }
+
+    throw new DatabaseConnectionError();
+
+    res.send({});
+  }
+);
+
+export { router as signupRouter };
+```
+
+### 142. determining error type
+
+- then in middlewares/error-handler.ts check the incoming error to handle appropriately
+
+```ts
+//src/middlewares/error-handler.ts
+import { Request, Response, NextFunction } from 'express';
+
+import { RequestValidationError } from '../errors/request-validation-error';
+import { DatabaseConnectionError } from '../errors/database-connection-error';
+
+export const errorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (err instanceof RequestValidationError) {
+    console.log('handling this error as a request validation error');
+  }
+  if (err instanceof DatabaseConnectionError) {
+    console.log('handling this error as a db connection error');
+  }
+
+  res.status(400).send({
+    message: 'something went wrong',
+  });
+};
+```
+
+### 143. property 'param' does not exist on type 'AlternativeValidationError'
+
+- express-validator library recently released a breaking v7 version where the ValidationError type is now a discriminated union
+  - https://express-validator.github.io/docs/migration-v6-to-v7#telling-error-types-apart
+- renaming `param` to `path`
+  - https://express-validator.github.io/docs/migration-v6-to-v7#renamed-properties
+  - TODO: FIX: update our conditional to add a check for an error of type field and use the new path property
+
+```ts
+if (err instanceof RequestValidationError) {
+  const formattedErrors = err.errors.map((error) => {
+    if (error.type === 'field') {
+      return { message: error.msg, field: error.path };
+    }
+  });
+  return res.status(400).send({ errors: formattedErrors });
+}
+```
+
+### 144. converting errors to responses
+
+![udemy-docker-section07-144-common-response-structure.png](exercise_files/udemy-docker-section07-144-common-response-structure.png)
+
+- common response structure for errors
+
+  - return an object with `errors` property, which will be an array of objects
+    - each object will have a `message` describing error
+    - and optional `field` which describes what area the message is tied to (eg. field:"email")
+
+- generic error should also have same format
+
+```js
+//common response structure
+{
+  errors:{
+    message: string, field?:string
+  }[]
+}
+```
+
+```ts
+//src/middlewares/error-handler.ts
+import { Request, Response, NextFunction } from 'express';
+
+import { RequestValidationError } from '../errors/request-validation-error';
+import { DatabaseConnectionError } from '../errors/database-connection-error';
+
+export const errorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (err instanceof RequestValidationError) {
+    console.log('handling this error as a request validation error');
+    const formattedErrors = err.errors.map((error) => {
+      if (error.type === 'field') {
+        return { message: error.msg, field: error.path };
+      }
+    });
+    return res.status(400).send({ errors: formattedErrors });
+  }
+
+  if (err instanceof DatabaseConnectionError) {
+    console.log('handling this error as a db connection error');
+    return res.status(500).send({ errors: [{ message: err.reason }] });
+  }
+
+  //generic error should also have same format
+  res.status(400).send({
+    errors: [{ message: 'something went wrong' }],
+  });
+};
+```
 
 ## section 08 - database management and modeling (1hr27min)
 
