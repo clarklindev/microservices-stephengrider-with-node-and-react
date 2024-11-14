@@ -21,7 +21,7 @@
 
 - [Section 06 - Leveraging a Cloud Environment for Development (47min)](#section-06---leveraging-a-cloud-environment-for-development-47min)
 
-### Working with data
+### Working with data and error handling
 
 - [Section 07 - Response Normalisation Strategies (1hr58min)](#section-07---response-normalisation-strategies-1hr58min)
 - [Section 08 - Database Management and Modeling (1hr27min)](#section-08---database-management-and-modeling-1hr27min)
@@ -4291,6 +4291,247 @@ export const errorHandler = (
     errors: [{ message: 'something went wrong' }],
   });
 };
+```
+
+### 145. moving logic into Errors
+
+- currently error-handler middleware is holding all the logic for different type of errors
+- TODO:
+  - move logic out to errors
+    - create serializeError() function to create response object with common structure
+      - RequestValidationError -> create serializeError() function
+      - DatabaseConnectionError -> create serializeError() function
+    - status code
+
+```ts
+//database-connection-error.ts
+import { ValidationError } from 'express-validator';
+
+export class DatabaseConnectionError extends Error {
+  reason = 'Error connecting to database';
+  statusCode = 500;
+
+  constructor() {
+    super();
+
+    //only because we are extending a built in class
+    Object.setPrototypeOf(this, DatabaseConnectionError.prototype);
+  }
+
+  serializeError() {
+    return [
+      {
+        message: this.reason,
+      },
+    ];
+  }
+}
+//usage: throw new DatabaseConnectionError(reason);
+```
+
+```ts
+//request-validation-error.ts
+import { ValidationError } from 'express-validator';
+
+export class RequestValidationError extends Error {
+  statusCode = 400;
+
+  constructor(private errors: ValidationError[]) {
+    super();
+
+    //only because we are extending a built in class
+    Object.setPrototypeOf(this, RequestValidationError.prototype);
+  }
+
+  serializeError() {
+    return this.errors.map((err) => {
+      if (err.type === 'field') {
+        return { message: err.msg, field: err.path };
+      }
+      return { message: err.msg };
+    });
+  }
+}
+//usage: throw new RequestValidationError(errors);
+```
+
+### 146. serializeErrors' not assignable to the same proeprty in the base type 'CustomError'
+
+- When adding the `serializeErrors` function in the next lecture you will see the following error:
+
+- [auth] src/errors/request-validation-error.ts(14,3): error TS2416: Property 'serializeErrors' in type 'RequestValidationError' is not assignable to the same property in base type 'CustomError'.
+- This is caused by the modifications we previously made in regard to express-validator v7.
+
+- FIX:
+
+```ts
+  serializeErrors() {
+    return this.errors.map((err) => {
+      if (err.type === 'field') {
+        return { message: err.msg, field: err.path };
+      }
+      return { message: err.msg };
+    });
+  }
+```
+
+### 147. verifying our custom errors
+
+- TODO: ensure that serialize errors always returns the common response structure
+- ie. ensuring implementation is correct
+- we will create AbstractClass (option 2)
+
+![udemy-docker-section07-147-verifying-custom-errors.png](exercise_files/udemy-docker-section07-147-verifying-custom-errors.png)
+
+```ts
+{
+  errors:{
+    message: string, field?:string
+  }[]
+}
+```
+
+- OPTION 1: CustomError interface
+
+```ts
+interface CustomError {
+  statusCode: number;
+  serializeErrors(): {
+    message: string;
+    field?: string;
+  }[];
+}
+
+export class RequestValidationError extends Error implements CustomError {}
+```
+
+- OPTION 2: CustomError Abstract Class
+  - Abstract class -> cannot be instantiated
+  - its used to set up requirements for subclasses
+  - it DOES create a Class when translated to JS (so then can use it in 'instance of' checks)
+  - RequestValidationError and DatabaseConnectionError will extend this CustomError abstract class
+
+### 148. Final Error Related Code
+
+- so Custom-error class is an abstract class that will define the required signatures
+- auth/src/errors/custom-error.ts
+- TODO: pass in message to constructor -> if we pass string message to super() it will still help show console errors eg. `throw new Error('fdfsdfsdfsd')`
+
+```ts
+//auth/src/errors/custom-error.ts
+
+export abstract class CustomError extends Error {
+  abstract statusCode: number;
+
+  constructor(message: string) {
+    super(message);
+
+    Object.setPrototypeOf(this, CustomError.prototype);
+  }
+
+  abstract serializeErrors(): { message: string; field?: string }[];
+}
+
+/*
+//testing abstract class
+class NotFoundError extends CustomError{
+  statusCode = 404
+}
+*/
+```
+
+```ts
+////request-validation-error.ts
+import { CustomError } from './custom-error';
+
+export class RequestValidationError extends CustomError {}
+```
+
+```ts
+//database-connection-error.ts
+import { CustomError } from './custom-error';
+
+export class DatabaseConnectionError extends CustomError {}
+```
+
+- so now Error-handler middleware can use the custom-error
+
+```ts
+//auth/src/errors/custom-error.ts
+import { Request, Response, NextFunction } from 'express';
+
+import { CustomError } from '../errors/custom-error';
+
+export const errorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (err instanceof CustomError) {
+    console.log('handling this error as a request validation error');
+    return res
+      .status(err.statusCode)
+      .send({ errors: err.serializeError(), statusCode: err.statusCode });
+  }
+
+  res.status(400).send({
+    message: 'something went wrong',
+  });
+};
+```
+
+![udemy-docker-section07-148-final-error-related-code.png](exercise_files/udemy-docker-section07-148-final-error-related-code.png)
+
+### 149. how to define new custom errors
+
+- TODO: write error handler for route that does not exist
+
+```ts
+import { CustomError } from './custom-error';
+
+export class NotFoundError extends CustomError {
+  statusCode = 404;
+
+  constructor() {
+    super('route not found');
+
+    //only because we are extending a built in class
+    Object.setPrototypeOf(this, NotFoundError.prototype);
+  }
+
+  serializeError(): { message: string; field?: string }[] {
+    return [{ message: 'not found' }];
+  }
+}
+```
+
+- TEST: throw new NotFoundError()
+
+```ts
+//...
+import { NotFoundError } from './errors/not-found-error';
+
+//testing not found error
+app.all('*', () => {
+  throw new NotFoundError();
+});
+```
+
+### 150. uh oh async error handling
+
+- `async` breaks it because instead of just returning a value, it returns a promise which will eventually resolve to some value in the future
+- we have to rely on calling 'next' function for async passing in the error
+- FIX: dont call next(), use a npm package
+- TODO: installing a npm package - `express-async-errors`
+- that will wait for the async (req, res)=>{} function to complete
+
+```ts
+import 'express-async-errors';
+
+app.all('*', async (req, res, next) => {
+  throw new NotFoundError();
+});
 ```
 
 ## section 08 - database management and modeling (1hr27min)
