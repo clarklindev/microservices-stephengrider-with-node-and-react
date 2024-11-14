@@ -3939,11 +3939,11 @@ router.post(
 
 ### 135. suprising complexity around error
 
-![udemy-docker-section06-135-error-flow.png](exercise_files/udemy-docker-section06-135-error-flow.png)
+![udemy-docker-section07-135-error-flow.png](exercise_files/udemy-docker-section07-135-error-flow.png)
 
 - the structured response we get for errors when calling an endpoint is the result of using `express-validator` package
 
-![udemy-docker-section06-135-multiple-errors.png](exercise_files/udemy-docker-section06-135-multiple-errors.png)
+![udemy-docker-section07-135-multiple-errors.png](exercise_files/udemy-docker-section07-135-multiple-errors.png)
 
 - with microservices using multiple services, each service could be built using a different language/framework and have different api response structure
 - TODO: standardize structure response from these services so we dont have to code for multiple languages to have a consistent error response
@@ -4042,6 +4042,8 @@ app.use(errorHandler);
 - folder: src/routes/signup.ts
 
 ```ts
+//src/routes/signup.ts
+
 //...
 if (!errors.isEmpty()) {
   //   return res.status(400).send(errors.array());
@@ -4055,6 +4057,47 @@ if (!errors.isEmpty()) {
 }
 //...
 ```
+
+### 139 - communicating more info to the error handler
+
+- when you throw a Error('some message'), the error string is assigned to the `err.message` property in the middleware handler
+- TODO: BUT.. instead of being limited to a simple string `new Error('error message')`, we would like to pass on the error object from express-validator
+
+```ts
+//section05-ticketing/auth/src/middlewares/error-handler.ts
+import { Request, Response, NextFunction } from 'express';
+
+export const errorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  console.log('something went wrong', err);
+
+  res.status(400).send({
+    message: err.message, //gets the message passed in
+  });
+};
+```
+
+### 140. encoding more information in an Error (typescript)
+
+- the javascript way to attach additional properties to an error object would be to just attach it eg.
+
+```js
+const error = new Error('Invalid email or password');
+error.reasons = errors.array();
+throw error;
+```
+
+- the typescript way...
+- we want something like an error BUT with some more custom properties (subclass Error)
+- TODO:
+  - create subclass RequestValidationError
+  - create subclass DatabaseConnectionError
+
+![udemy-docker-section07-140-encoding-more-info-errors.png](exercise_files/udemy-docker-section07-140-encoding-more-info-errors.png)
 
 ## section 08 - database management and modeling (1hr27min)
 
