@@ -4298,9 +4298,9 @@ export const errorHandler = (
 - currently error-handler middleware is holding all the logic for different type of errors
 - TODO:
   - move logic out to errors
-    - create serializeError() function to create response object with common structure
-      - RequestValidationError -> create serializeError() function
-      - DatabaseConnectionError -> create serializeError() function
+    - create serializeErrors() function to create response object with common structure
+      - RequestValidationError -> create serializeErrors() function
+      - DatabaseConnectionError -> create serializeErrors() function
     - status code
 
 ```ts
@@ -4318,7 +4318,7 @@ export class DatabaseConnectionError extends Error {
     Object.setPrototypeOf(this, DatabaseConnectionError.prototype);
   }
 
-  serializeError() {
+  serializeErrors() {
     return [
       {
         message: this.reason,
@@ -4343,7 +4343,7 @@ export class RequestValidationError extends Error {
     Object.setPrototypeOf(this, RequestValidationError.prototype);
   }
 
-  serializeError() {
+  serializeErrors() {
     return this.errors.map((err) => {
       if (err.type === 'field') {
         return { message: err.msg, field: err.path };
@@ -4472,7 +4472,7 @@ export const errorHandler = (
     console.log('handling this error as a request validation error');
     return res
       .status(err.statusCode)
-      .send({ errors: err.serializeError(), statusCode: err.statusCode });
+      .send({ errors: err.serializeErrors(), statusCode: err.statusCode });
   }
 
   res.status(400).send({
@@ -4500,7 +4500,7 @@ export class NotFoundError extends CustomError {
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 
-  serializeError(): { message: string; field?: string }[] {
+  serializeErrors(): { message: string; field?: string }[] {
     return [{ message: 'not found' }];
   }
 }
@@ -4886,6 +4886,98 @@ const user = User.build({
 
 - generics -> think of it as types provided to a function as arguments (order sensative)
 - generics allows us to customize the types used inside a Class/function/interface
+
+### 160. user creation
+
+- auth/src/routes/signup.ts
+- check if email already used
+- otherwise, create user and save to mongodb
+- NOTE: at this point, password is still NOT hashed
+- TODO: test with POSTMAN
+
+```ts
+import { User } from '../models/user';
+
+//...
+
+router.post(
+  '/api/users/signup',
+  [
+    body('email').isEmail().withMessage('Email must be valid'),
+    body('password')
+      .trim()
+      .isLength({ min: 4, max: 20 })
+      .withMessage('password must be between 4 and 20 characters'),
+  ],
+
+  //validation using express-validator
+  async (req: Request, res: Response) => {
+    //return the error to requestor
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      throw new RequestValidationError(errors.array());
+    }
+
+    //check if user exists
+    const { email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      console.log('email in use');
+      return res.send({});
+    }
+
+    //password hash
+
+    //create user
+    const user = User.build({ email, password });
+    await user.save(); //save to db
+
+    res.status(201).send(user);
+  }
+);
+
+//...
+```
+
+- TODO:
+  1. password should be hashed
+  2. password should NOT be returned after user is created
+  3. if email already used, do not just send back an empty object
+
+### 161. proper error handling
+
+- need to tell user why creating user failed.
+- can create a custom Error handler `BadRequestError` that we will use anytime there is bad input from user.
+- src/errors/bad-request-error.ts
+
+```ts
+//src/errors/bad-request-error.ts
+import { CustomError } from './custom-error';
+
+export class BadRequestError extends CustomError {
+  statusCode = 400;
+
+  constructor(public message: string) {
+    super(message);
+
+    Object.setPrototypeOf(this, BadRequestError.prototype);
+  }
+
+  serializeErrors(): { message: string; field?: string }[] {
+    return [{ message: this.message }];
+  }
+}
+```
+
+```ts
+//src/routes/signup.ts
+
+if (existingUser) {
+  console.log('email in use');
+  return res.send({});
+}
+```
 
 ## section 09 - authentication strategies and options (2hr48min)
 
