@@ -3,11 +3,18 @@
 ### TODO:
 
 1. start docker desktop (ensure docker + kubernetes started)
+
+- NOTE: docker logged-in
+
 2. ensure correct kubernetes context selected
+
+- NOTE: gcloud project has already been created
+- NOTE: gcloud kubernetes context already created (see readme)
+- NOTE: you already have a project id (configured in infra/k8s/ yaml files)
 
 3. kubernetes engine -> clusters -> switch to standard -> config -> create
 
-- config: zonal -> asia-east1-a
+- config: zonal -> asia-east1-a (pick whats closest)
 - node pools -> nodes -> machine family (N1) -> type: shared core (g1-small) -> bootdisk size (83gb)
 
 4. login gcloud
