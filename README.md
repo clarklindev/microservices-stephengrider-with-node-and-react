@@ -4961,7 +4961,7 @@ export class BadRequestError extends CustomError {
   constructor(public message: string) {
     super(message);
 
-    Object.setPrototypeOf(this, BadRequestError.prototype);
+    Object.setPrototypeOf(this, BadRequestError.prototype); //extending a class of javascript
   }
 
   serializeErrors(): { message: string; field?: string }[] {
@@ -4970,12 +4970,16 @@ export class BadRequestError extends CustomError {
 }
 ```
 
+- update to throw `BadRequestError` and pass-in message
+
 ```ts
 //src/routes/signup.ts
+import { BadRequestError } from '../errors/bad-request-error';
 
 if (existingUser) {
-  console.log('email in use');
-  return res.send({});
+  // console.log('email in use');
+  // return res.send({});
+  throw new BadRequestError('Email in use');
 }
 ```
 
