@@ -1603,7 +1603,7 @@ kubectl logs posts-depl-7b87fbf7f4-clzk7
 
 1. cluster IP -> (we use often) sets up an easy to remember url to access a pod (only exposes pods in the cluster)
 
-- for communication between pods in a kubernetes cluster. eg. `infra/k8s/poSts-depl.yaml`, `infra/k8s/event-bus-depl.yaml`
+- for communication between pods in a kubernetes cluster. eg. `infra/k8s/posts-depl.yaml`, `infra/k8s/event-bus-depl.yaml`
 
 2. Node port -> makes pods accessible from outside the cluster. (usually for dev purpose only) - eg. `infra/k8s/posts-srv.yaml`
 3. load balancer -> (we use often) make a pod accessible from outside the cluster. (correct way to expose pod to outside world)
@@ -4536,7 +4536,151 @@ app.all('*', async (req, res, next) => {
 
 ## section 08 - database management and modeling (1hr27min)
 
+- 16 lessons / 1hr 27min / lesson 151-166
+
+### 151. creating databases in kubernetes
+
+![udemy-docker-section08-151-auth-service-create-database.png](exercise_files/udemy-docker-section08-151-auth-service-create-database.png)
+
+- each service will use mongoose to interface with its own mongodb instance (1 db per service)
+
+#### auth/ install mongoose
+
+- TODO: add mongoose to project
+- folder: `section05-ticketing/auth/`
+
+```
+pnpm i mongoose
+```
+
+##### REFRESH MEMORY
+
+![Kubernetes - types of services](exercise_files/udemy-docker-section04-77-types-of-services.png)
+
+- cluster IP -> (we use often) sets up an easy to remember url to access a pod (only exposes pods in the cluster)
+- for communication between pods in a kubernetes cluster. eg. `infra/k8s/posts-depl.yaml`, `infra/k8s/event-bus-depl.yaml`
+
+#### mongodb depl
+
+- TODO: install instance of mongodb in kubernetes cluster
+- we will run mongodb inside a pod
+- pods are created via deployments
+- to communicate with pod -> create a `cluster ip service`
+- create `section05-ticketing/infra/k8s/auth-mongo-depl.yaml`
+
+##### install mongodb
+
+- folder: `section05-ticketing/infra/k8s/auth-mongo-depl.yaml`
+- NOTE: giving pod a label: `template:metadata:labels:app: auth-mongo`
+- NOTE: selector is how deployment finds the pods it will create: `selector:matchLabels:app: auth-mongo`
+- NOTE: `image: mongo` comes from docker-hub
+
+#### cluster ip service
+
+- TODO: also create cluster ip service so can connect to the pod
+- NOTE: inside service -> `spec: selector: app: auth-mongo` -> this specifies which pods the service has access to
+- NOTE: default mongodb port for listening to traffic -> `27017`
+
+```yaml
+# kubernetes deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-mongo-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-mongo
+  template:
+    metadata:
+      labels:
+        app: auth-mongo
+    spec:
+      containers:
+        - name: auth-mongo
+          image: mongo
 ---
+# cluster ip service
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-mongo-srv
+spec:
+  selector:
+    app: auth-mongo
+  ports:
+    - name: db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+```
+
+- NOTE: `ports: - name: db` -> name is just for console log
+- to deploy with skaffold: `skaffold dev`
+- OR to deploy with kubectl: `kubectl apply -f auth-depl.yaml`
+
+#### ensure kubernetes deployment
+
+- this just ensures we are running a copy of mongodb for our service
+
+```cmd
+kubectl get pods
+```
+
+```output
+NAME                               READY   STATUS    RESTARTS   AGE
+auth-depl-55cdb4bff9-d75ns         1/1     Running   0          52s
+auth-mongo-depl-576b56cb89-w9hqq   1/1     Running   0          52s
+```
+
+#### testing deployment
+
+- https://ticketing.dev/api/users/currentuser
+- type in browser `thisisunsafe` if there is Error regarding SSL certificate
+
+### 152. connecting to mongodb
+
+- creating code so `auth` service can reach out to our deployed mongodb instance
+- NOTE: currently the deployment creates a pod that will host the db
+- NOTE: IF THE POD IS DELETED, THE DB IS DELETED -> this will later be hosted on persistent storage
+- TODO: add mongoose in `auth/src/index.ts`
+- NOTE: mongoose package is already installed
+- mongodb instance is in a pod on the kubernete cluster
+- you can reach the instance via `cluster ip service` ie. you put the name of the cluster ip service
+- so `auth-mongo-srv` (see `infr/k8s/auth-mongo-depl.yaml`) i how we will connect to the service
+- NB: dont forget the mongodb port (27017) you can get this from documentation
+- NB: dont forget the name of the db (if you makeup a name, mongo will use that): we use `auth`
+- NOTE: as of mongoose v6 there is no options object after mongoose connect string.
+
+```ts
+//auth/src/index.ts
+import mongoose from 'mongoose';
+//...
+
+const start = async () => {
+  try {
+    await mongoose.connect('mongodb://auth-mongo-srv:27017/auth'); //connecting to mongodb on cluster ip service
+    console.log('connected to mongodb');
+  } catch (err) {
+    console.error(err);
+  }
+
+  app.listen(3000, () => {
+    console.log('Listening on port 3000!!!!!!');
+    console.log('visit: https://ticketing.dev/api/users/currentuser');
+  });
+};
+
+start();
+```
+
+- expected out:
+
+```console
+[auth] connected to mongodb
+[auth] Listening on port 3000!!!!!!
+```
 
 ## section 09 - authentication strategies and options (2hr48min)
 
