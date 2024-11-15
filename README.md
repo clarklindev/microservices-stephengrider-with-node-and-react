@@ -5003,7 +5003,7 @@ if (existingUser) {
 
 #### sign-in flow
 
-![sign-in flow](exercise_files/udemy-docker-section08-163-password-hashing-sign-in-flow.png)\
+![sign-in flow](exercise_files/udemy-docker-section08-163-password-hashing-sign-in-flow.png)
 
 - when user signs in, we also hash the entered password
 - we find the user in the db (if it exists)
@@ -5019,6 +5019,17 @@ if (existingUser) {
 - salt is what we use to create a random seed
 - when you use scrypt, you get back a buffer (array with raw-data inside) -> type cast `as Buffer`
 - note: returning the hash concatenated with the salt
+
+### 165. comparing hashed password
+
+#### get the hashed password
+
+- so the toHash function returns the password hash AND salt
+- to get the individual parts: `const [hashedPassword, salt] = storedPassword.split('.');`
+
+#### hash the supplied password
+
+- hash suplied password and convert buffer to hex
 
 ```ts
 //src/services/password.ts
@@ -5040,9 +5051,41 @@ export class Password {
     return `${buf.toString('hex')}.${salt}`;
   }
 
-  static compare(storedPassword: string, suppliedPassword: string) {}
+  static async compare(storedPassword: string, suppliedPassword: string) {
+    const [hashedPassword, salt] = storedPassword.split('.');
+
+    const buf = (await scryptAsync(suppliedPassword, salt, 64)) as Buffer;
+
+    return buf.toString('hex') === hashedPassword;
+  }
 }
 ```
+
+### 166. mongoose pre-save hooks
+
+- TODO: import password class into `src/models/user.ts`
+- when we try save user to database, the saving will be intercepted -> the password will be hashed and overwritten on the document
+- NOTE:
+- `userSchema.pre('save', async function (done) {}` is a middleware function for mongoose (anytime we save document, we will execute the function)
+- need to call `done()` once we do what we need to
+- NOTE: we need to use an `function` keyword to maintain `this` (Document) context and not an arrow function
+- only hash password if password was updated
+- TEST WITH POSTMAN: it should return hashed password
+
+```ts
+import { Password } from '../services/password';
+
+userSchema.pre('save', async function (done) {
+  //only hash password if password was updated
+  if (this.isModified('password')) {
+    const hashed = await Password.toHash(this.get('password'));
+    this.set('password', hashed);
+  }
+  done();
+});
+```
+
+TODO: response -> how to consider a user as logged-in (eg. jwt/cookie/session)
 
 ## section 09 - authentication strategies and options (2hr48min)
 
