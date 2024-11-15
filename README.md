@@ -4983,6 +4983,67 @@ if (existingUser) {
 }
 ```
 
+### 162. note on password hashing
+
+- use given code if you dont want to do this part
+
+### 163. reminder on password hashing
+
+- TODO: hashing user password
+
+![udemy-docker-section08-163-password-hashing-bad-approach.png](exercise_files/udemy-docker-section08-163-password-hashing-bad-approach.png)
+
+- basically we dont store passwords in db because of security concerns (eg. being hacked will expose the password / developers can access database data)
+
+#### Signup flow
+
+![sign-up flow](exercise_files/udemy-docker-section08-163-password-hashing-sign-up-flow.png)
+
+- FIX -> hash the password -> gives unique characters -> we then store the hashed string in db.
+
+#### sign-in flow
+
+![sign-in flow](exercise_files/udemy-docker-section08-163-password-hashing-sign-in-flow.png)\
+
+- when user signs in, we also hash the entered password
+- we find the user in the db (if it exists)
+- and compare the hashed passwords
+
+### 164. adding password hashing
+
+- TODO: split up hashing logic functions into separate class (not in src/models/user.ts) that is responsible for taking a string and hashing it
+- TODO: create a function to compare 2 hashed strings
+
+- `scrypt` is hashing function (callback based)
+- `promisify` takes callback and makes it a promise-based implementation
+- salt is what we use to create a random seed
+- when you use scrypt, you get back a buffer (array with raw-data inside) -> type cast `as Buffer`
+- note: returning the hash concatenated with the salt
+
+```ts
+//src/services/password.ts
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
+
+const scryptAsync = promisify(scrypt); //going from callback implementation to async implementation
+
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
+
+const scryptAsync = promisify(scrypt); //going from callback implementation to async implementation
+
+export class Password {
+  static async toHash(password: string) {
+    const salt = randomBytes(8).toString('hex');
+    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+
+    return `${buf.toString('hex')}.${salt}`;
+  }
+
+  static compare(storedPassword: string, suppliedPassword: string) {}
+}
+```
+
 ## section 09 - authentication strategies and options (2hr48min)
 
 ---
