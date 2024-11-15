@@ -4682,6 +4682,211 @@ start();
 [auth] Listening on port 3000!!!!!!
 ```
 
+### 153. understanding signup flow
+
+- auth/src/routes/signup.ts
+
+![udemy-docker-section08-153-signup-flow.png](exercise_files/udemy-docker-section08-153-signup-flow.png)
+
+#### Steps
+
+1. react app makes request to Auth service (email + password)
+2. check - does email already exist -> check in db
+3. hash password
+4. create new user and save to mongodb
+5. user is now logged in -> respond with cookie/jwt/something
+
+- requires mongoose User model
+- mongoose doesnt work well with typescript
+
+### 154. getting typescript and mongoose to cooperate
+
+![udemy-docker-section08-154-model-vs-document.png](exercise_files/udemy-docker-section08-154-model-vs-document.png)
+
+- `mongoose user model` -> represents entire collection of users
+- `mongoose user document` -> represents one single user
+
+#### issues with mongoose/typescript
+
+1. - creating a new user document, typescript wants to make sure correct properties are provided
+2. - properties passed to constructor dont match up with properties available on a user. BUT typescript wants to know this
+
+### 155. creating the user model
+
+- creating a mongoose `user` schema tells mongoose all the properties a user will have
+- note: working with mongoose.Schema `type:String`, this is for mongoose.. not typescript (which would use `:string`), it is js type `String`
+- we can feed this Schema into mongoose, and mongoose will create a new model from it
+- this model is how we access a big set of data inside mongodb database
+- auth/src/models/user.ts
+
+```ts
+//auth/src/models/user.ts
+
+import mongoose from 'mongoose';
+
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
+const User = mongoose.model('User', userSchema);
+
+export { User };
+```
+
+### 156. type checking User properties
+
+- if we try create an instance on User, typescript doesnt know what types are of the properties it can receive (only mongoose schema)
+
+```ts
+new User({
+  email: 'test@test.com',
+  password: 'blah',
+});
+```
+
+- FIX: for Typescript, create interfaces and a `buildUser()` function instead of calling `new User({})` directly
+- ie. we add a step to get typescript involved in creating instance of model
+
+```ts
+//src/models/user.ts
+
+//an interface that describes the properties that are required to create a new User
+interface UserAttrs {
+  email: string;
+  password: string;
+}
+
+const buildUser = (attrs: UserAttrs) => {
+  return new User(attrs);
+};
+```
+
+- then calling `buildUser()` will have full Typescript support
+- `buildUser` is the function we also export
+
+```ts
+//NOTE: MORE UPDATED CODE TO COME
+import mongoose from 'mongoose';
+
+//requirements for a USER -> an interface that describes the properties that are required to create a new User
+interface UserAttrs {
+  email: string;
+  password: string;
+}
+
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
+const User = mongoose.model('User', userSchema);
+
+const buildUser = (attrs: UserAttrs) => {
+  return new User(attrs);
+};
+
+export { User, buildUser };
+```
+
+### 157. Adding static properties to Model
+
+- we want to make it easier
+
+```ts
+User.build({
+  email: '',
+  password: '',
+});
+```
+
+- this will remove the need to export `buildUser`
+
+#### adding static properties to the model
+
+- typescript doesnt understand adding `statics.build` to `userSchema` object
+- FIX: add an interface that tells typescript there is a build function available on the User model
+- FIX: add this interface to tell typescript `const User = mongoose.model<any, UserModel>('User', userSchema);`
+
+```ts
+//src/models/user.ts
+
+//...
+//USER MODEL - methods associated with User model -> an interface that describes the properties that a User model has
+interface UserModel extends mongoose.Model<any> {
+  build(attrs: UserAttrs): any;
+}
+
+userSchema.statics.build = (attrs: UserAttrs) => {
+  return new User(attrs);
+};
+
+// this is later updated...
+const User = mongoose.model<any, UserModel>('User', userSchema);
+
+export { User };
+```
+
+- usage and typescript now understand the properties build function should receive (no more vscode warnings)
+
+```ts
+User.build({
+  email: 'test@test.com',
+  password: 'password',
+});
+```
+
+### 158. defining extra Document properties
+
+- the properties that we pass to the User constructor don't necessarily match up with the properties available on a user
+- TODO: add an interface that describes the properties that a User Document has (single user)
+- NOTE: the return type is different to `UserAttrs` because `UserDoc` can contain additional properties added by eg. mongoose
+
+```ts
+//USER MODEL - methods associated with User model -> an interface that describes the properties that a User model has
+interface UserModel extends mongoose.Model<any> {
+  build(attrs: UserAttrs): any;
+}
+
+//USER DOCUMENT -> an interface that describes the properties that a User Document has (single user)
+interface UserDoc extends mongoose.Document {
+  email: string;
+  password: string;
+  //additional properties mongoose adds
+}
+
+//...
+const User = mongoose.model<UserDoc, UserModel>('User', userSchema);
+```
+
+- usage -> hovering over user will tell us the return type is `UserDoc`
+
+```ts
+const user = User.build({
+  email: 'test@test.com',
+  password: 'password',
+});
+```
+
+### 159. what's the angle branckets? (Generics)
+
+![udemy-docker-section08-159-typescript-generics.png](exercise_files/udemy-docker-section08-159-typescript-generics.png)
+
+- generics -> think of it as types provided to a function as arguments (order sensative)
+- generics allows us to customize the types used inside a Class/function/interface
+
 ## section 09 - authentication strategies and options (2hr48min)
 
 ---
