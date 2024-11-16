@@ -5451,6 +5451,130 @@ eyJqd3QiOiJleUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKcFpDSTZJalkzTXpn
 
 ![udemy-docker-section09-177-shared-signing-key-across-services.png](exercise_files/udemy-docker-section09-177-shared-signing-key-across-services.png)
 
+### 178. securely storing secrets with kubernetes
+
+- this signing key should be securely stored and we can do this with kubernetes by using secrets
+- NOTE: the Pod contains the container (eg. Auth, Orders, Payments) and the container has environment variables
+- using secrets, we can get the signing secret to all services that need it
+
+![udemy-docker-section09-178-kubernetes-secrets.png](exercise_files/udemy-docker-section09-178-kubernetes-secrets.png)
+
+### 179. creating and accessing secrets
+
+#### creating a kubernetes secret - imperative approach
+
+- eg. create a secret named `jwt-secret` with key:`JWT_KEY` value `asdf`
+- you can assign many key/value pairs to a secret
+- this is an imperative command -> ie. directly create a kubernetes object
+- the reason this is done imperatively is because we do NOT want our secret stored in the config file
+
+![udemy-docker-section09-179-imperatively-creating-secret.png](exercise_files/udemy-docker-section09-179-imperatively-creating-secret.png)
+
+- from section05-ticketing/
+
+```cmd
+kubectl create secret generic jwt-secret --from-literal=JWT_KEY=asdf
+```
+
+```cmd-out
+secret/jwt-secret created
+```
+
+- NOTE: this command should be stored somewhere (not viewable in repository and referenced everytime you start a new cluster)
+- testing/development environment
+- downside of imperative approach, you have to remember the secrets
+
+#### creating a kubernetes secret - declarative approach
+
+- whereas with config files it is more declarative approach where the config file gets applied
+- technially we can store this in an environment variable locally on machine and refer to from config file...
+- production env
+
+##### Create Kubernetes secret from an .env file
+
+- From [Q&A](https://www.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19119820#questions/20826228)
+
+- Kubernetes can consume key-value pairs from any plain text format file such as .txt or .env.
+- To do so, created a `.kubectl.env` file with a key-value pair in it:
+
+```env
+<!-- .kubectl.env -->
+JWT_KEY=secret_key
+```
+
+- `kubectl delete secret jwt-secret` - Before you can consume it you need to remove the key created from a string
+- `kubectl create secret generic jwt-secret --from-env-file=.kubectl.env` - create a secret again from the file
+- `kubectl get secrets` - To list all the created secrets issue a Kubectl command
+- `kubectl describe secret jwt-secret` - to get data on the jwt-secret:
+
+### TODO: get the secret into the pods
+
+- the secret should be set as environment variables for the pods
+- this is set in the deployment config files -> tells kubernetes (when creating pod) to find secret -> get key/value -> assign as environment variables in container
+- infra/k8s/auth-depl.yaml
+
+```yaml
+# infra/k8s/auth-depl.yaml
+#...
+spec:
+  containers:
+    - name: auth
+      # image: clarklindev/auth:latest/auth
+      image: asia.gcr.io/golden-index-441407-u9/auth
+      env:
+        - name: JWT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: JWT_KEY
+#...
+```
+
+- after this change skaffold should pick-up a change was made
+
+![udemy-docker-section09-179-accessing-secret.png](exercise_files/udemy-docker-section09-179-accessing-secret.png)
+
+- NOTE: if you try load a secret (that does not exist) in a pod -> kubernetes wont start up that pod.
+
+### 180. accessing the env variable in a pod
+
+- NOTE: at this point the secret has been created, the container has a reference to the secret
+- TODO: reference from pod (auth/src/routes/signup.ts) the env variable `JWT_KEY`:
+
+  - src/routes/signup.ts
+
+- typescript complains about the environment variable possible not existing...
+
+```ts
+//src/routes/signup.ts
+const userJwt = jwt.sign(
+  {
+    id: user.id, //id from mongodb
+    email: user.email,
+  },
+  // 'asdf' //signing key NOTE: for production this should go in kubernetes
+  process.env.JWT_KEY!
+);
+```
+
+- FIX: build check in index.ts of project:
+
+```ts
+//auth/src/index.ts
+//...
+if (!process.env.JWT_KEY) {
+  throw new Error('JWT_KEY must be defined');
+}
+//...
+```
+
+![udemy-docker-section09-180-env-variable-check-on-start.png](exercise_files/udemy-docker-section09-180-env-variable-check-on-start.png)
+
+- if we add the check to index.ts and typscript still complains in src/routes/signup.ts, we can tell typescript to ignore this check by appending '!'
+  - eg: `process.env.JWT_KEY!`
+
+### 181. common response properties
+
 ## section 10 - testing isolated microservices (1hr22min)
 
 ---

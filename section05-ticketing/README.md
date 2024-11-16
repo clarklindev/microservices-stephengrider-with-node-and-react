@@ -83,3 +83,13 @@ FIX: click on browser page and type 'thisisunsafe' -> hi there
 13. shutting down
 
 - from gcloud console -> shutdown kubernetes cluster (this costs money to keep running)
+
+14. creating and accessing secrets for pods (JWT signing key)
+
+- NOTE: everytime you start up kubernetes kluster, if you used imperative approach for creating secrets, you have to initialize the create secret commands again in the commandline.
+
+- see notes 179. creating and accessing secrets
+
+```
+kubectl create secret generic jwt-secret --from-literal=JWT_KEY=asdf
+```

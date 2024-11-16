@@ -48,7 +48,8 @@ router.post(
         id: user.id, //id from mongodb
         email: user.email,
       },
-      'asdf' //signing key NOTE: for production this should go in kubernetes
+      // 'asdf' //signing key NOTE: for production this should go in kubernetes
+      process.env.JWT_KEY!
     );
 
     //store on req.session object
