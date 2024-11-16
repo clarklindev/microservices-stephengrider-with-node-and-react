@@ -5087,6 +5087,8 @@ userSchema.pre('save', async function (done) {
 
 TODO: response -> how to consider a user as logged-in (eg. jwt/cookie/session)
 
+---
+
 ## section 09 - authentication strategies and options (2hr48min)
 
 - lesson 167 -> 192 (26 lessons) / 2hr 48min
@@ -5165,6 +5167,107 @@ TODO: response -> how to consider a user as logged-in (eg. jwt/cookie/session)
   - the banned event time limit just needs to be the same time as lifecycle of a jwt token/cookie - afterwards, the service will know the jwt is expired
 
 ![udemy-docker-section09-170-banned-event.png](exercise_files/udemy-docker-section09-170-banned-event.png)
+
+### 171. reminder on cookies vs JWT
+
+- difference between JWT and cookies - NOT THE SAME THING
+
+#### COOKIES
+
+- when server sends a response back from server, it can optionally include a header with `Set-Cookie` and a value.
+- this cookie is stored by the browser and - later when a request is made to server (same domain + port), the header of the request will included this cookie.
+
+![udemy-docker-section09-171-cookies.png](exercise_files/udemy-docker-section09-171-cookies.png)
+
+#### JWT
+
+- JWT takes a payload (any information we want to have access to) -> put in JWT creation algorithm -> gives us a Jason web token (JWT) (3 parts)
+- we can take the JWT and decode it to extract the information
+
+![udemy-docker-section09-171-JWT.png](exercise_files/udemy-docker-section09-171-JWT.png)
+
+- the token can be communicated between browser and server:
+  1. JWT put inside request Authorization header
+  2. JWT put in body of request
+  3. JWT put inside request header cookie - here JWT stores auth information, cookie is the transport mechanism
+
+![udemy-docker-section09-171-jwt-token-include-options.png](exercise_files/udemy-docker-section09-171-jwt-token-include-options.png)
+
+### Cookies vs JWT
+
+#### Cookies
+
+- cookies are a transport mechanism
+- moves any kind of data between browser and server
+- automatically managed by browser
+
+#### JWT
+
+- authentication/authorization mechanism
+- store any data we want
+- have to manage it manually
+
+![udemy-docker-section09-171-cookies-vs-jwt.png](exercise_files/udemy-docker-section09-171-cookies-vs-jwt.png)
+
+### 172. microservices auth requirements
+
+- cookies -> cookie based authentication -> is when we have a cookie that stores the encrypted token
+
+![udemy-docker-section09-172-auth-requirements-jwt.png](exercise_files/udemy-docker-section09-172-auth-requirements-jwt.png)
+
+#### Requirement 1 - needs to be able to store more info in auth mechanism
+
+- fundamental option 2 -> the auth mechanism will also contain more details about the logged in user (more than just isAuthenticated, eg. id/email/has credit card linked)
+
+![udemy-docker-section09-172-auth-requirements-store-additional-info.png](exercise_files/udemy-docker-section09-172-auth-requirements-store-additional-info.png)
+
+#### Requirement 2 - has to include authorization info in auth mechanism
+
+- if feature needs specific authorization before being called eg. coupon generation limited to admin user
+  - check if logged-in
+  - check if user is an admin -> authorized to issue coupons
+
+![udemy-docker-section09-172-auth-requirements-authorization.png](exercise_files/udemy-docker-section09-172-auth-requirements-authorization.png)
+
+#### Requirement 3 - built-in sercure way of expiring tokens
+
+- tamper proof tokens that can expire / be invalidated
+  - JWT will encode expiration time
+
+#### Requirement 4 - auth mechanism compatible with multiple coding languages
+
+- auth mechanism must be usable by multiple languages
+  - cookies dont have same implementation accross different coding languages
+- must be easily implementable
+- shouldnt require backend db to store auth data
+  - JWT doesnt require backend db store to authenticate user
+  - cookies -> sometimes session id's are stored in cookies that refers to session on db
+
+### 173. issues with JWT server side rendering
+
+- TODO: decide how to move JWT token around
+
+#### normal flow of react app
+
+1. initial request for html (script tags)
+2. request for js files -> response with js
+3. react app then request for data -> response with data - but authentication info only required when user requests for data from backend
+
+![udemy-docker-section09-173-normal-react-data-flow.png](exercise_files/udemy-docker-section09-173-normal-react-data-flow.png)
+
+#### server side rendering
+
+- with SSR, initial request returns the fully rendered html file with content
+- so authentication data needs to be available from the initial request to ticketing.dev
+
+![udemy-docker-section09-173-authentication-with-SSR.png](exercise_files/udemy-docker-section09-173-authentication-with-SSR.png)
+
+- the problem is, with the initial load (html), script tag can have js code to load up some code but it cant be customized eg. to first execute some js
+- PROBLEM - cant intercept the intial page load Request to put authorization code in request header, or put token in Request body (requires js)
+- with a cookie the browser attaches it automatically to header
+- so the only way to communicate data between browser and backend on initial load is by storing JWT in cookie
+
+![udemy-docker-section09-173-SSR-headers.png](exercise_files/udemy-docker-section09-173-SSR-headers.png)
 
 ## section 10 - testing isolated microservices (1hr22min)
 
