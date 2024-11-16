@@ -5073,6 +5073,7 @@ export class Password {
 - TEST WITH POSTMAN: it should return hashed password
 
 ```ts
+//src/models/user.ts
 import { Password } from '../services/password';
 
 userSchema.pre('save', async function (done) {
@@ -5268,6 +5269,187 @@ TODO: response -> how to consider a user as logged-in (eg. jwt/cookie/session)
 - so the only way to communicate data between browser and backend on initial load is by storing JWT in cookie
 
 ![udemy-docker-section09-173-SSR-headers.png](exercise_files/udemy-docker-section09-173-SSR-headers.png)
+
+### 174. cookies and encryption
+
+- JWT as authentication mechanism
+- store and manage JWT in cookies
+- use a library to read data out of cookie: `cookie-session`
+- cookie-session -> you can store information in the cookie
+  - must be easily understood between different languages
+  - issues if `cookie-session` encrypts the data as encryption algorithm might not be supported across different languages.
+  - FIX: do not encrypt cookie contents - as JWT itself is tamper resistent
+
+![udemy-docker-section09-174-jwt-inside-cookie.png](exercise_files/udemy-docker-section09-174-jwt-inside-cookie.png)
+
+### 175. adding session support
+
+- auth/ folder
+
+```cmd
+pnpm i cookie-session @types/cookie-session
+```
+
+- TODO: import `cookie-session` and wireup to express app as middleware
+- auth/src/index.ts
+- NOTE: JWT is encrypted so we dont mind cookie is not `signed: false`
+- cookies will only be used if user is visiting over secure https connection `secure: true`
+- and add to express: `app.set('trust proxy', true);` -> traffic is being proxied through application through nginx, express will see stuff is being proxied and will raise that it doesnt trust the http connection -> so we add this so express is aware it is behind a proxy of nginx and trust traffic as secure.
+
+```ts
+// auth/src/index.ts
+import cookieSession from 'cookie-session';
+
+//...
+app.set('trust proxy', true);
+
+app.use(json());
+
+app.use(
+  cookieSession({
+    signed: false,
+    secure: true,
+  })
+);
+```
+
+### 176. generating JWT and storing it inside a cookie
+
+- generating JWT and storing it inside a cookie
+
+#### storing data in cookie
+
+- storing data in cookie via `req.session.` -> any information we store on `session` object will be serialized by `cookie-session` and stored inside the cookie.
+
+#### generating JWT
+
+- package `jsonwebtoken`
+- folder auth/
+
+```cmd
+pnpm i jsonwebtoken @types/jsonwebtoken
+```
+
+- import `import jwt from 'jsonwebtoken';`
+- JWT has method `sign(payload, signing-key)` -> function receives a payload (information to store) and signing-key (secret)
+- JWT has method `verify(token, secret)` -> verify incoming jwt
+- after saving user to database, add JWT to `req.session`
+- the payload for JWT should store information about the user
+  - we have mongodb id
+  - email
+- NOTE: we need to add private key (signing-secret) - here we are hardcoding but it should be secure
+- NOTE: if you add a callback function, it will be async, else it will be synchronous
+- NOTE: setting jwt directly on req.session, typescript will complain, so instead, just assign a new object to req.session with jwt as prop
+- auth/src/routes/signup.ts
+
+```ts
+//auth/src/routes/signup.ts
+
+//...
+import jwt from 'jsonwebtoken';
+
+await user.save();
+//generate JWT
+const userJwt = jwt.sign(
+  {
+    id: user.id,
+    email: user.email,
+  },
+  'asdf' //private key
+);
+//store on req.session object
+req.session = {
+  jwt: userJwt,
+};
+
+//...
+```
+
+- NOTE: you have run: `skaffold dev`
+- when testing with POSTMAN -> our settings specify to only generate cookie if over https
+
+  - POST
+  - URL: https://ticketing.dev/api/users/signup
+  - Content-Type: application/json
+  - body: raw -> JSON ->
+
+  ```json
+  {
+    "email": "test@test.com",
+    "password": "blabla"
+  }
+  ```
+
+![udemy-docker-section09-176-cookie-generated.png](exercise_files/udemy-docker-section09-176-cookie-generated.png)
+
+- NOTE: email can only be used once, otherwise clear the mongodb deployment and try again (but NOTE that mongodb database is set up in kubernetes)
+
+![udemy-docker-section09-177-kubernetes-delete-mongodb-deployment.png](exercise_files/udemy-docker-section09-177-kubernetes-delete-mongodb-deployment.png)
+
+- delete and re-rerun `skaffold dev`
+
+#### troubleshoot
+
+- when testing with POSTMAN -> if you get errors regarding ssl certificates when accessing via https://ticketing.dev/
+- FIX: turn off ssl-certificate verification
+
+## ![udemy-docker-section09-176-ssl-off.png](exercise_files/udemy-docker-section09-176-ssl-off.png)
+
+### 177. JWT signing keys
+
+- the cookie session value contains the `{jwt:userJwt}` object that gets turned into json and gets base 64 encoded
+
+#### base64decode.org
+
+- to decode: [https://www.base64decode.org/](https://www.base64decode.org/)
+- paste the cookie from POSTMAN to base64decode:
+
+```
+eyJqd3QiOiJleUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKcFpDSTZJalkzTXpnMk1tWmpZMlk0WWpBNVkyWTFZVFF6TVRJM1l5SXNJbVZ0WVdsc0lqb2lkR1Z6ZEVCMFpYTjBMbU52YlNJc0ltbGhkQ0k2TVRjek1UYzBPRFl3TkgwLlFIM19YNUktZHNFTzdIQXVlRWVaUGhaRzJGeE9Tb01tMnoyTGJ0WTRxcXMifQ%3D%3D
+```
+
+![udemy-docker-section09-177-base64-decode.png](exercise_files/udemy-docker-section09-177-base64-decode.png)
+
+- the decoded json web token:
+
+```cmd
+{"jwt":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3Mzg2MmZjY2Y4YjA5Y2Y1YTQzMTI3YyIsImVtYWlsIjoidGVzdEB0ZXN0LmNvbSIsImlhdCI6MTczMTc0ODYwNH0.QH3_X5I-dsEO7HAueEeZPhZG2FxOSoMm2z2LbtY4qqs"}
+
+```
+
+#### jwt.io
+
+- notice it has 3 parts separated by '.'
+- to make sense of this: goto `jwt.io` and paste the decoded TOKEN...
+- NOTE: just the value of jwt: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3Mzg2MmZjY2Y4YjA5Y2Y1YTQzMTI3YyIsImVtYWlsIjoidGVzdEB0ZXN0LmNvbSIsImlhdCI6MTczMTc0ODYwNH0.QH3_X5I-dsEO7HAueEeZPhZG2FxOSoMm2z2LbtY4qqs`
+
+![udemy-docker-section09-177-jwt.io.png](exercise_files/udemy-docker-section09-177-jwt.io.png)
+
+- note we enter our 256bit secret we encoded in `auth/routes/signup.ts`
+- ALSO NOTE: this is not the correct way to do it...(DO NOT HARDCODE... we later update this code and put it in kubernetes)
+
+![udemy-docker-section09-177-secret.png](exercise_files/udemy-docker-section09-177-secret.png)
+
+- expected that WITH the secret entered, the token is still the same as what 64bitdecode gives: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3Mzg2MmZjY2Y4YjA5Y2Y1YTQzMTI3YyIsImVtYWlsIjoidGVzdEB0ZXN0LmNvbSIsImlhdCI6MTczMTc0ODYwNH0.QH3_X5I-dsEO7HAueEeZPhZG2FxOSoMm2z2LbtY4qqs`
+
+- if the correct secret is entered, the JWT token value will match 64bitdecode token value
+
+![correct](exercise_files/udemy-docker-section09-177-secret-correct.png)
+
+- an incorrect secret -> yield incorrect JWT token (compared to 64bitdecode)
+
+![incorrect](exercise_files/udemy-docker-section09-177-secret-incorrect.png)
+
+### regarding the signing key...
+
+![udemy-docker-section09-177-jwt-equals-payload+signing-key.png](exercise_files/udemy-docker-section09-177-jwt-equals-payload+signing-key.png)
+
+- when another service receives the jwt token and it needs to decide if the token is valid, it needs this signing key
+- the signing key needs to be shared with the other services but nobody else should be able to get hold of this signing key
+- writing the signing key in the code `auth/routes/signup.ts` IS WRONG (for Production)
+- the signing key should be stored securely in our application, easily shared across services
+
+![udemy-docker-section09-177-shared-signing-key-across-services.png](exercise_files/udemy-docker-section09-177-shared-signing-key-across-services.png)
 
 ## section 10 - testing isolated microservices (1hr22min)
 

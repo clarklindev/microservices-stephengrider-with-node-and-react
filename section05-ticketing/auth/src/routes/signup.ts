@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
+import jwt from 'jsonwebtoken';
 
 import { RequestValidationError } from '../errors/request-validation-error';
 import { BadRequestError } from '../errors/bad-request-error';
@@ -36,10 +37,24 @@ router.post(
     }
 
     //password hash
+    //NOTE THIS IS HANDLED AS MIDDLEWARE BY auth/src/services/passwords.ts
 
     //create user
     const user = User.build({ email, password });
     await user.save(); //save to db
+    //generate JWT
+    const userJwt = jwt.sign(
+      {
+        id: user.id, //id from mongodb
+        email: user.email,
+      },
+      'asdf' //signing key NOTE: for production this should go in kubernetes
+    );
+
+    //store on req.session object
+    req.session = {
+      jwt: userJwt,
+    };
 
     res.status(201).send(user);
   }
