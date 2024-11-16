@@ -5137,6 +5137,35 @@ TODO: response -> how to consider a user as logged-in (eg. jwt/cookie/session)
 
 ### 169. so which solution?
 
+![udemy-docker-section09-169-options-picking-options.png](exercise_files/udemy-docker-section09-169-options-picking-options.png)
+
+- option 2 because of independent services
+
+### 170. solving issues with option2 - tokens with expiration (OPTIONAL)
+
+- TODO: figure out how to ban users with authentication state
+- this lesson is optional because we wont be implementing what is discussed
+- FIX: the solution here is the token/cookie has a time limit (eg. 15 min)
+
+![udemy-docker-section09-170-expiring-tokens.png](exercise_files/udemy-docker-section09-170-expiring-tokens.png)
+
+#### expired token?
+
+- so UserABC at some point will have an expired token (eg. 30min old JWT token and tokens have been set to have time limit of 15min)
+- so the Order Service logic will say token is expired:
+  1. can get new refresh token from Auth Service (and send back to userABC as well)
+  2. reject request letting user know they need to refresh token -> client needs to visit authentication service
+- PROBLEM -> if token is still valid (15min till expire), they have until token expiration to access the site
+
+#### immediate ban -> No access
+
+- TODO: this implementation Authentication Service bans user AND this change should reflect immediately in other services
+- FIX: how? also emit a 'user banned' event to EVENT BUS -> which sends this off to other services - which could store this event in short-lived cache
+  - dont want to store this list of banned
+  - the banned event time limit just needs to be the same time as lifecycle of a jwt token/cookie - afterwards, the service will know the jwt is expired
+
+![udemy-docker-section09-170-banned-event.png](exercise_files/udemy-docker-section09-170-banned-event.png)
+
 ## section 10 - testing isolated microservices (1hr22min)
 
 ---
