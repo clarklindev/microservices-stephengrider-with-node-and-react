@@ -5089,7 +5089,53 @@ TODO: response -> how to consider a user as logged-in (eg. jwt/cookie/session)
 
 ## section 09 - authentication strategies and options (2hr48min)
 
----
+- lesson 167 -> 192 (26 lessons) / 2hr 48min
+
+### 167. fundamental authentication strategies
+
+- User auth with microservices is unsolved problem
+- many ways to do it
+- MAIN GOAL IS TO DECIDE 'IS A PERSON LOGGED IN?'
+
+#### FUNDAMENTAL - OPTION 1
+
+![udemy-docker-section09-167-fundamental-option-1.png](exercise_files/udemy-docker-section09-167-fundamental-option-1.png)
+
+- HOW? let a centralized service decide if a user is logged in eg. ask an `Auth service`
+- service communicates with another service (the auth service) -> will receive the JWT/Cookie and decide if user authenticated
+- CONS -> if auth service goes down. nothing in app that requires authentication checks will work
+
+##### FUNDAMENTAL - OPTION 1.1 (variation of option 1)
+
+![udemy-docker-section09-167-fundamental-option-1.1.png](exercise_files/udemy-docker-section09-167-fundamental-option-1.1.png)
+
+- any request from application will first go through a central gateway (that checks if user is authenticated)
+
+##### FUNDAMENTAL - OPTION 2
+
+![udemy-docker-section09-167-fundamental-option-2.png](exercise_files/udemy-docker-section09-167-fundamental-option-2.png)
+
+- teach each service to decide if a user is authenticated ie. service looks at jwt/cookie to decide if user is authenticated
+- no dependency to outside
+- CONS -> auth logic will be duplicated in each service (BUT can be refactored to shared library)
+- there are downsides for micro services communicating with each other
+
+### 168. huge issues with authentication strategies
+
+#### CONS of each service managing auth logic (OPTION 2)
+
+- once authenticated with (sign-in service), they can use JWT/cookie to do anything
+- PROBLEM is, any other service (eg. orders service) will ONLY look at the valid JWT token and NOT go back to authentication service to validate
+
+##### explained...
+
+- say an admin user needs to ban a user (UserABC) -> sends request to ban user to Auth service (handled by user management logic) -> DB updated to NOT have access
+- eg. now Auth Service updates DB -> user `hasAccess` updated to false -> now AuthService has noted banned user
+- PROBLEM -> follow up requests (to other services eg. Order Service) only looking at valid access token to determine if user is authenticated (it is decoupled -> doesnt communicate with Auth service)
+
+![udemy-docker-section09-168-banned-user.png](exercise_files/udemy-docker-section09-168-banned-user.png)
+
+### 169. so which solution?
 
 ## section 10 - testing isolated microservices (1hr22min)
 
