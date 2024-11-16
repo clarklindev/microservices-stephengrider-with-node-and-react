@@ -5575,6 +5575,98 @@ if (!process.env.JWT_KEY) {
 
 ### 181. common response properties
 
+- note how `signup.ts` successful signup of user calls `res.status(201).send(user);` which returns the whole user object
+
+![udemy-docker-section09-181-signup-returns-full-user-data.png](exercise_files/udemy-docker-section09-181-signup-returns-full-user-data.png)
+
+- we want to remove `password`, and `__v` from response
+- not all databases have the same consistent response...
+  - eg. mongodb returns `_id`
+
+![udemy-docker-section09-181-inconsistent-db-response.png](exercise_files/udemy-docker-section09-181-inconsistent-db-response.png)
+
+- TODO: we need to ensure that when fetching data (from db) there is consistent response from the different services (accross different language/db's) as well.
+  - remove \_\_v
+  - remove password
+  - change \_id to id
+
+### 182. Formatting JSON properties
+
+#### JSON.stringify -> converts JS object to JSON
+
+- a lesson on JS and JSON
+- in browser console...
+
+```js
+const person = { name: 'alex' };
+JSON.stringify(person);
+```
+
+```out
+"{"name": "alex"}"
+```
+
+#### JSON lesson - override how js changes a object to json
+
+- if you add `toJSON()`
+- when you stringify personTwo, js will call this `toJSON()` method
+
+```js
+const personTwo = {
+  name: 'alex',
+  toJSON() {
+    return 1;
+  },
+};
+JSON.stringify(personTwo);
+```
+
+```out
+"1"
+```
+
+![udemy-docker-section09-182-JSON-lesson.png](exercise_files/udemy-docker-section09-182-JSON-lesson.png)
+
+#### toJSON() but for mongoose schema
+
+- src/models/user.ts schema's 2nd property is `toJSON:{}` but implemented as an object
+- we will use `transform(doc, ret)`
+  - `doc` -> mongoose document which is being converted
+  - `ret` -> plain object representation which has been converted
+- we will modify `ret` object directly in place
+- in javascript we use `delete` to remove a property off an object
+- instead of deleting version key `__v`, you can call `versionKey: false`
+- for id, first assign then delete \_id: `ret.id = ret._id; delete ret._id;`
+
+```ts
+//src/models/user.ts
+const userSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    toJSON: {
+      transform(doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.password;
+        delete ret.__v;
+      },
+      // versionKey: false,
+    },
+  }
+);
+```
+
+- NOTE: this is atypical for model definition file -> transform is a view responsibility (in mvc) so it shouldnt really be part of model. return data transformation should be handled by view not the model.
+
 ## section 10 - testing isolated microservices (1hr22min)
 
 ---
