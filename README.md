@@ -81,7 +81,6 @@
 ### Typescript
 
 - [Section 25 - Basics of TypeScript (5hr42min)](#section-25---basics-of-typescript-5hr42min)
-- [Section 26 - Bonus (1min)](#section-26---bonus-1min)
 
 ---
 
@@ -5738,9 +5737,5 @@ const userSchema = new mongoose.Schema(
   - [microservices-with-node-js-and-react](https://www.udemy.com/course/microservices-with-node-js-and-react/) - section 25: appendix B - basics of typescript
   - [typescript-the-complete-developers-guide](https://www.udemy.com/course/typescript-the-complete-developers-guide) - section 01 to section 09
   - [react-and-typescript-build-a-portfolio-project](https://www.udemy.com/course/react-and-typescript-build-a-portfolio-project) - section 26: Appendix:Typescript
-
----
-
-## section 26 - bonus (1min)
 
 ---
