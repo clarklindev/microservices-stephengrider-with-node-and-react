@@ -5666,6 +5666,177 @@ const userSchema = new mongoose.Schema(
 
 - NOTE: this is atypical for model definition file -> transform is a view responsibility (in mvc) so it shouldnt really be part of model. return data transformation should be handled by view not the model.
 
+### 183. Sign-in flow
+
+- the signin flow:
+  - with signin, continues if user exists in db
+  - compares hashed stored password with entered password (hashed)
+  - if the same -> user is considered logged in
+
+![udemy-docker-section09-183-signin-flow.png](exercise_files/udemy-docker-section09-183-signin-flow.png)
+
+- TODO: validation on incoming request (email / password)
+- test with POSTMAN -> POST: `https://ticketing.dev/api/users/signin` header:Content-Type application/json body: {email, password}
+
+```ts
+//src/routes/signin.ts
+import express, { Request, Response } from 'express';
+import { body, validationResult } from 'express-validator';
+import { RequestValidationError } from '../errors/request-validation-error';
+
+const router = express.Router();
+
+router.post(
+  '/api/users/signin',
+  [
+    body('email').isEmail().withMessage('email invalid'),
+    body('password')
+      .trim()
+      .notEmpty()
+      .withMessage('you must supply a password'),
+  ],
+  (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new RequestValidationError(errors.array());
+    }
+  }
+);
+
+export { router as signinRouter };
+```
+
+### 184. common request validation middleware
+
+- extracting error checking (common error handling) code into middleware
+- error handling with middleware using the reusable `validateRequest`
+
+- NOTE:
+  - normal middleware has 3 params (req, res, next)
+  - error handling middleware has 4 params (first is err)
+- `src/middleware/validate-request.ts`
+
+```ts
+//src/middleware/validate-request.ts
+import { Request, Response, NextFunction } from 'express';
+import { validationResult } from 'express-validator';
+import { RequestValidationError } from '../errors/request-validation-error';
+
+export const validateRequest = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new RequestValidationError(errors.array());
+  }
+
+  next();
+};
+```
+
+- using the iddleware in: `src/routes/signup.ts`
+- note: middleware order matters (they run sequentially in-order)
+- so first do validation, then error-handling `validateRequest`
+
+```ts
+// src/routes/signup.ts
+import {
+  body,
+  // validationResult //- moved to middleware
+} from 'express-validator';
+// import { RequestValidationError } from '../errors/request-validation-error'; - moved to middleware
+import { validateRequest } from '../middlewares/validate-request';
+
+//...
+router.post(
+  '/api/users/signup',
+  //MIDDLEWARE
+  //validation
+  [
+    body('email').isEmail().withMessage('Email must be valid'),
+    body('password')
+      .trim()
+      .isLength({ min: 4, max: 20 })
+      .withMessage('password must be between 4 and 20 characters'),
+  ],
+
+  //error handling
+  validateRequest,
+
+  async (req: Request, res: Result) => {}
+);
+
+//...
+```
+
+### 185. sign in logic
+
+- TODO: running a query on collection of users
+  - when working with Mongodb need to import the model (User model): `import { User } from '../models/user'`
+- for sign-in we use a generic error because its safer
+- NOTE: throwing errors gets "picked up" by `middlewares/error-handler.ts`
+  - need to import `BadRequestError`
+- use the `Password` service methods to compare passwords
+- once we confirmed passwords:
+
+  1. generate token (`import jwt from 'jsonwebtoken'`)
+  2. store in req.session object
+
+  - store the found db user (`existingUser`)
+
+  3. send response back
+
+  - 201 (created something)
+  - 200 (success)
+
+- NOTE: docker / kubernetes is running
+- NOTE: skaffold is running
+
+```ts
+//src/routes/signin.ts
+
+import express, { Request, Response } from 'express';
+import {
+  body,
+  // validationResult //- moved to middleware
+} from 'express-validator';
+// import { RequestValidationError } from '../errors/request-validation-error'; - moved to middleware
+import jwt from 'jsonwebtoken';
+import { validateRequest } from '../middlewares/validate-request';
+
+import { User } from '../models/user';
+import { BadRequestError } from '../errors/bad-request-error';
+
+const router = express.Router();
+
+router.post(
+  '/api/users/signin',
+  [
+    body('email').isEmail().withMessage('email invalid'),
+    body('password')
+      .trim()
+      .notEmpty()
+      .withMessage('you must supply a password'),
+  ],
+
+  validateRequest,
+  async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (!existingUser) {
+      throw new BadRequestError('Invalid credentials');
+    }
+
+    const passwordsMatch = await Password.compare();
+  }
+);
+
+export { router as signinRouter };
+```
+
 ## section 10 - testing isolated microservices (1hr22min)
 
 ---

@@ -7,10 +7,11 @@
 - NOTE: docker logged-in
 
 2. ensure correct kubernetes context selected
+   - right click docker-desktop app, select kubernetes context
 
 - NOTE: gcloud project has already been created
 - NOTE: gcloud kubernetes context already created (see readme)
-- NOTE: you already have a project id (configured in infra/k8s/ yaml files)
+- NOTE: you already have a gcloud project id (configured in infra/k8s/ yaml files)
 
 3. kubernetes engine -> clusters -> switch to standard -> config -> create
 
@@ -36,24 +37,39 @@ kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-ad
 
 ```cmd
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0-beta.0/deploy/static/provider/cloud/deploy.yaml
-
 ```
 
-7.  ensure loadbalancer created
+- NOTE: once the kubernetes load balancer is created, you need to get the ip. this ip must be put in the host file (windows/system32/drivers/etc/host):
+  - eg. 134.44.32.54 ticketing.dev (which means if you visit `ticketing.dev`, direct traffic to the load balancer)
+
+7. start skaffold
+
+- section05-ticketing/
+
+```cmd
+skaffold dev
+```
+
+8.  ensure loadbalancer created
 
 ```cmd
 gcloud console -> view all products -> networking -> network services -> load balancer
 ```
 
-8. google cloud dashboard
+#### TROUBLESHOOT
+
+- NOTE: if you delete the load balancer (but no the cluster), running the `create ingres-controller/ load balancer` command doesnt re-create the loadbalancer as the controller still exists.
+- FIX: by deleting and starting again
+
+9. google cloud dashboard
 
 - [google cloud dashboard](https://console.cloud.google.com/apis/dashboard?pli=1)
 
-9. get load balancer ip
+10. get load balancer ip
 
 - [check load balancer](https://console.cloud.google.com/net-services/loadbalancing/)
 
-10. paste in host (save as administrator)
+11. paste in host (save as administrator)
 
 - redirect url ticketing.dev to loadbalancer ip
 
@@ -61,14 +77,6 @@ gcloud console -> view all products -> networking -> network services -> load ba
 
 ```
 34.80.20.175 ticketing.dev
-```
-
-11. start skaffold
-
-- section05-ticketing/
-
-```cmd
-skaffold dev
 ```
 
 12. test by visiting:

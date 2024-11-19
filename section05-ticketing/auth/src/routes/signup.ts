@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
-import { body, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
+import { body } from 'express-validator';
 
-import { RequestValidationError } from '../errors/request-validation-error';
+import { validateRequest } from '../middlewares/validate-request';
 import { BadRequestError } from '../errors/bad-request-error';
 import { User } from '../models/user';
 
@@ -18,14 +18,15 @@ router.post(
       .withMessage('password must be between 4 and 20 characters'),
   ],
 
+  validateRequest,
+
   //validation using express-validator
   async (req: Request, res: Response) => {
-    //return the error to requestor
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      throw new RequestValidationError(errors.array());
-    }
+    //(error checking moved to middlewares/validate-requests.ts)
+    // const errors = validationResult(req);
+    // if (!errors.isEmpty()) {
+    //   throw new RequestValidationError(errors.array());
+    // }
 
     //check if user exists
     const { email, password } = req.body;
@@ -57,6 +58,7 @@ router.post(
       jwt: userJwt,
     };
 
+    //send response
     res.status(201).send(user);
   }
 );

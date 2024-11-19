@@ -15,8 +15,8 @@ export class DatabaseConnectionError extends CustomError {
   serializeErrors() {
     return [
       {
-        message: this.reason,
-      },
+        message: this.reason
+      }
     ];
   }
 }
