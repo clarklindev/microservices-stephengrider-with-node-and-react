@@ -5933,7 +5933,29 @@ router.get('/api/users/currentuser', (req:Request, res:Response) => {
 }
 ```
 
+### 189. sign out
+- signing out user route: `/api/users/signout`
+- you can use npm package `cookie-session` to handle cookie related..like destroying a session
 
+```
+req.session = null
+```
+```ts
+// src/routes/signout.ts
+import express, { Request, Response } from 'express';
+const router = express.Router();
+
+router.post('/api/users/signout', (req:Request, res:Response) => {
+  req.session = null;
+  res.send({});
+});
+
+export { router as signoutRouter };
+
+```
+- Test with POSTMAN:
+  - `https://ticketing.dev/api/users/signout`
+  - in header: Content-Type `application/json`
 
 ## section 10 - testing isolated microservices (1hr22min)
 
