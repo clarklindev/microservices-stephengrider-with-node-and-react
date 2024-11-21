@@ -5957,6 +5957,184 @@ export { router as signoutRouter };
   - `https://ticketing.dev/api/users/signout`
   - in header: Content-Type `application/json`
 
+### 190. creating a current user middleware
+- TODO: create a middleware to check if user is logged in
+- this code should be extacted because we always have to repeat this code in every route that requires auth checking
+- middleware is automatic code execution "automatic check" so makes sense to refactor code.
+
+![udemy-docker-section09-190-extracting-code-as-middleware.png](exercise_files/udemy-docker-section09-190-extracting-code-as-middleware.png) 
+
+- NOTE: with the middleware, we always call `next()` because we want to continue on to the next middleware
+- NOTE: typescript complains that you cant just add new property `req.currentUser` on existing types eg.`:Request` 
+
+
+### 191. augmenting type definitions
+
+![udemy-docker-section09-190-creating-current-user-middleware-typescript-adding-onto-req.png](exercise_files/udemy-docker-section09-190-creating-current-user-middleware-typescript-adding-onto-req.png)
+
+- the type definition file for express is specific for the properties of type Request, type Response.
+- TODO: specify the return type of payload from the call to `jwt.verify()`
+- HOW? - create an interface that describes the payload
+
+```ts
+interface UserPayload{
+  id: string;
+  email: string;
+}
+
+//...
+const payload = jwt.verify(req.session.jwt, process.env.JWT_KEY!) as UserPayload;
+req.currentUser = payload;
+```
+
+- then we augment the definition of what a request object is
+- we reach into an existing type definition and make a modification by adding an additional property (without 'extend')
+- NOTE: currentUser? property added as optional
+
+```ts
+declare global {
+  namespace Express{
+    interface Request{
+      currentUser?: UserPayload;
+    }
+  }
+}
+```
+- after fix:  
+
+![udemy-docker-section09-190-creating-current-user-middleware-typescript-adding-onto-req-after-fix.png](exercise_files/udemy-docker-section09-190-creating-current-user-middleware-typescript-adding-onto-req-after-fix.png)
+
+- so after middlewares/current-user.ts we can import the middleware in routes/current-user.ts
+```ts
+//middlewares/current-user.ts
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+
+import { CustomError } from '../errors/custom-error';
+
+interface UserPayload{
+  id: string;
+  email: string;
+}
+
+declare global {
+  namespace Express{
+    interface Request{
+      currentUser?: UserPayload;
+    }
+  }
+}
+
+export const currentUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if(!req.session?.jwt){
+    return next();
+  }
+
+  try{
+    const payload = jwt.verify(req.session.jwt, process.env.JWT_KEY!) as UserPayload;
+    req.currentUser = payload;
+  }
+  catch(err){
+  }
+  next();
+
+};
+
+```
+### use the middleware
+- just import the middleware: `import {currentUser} from '../middlewares/current-user';`
+- add to route function: `router.get('/api/users/currentuser', currentUser, (req:Request, res:Response) => {}`
+- routes/current-user.ts
+- NOTE: this extracted middleware is inside Auth service, but we could extract it into a common library
+
+```ts
+//routes/current-user.ts
+import express, {Request, Response} from 'express';
+import jwt from 'jsonwebtoken';
+
+import {currentUser} from '../middlewares/current-user';
+
+const router = express.Router();
+
+router.get('/api/users/currentuser', currentUser, (req:Request, res:Response) => {
+  res.send({currentUser: req.currentUser || null});
+});
+
+export { router as currentUserRouter };
+
+```
+
+### 192. Requiring Auth for Route Access  
+
+![udemy-docker-section09-190-extracting-code-as-middleware.png](exercise_files/udemy-docker-section09-190-extracting-code-as-middleware.png) 
+- TODO: make middleware to reject request if user not logged in ie. respond with an error
+
+#### Middleware throwing NotAuthorizedError
+- middlewares/require-auth.ts
+- import { NotAuthorizedError } from '../errors/not-authorized-error';
+
+```ts
+//middlewares/require-auth.ts
+import {Request, Response, NextFunction} from 'express';
+import { NotAuthorizedError } from '../errors/not-authorized-error';
+
+export const requireAuth = (req:Request, res:Response, next:NextFunction) => {
+  if(!req.currentUser){
+    throw new NotAuthorizedError();
+  }
+
+  next();
+}
+```
+
+#### NotAuthorizedError
+- TODO: make a new custom error to handle when user tries to access a resource they are not authorized to access.
+- `src/middlewares/require-auth.ts`
+
+```ts
+import {CustomError} from './custom-error';
+
+export class NotAuthorizedError extends CustomError{
+  statusCode = 401;
+
+  constructor(){
+    super('Not authorized');
+    Object.setPrototypeOf(this, NotAuthorizedError.prototype);
+  }
+
+  serializeErrors(): { message: string; field?: string; }[] {
+    return [{message: 'Not authorized'}]
+  }
+}
+```
+### Testing require-auth.ts
+- NOTE: we temporarily add the middleware to current-user.ts because currently it doesnt have auth checking yet...
+- `requireAuth` middleware should come after `currentUser` middleware
+- middlewares/current-user.ts
+
+```ts
+//middlewares/current-user.ts
+import express, {Request, Response} from 'express';
+import jwt from 'jsonwebtoken';
+
+import {currentUser} from '../middlewares/current-user';
+import { requireAuth } from '../middlewares/require-auth';
+
+const router = express.Router();
+
+router.get('/api/users/currentuser', currentUser, requireAuth, (req:Request, res:Response) => {
+  res.send({currentUser: req.currentUser || null});
+});
+
+export { router as currentUserRouter };
+
+```
+
+```
 ## section 10 - testing isolated microservices (1hr22min)
 
 ---
