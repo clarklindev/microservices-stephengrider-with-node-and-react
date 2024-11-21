@@ -15,7 +15,7 @@ spec:
       containers:
         - name: auth
           # image: clarklindev/auth:latest/auth
-          image: asia.gcr.io/golden-index-441407-u9/auth
+          image: asia.gcr.io/golden-index-441407-u9/auth:latest
           env:
             - name: JWT_KEY
               valueFrom:

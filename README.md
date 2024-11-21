@@ -2285,7 +2285,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 ```
 
 - The YAML manifest in the command above was generated with helm template, so you will end up with almost the same resources as if you had used Helm to install the controller.
-- looking at the yaml, notice: it is creating an load balancer (Kind: service)
+- looking at the yaml (sourcecode), notice: it is creating an load balancer (Kind: service)
 
 ```
 apiVersion: v1
@@ -3337,6 +3337,8 @@ ts-node-dev --poll src/index.ts
   1. setup a node port
   2. set up ingress controller for routing within the cluster
 - add the route to index.ts
+- NOTE: res.send -> http response
+- NOTE: res.json -> sends json response
 
 ```ts
 //src/index.ts
@@ -5840,6 +5842,98 @@ router.post(
 
 export { router as signinRouter };
 ```
+
+### 187. Current-user handler
+
+- this route `/api/users/currentuser` will figure out if user is signed in the app
+
+![udemy-docker-section09-187-current-user.png](exercise_files/udemy-docker-section09-187-current-user.png)
+
+- routes/current-user.ts
+- when the react app wants to figure out if user is signed in
+  - the react app cannot inspect the cookie to decide if there is a valid JWT
+  - NOTE: cookies cannot be accessed from javascript running in the browser
+  - if the user is logged-in, it will include a cookie (`req.session.jwt`), if not logged-in, there wont be a JWT
+    - early return if not set: `{currentUser: null}`
+    - early return if invalid: `{currentUser: null}`
+  - if it is valid - send back the info stored in the JWT (payload): `{currentUser: {id:'', email:''}}`
+
+### 188. returning the current user
+- this must first be called
+
+```ts
+//src/index.ts
+app.use(
+  cookieSession({
+    signed: false,
+    secure: true,
+  })
+);
+```
+
+![udemy-docker-section09-188-CookieSessionObjectType.png](exercise_files/udemy-docker-section09-188-CookieSessionObjectType.png)
+
+- note: req.session will only be `null` or `undefined` if this if statement is called before index initializes the cookieSession.
+- if cookieSession() is called first, then below code wont be null so check if req.session exists too
+- otherwise send back a payload.
+- `verify()` uses the `JWT_KEY` to decode the token
+- we already did the check in start() of index.ts for JWT_KEY so we use !
+- if the jwt token has been messed around with in anyway, then verify() will throw an error  
+- wrap in try/catch as it throws an error if the token has been tampered with
+
+```ts
+//src/routes/current-user.ts
+import jwt from 'jsonwebtoken';
+
+//...
+router.get('/api/users/currentuser', (req:Request, res:Response) => {
+  if(!req.session?.jwt){
+    return res.send({currentUser:null});
+  }
+  try{
+    const payload = jwt.verify(
+      req.session.jwt,
+      process.env.JWT_KEY!
+    )
+    res.send({currentUser: payload});
+  }
+  catch(err){
+    res.send({currentUser: null});
+  }
+});
+
+//...
+
+```
+- TODO: update code above into a middleware to automatically figure out if user is logged in
+
+
+#### TEST with cookie 
+- POSTMAN: 
+  - NOTE: sign in first as this creates the jwt token on req.session.jwt by passing {email, password}
+  - test  GET: `/api/users/currentuser`
+  - NOTE: inside postman, if the cookie has been set, POSTMAN sends the cookie with any follow up requests (see cookies tab inside POSTMAN) to the same domain
+  - NOTE: iat (issued at time)
+- EXPECT RESULTS:  
+```
+{
+  currentUser:{
+    "id": "4fgfdgsdfsfEdfdsf",
+    "email": 'test@test.com',
+    "iat": 145345345345
+  }
+}
+```
+
+#### TEST without cookie 
+- EXPECT RESULTS:  
+```
+{
+  "currentUser": null
+}
+```
+
+
 
 ## section 10 - testing isolated microservices (1hr22min)
 

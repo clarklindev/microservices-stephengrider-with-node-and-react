@@ -15,10 +15,10 @@ export class DatabaseConnectionError extends CustomError {
   serializeErrors() {
     return [
       {
-        message: this.reason
-      }
+        message: this.reason,
+      },
     ];
   }
 }
 
-//usage: throw new DatabaseConnectionError(reason);
+//usage: throw new DatabaseConnectionError();
