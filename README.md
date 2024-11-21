@@ -1214,25 +1214,15 @@ docker run clarklindev/event-bus
 
 - Install option -> Docker for Windows / Mac /linux
 
-  #### Windows -> enable kubernetes
-
-  - RECOMMENDED -> Windows users should use -> Docker Desktop with WSL2
-  - docker toolbox icon -> preferences -> kubernetes -> enable kubernetes -> restart
-
   #### mac
-
   - RECOMMENDED -> macOS users should use Docker Desktops kubernetes instead of Minikube
 
   #### Linux
-
   - RECOMMENDED -> Minikube
-
-## 63. NOTE on MiniKube
-
-- Install option -> Install method with Docker-Toolbox (STATUS: unstable) or Linux (need to install [minikube](kubernetes.io/docs/tasks/tools/install-minikube))
-  - Minikube is an alternative option to using Docker Desktop's built-in Kubernetes.
-
-## 64. kubernetes tour
+  
+  #### Windows -> enable kubernetes
+  - RECOMMENDED -> Windows users should use -> Docker Desktop with WSL2
+  - docker toolbox icon -> preferences -> kubernetes -> enable kubernetes -> restart
 
 - NOTE: make sure Docker is running (NOT AS ADMINISTRATOR but normal user)
 - NOTE: for me, windows 11 kubernetes option from docker-desktop took a while to startup
@@ -1252,7 +1242,7 @@ Server Version: v1.30.2
 
 ![docker-desktop kubernetes running status](exercise_files/udemy-docker-section04-64-a-kubernetes-tour.png)
 
-### TROUBLESHOOT
+### TROUBLESHOOT DOCKER KUBERNETES
 
 ```
 PS C:\Windows\system32> kubectl version
@@ -1267,12 +1257,20 @@ Unable to connect to the server: dial tcp [::1]:8080: connectex: No connection c
 - on Windows 11 -> from Q&A -> The only thing that worked for me was while in Docker Desktop I clicked on the "Troubleshoot" bug icon at the top. Then clicked the "Clean / Purge data" button. In the pop-up I selected all three check boxes ("Hyper-V", "WSL 2", "Windows Containers") and clicked the "Delete" button. After it completed Docker and Kubes status both went green.
 - deleted the .kube folder in my user directory
 - Delete the folder (hidden folder) `C:\ProgramData\DockerDesktop\pki` OR `C:\Users\<user_name>\AppData\Local\Docker\pki`
-- update kube config file `c:\Users\<user folder>\.kube\config` -> update clusters server -> `server: https://localhost:6443`
-- AS ADMINISTRATOR: c:\Windows\System32\drivers\etc\hosts
 
+### update .kube/config
+- update kube config file `c:\Users\<user folder>\.kube\config` -> update clusters server -> `server: https://localhost:6443`
+- why this works? -> When you use localhost in the server URL (e.g., server: https://localhost:6443), your system will attempt to resolve localhost using DNS resolution (starting with the local hosts file).
+```c:\Users\<user folder>\.kube\config
+    server: https://localhost:6443
 ```
+
+### update system32/drivers/etc/host
+- update c:/windows/system32/drivers/host 
+- `c:\Windows\System32\drivers\etc\hosts` (AS ADMINISTRATOR)
+```hosts
 127.0.0.1 kubernetes.docker.internal
-127.0.0.1 docker-for-desktop
+localhost kubernetes.docker.internal
 ```
 
 #### Docker desktop for mac
@@ -1285,6 +1283,12 @@ Unable to connect to the server: dial tcp [::1]:8080: connectex: No connection c
 - kubernetes tries to find the image (described in config file) first from local computer
 - if it cant find it, then it looks in docker-hub
 
+## 63. NOTE on MiniKube
+
+- Install option -> Install method with Docker-Toolbox (STATUS: unstable) or Linux (need to install [minikube](kubernetes.io/docs/tasks/tools/install-minikube))
+  - Minikube is an alternative option to using Docker Desktop's built-in Kubernetes.
+
+## 64. kubernetes tour
 #### terminology
 
 - NOTE: a `pod` OR `container` by definition is more or less the same thing.
