@@ -6218,6 +6218,75 @@ export { router as currentUserRouter };
 
 <image src='exercise_files/udemy-docker-section10-195-4-ideal-setup.png' width="800px" />
 
+### 196. index to app refactor
+- app now only has the configuration for the server then exports it
+
+- create auth/src/app.ts
+```ts
+import express from 'express';
+import { json } from 'body-parser';
+import cookieSession from 'cookie-session';
+
+import { currentUserRouter } from './routes/current-user';
+import { signinRouter } from './routes/signin';
+import { signoutRouter } from './routes/signout';
+import { signupRouter } from './routes/signup';
+import { errorHandler } from './middlewares/error-handler';
+import { NotFoundError } from './errors/not-found-error';
+
+const app = express();
+app.set('trust proxy', true);
+app.use(json());
+
+app.use(
+  cookieSession({
+    signed: false,
+    secure: true,
+  })
+);
+
+app.use(currentUserRouter);
+app.use(signinRouter);
+app.use(signoutRouter);
+app.use(signupRouter);
+
+//testing not found error
+// app.all('*', async (req, res, next) => {
+//   throw new NotFoundError();
+// });
+
+app.use(errorHandler);
+
+export {app};
+
+```
+- update index.ts
+
+```ts
+import mongoose from 'mongoose';
+import {app} from './app';
+
+const start = async () => {
+  if (!process.env.JWT_KEY) {
+    throw new Error('JWT_KEY must be defined');
+  }
+
+  try {
+    await mongoose.connect('mongodb://auth-mongo-srv:27017/auth'); //connecting to mongodb on cluster ip service
+    console.log('connected to mongodb');
+  } catch (err) {
+    console.error(err);
+  }
+
+  app.listen(3000, () => {
+    console.log('Listening on port 3000!!!!!!');
+    console.log('visit: https://ticketing.dev/api/users/currentuser');
+  });
+};
+
+start();
+
+```
 ---
 
 ## section 11 - integrating a server side rendered react app (3hr01min)
