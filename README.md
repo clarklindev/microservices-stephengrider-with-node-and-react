@@ -6135,8 +6135,88 @@ export { router as currentUserRouter };
 
 ```
 
-```
+---
 ## section 10 - testing isolated microservices (1hr22min)
+
+### 193. scope of tests
+#### some type of tests
+<image src="exercise_files/udemy-docker-section10-193-testing-type-of-tests.png" width="800px"/>
+
+- testing services working together is really difficult 
+- the tests we will do is tests in isolation (unit tests)
+
+##### unit tests  
+<image src="exercise_files/udemy-docker-section10-193-testing-unit-test.png" width="800px"/>
+
+##### pieces of code working together   
+<image src="exercise_files/udemy-docker-section10-193-testing-pieces-of-code-working-together.png" width="800px"/>
+
+##### components working together  
+<image src="exercise_files/udemy-docker-section10-193-testing-components-working-together.png" width="800px"/>
+
+##### services working together  
+- this is challenging
+- wont focus on this
+
+<image src="exercise_files/udemy-docker-section10-193-testing-services-working-together.png" width="800px"/>
+
+##### current app architecture:  
+<image src="exercise_files/udemy-docker-section10-193-testing-app-architecture.png" width="800px"/>
+
+### 194. testing goals
+#### test1 - basic request handling 
+- test eg. if a request is sent to sign up with auth service - it should respond with a cookie with jwt inside
+- assert writing data into mongodb
+
+<image src="exercise_files/udemy-docker-section10-194-test1-basic-request-handling.png" width="800px"/>
+
+#### test2 - unit test around data models
+- looking at a model and do some tests around it
+
+<image src="exercise_files/udemy-docker-section10-194-test2-unit-test-style.png" width="800px"/>
+
+#### test3 - event emitting + receiving
+- this "simulates" different services working together, as whats implied from emitting/receiving events will be similar to testing services working together
+- these tests handle the receiving and emitting of events from our auth service
+- test receive incoming events
+- test issuing events
+
+<image src="exercise_files/udemy-docker-section10-194-test3-emitting-and-receiving.png" width="800px"/>
+
+#### running tests
+- run in terminal
+- locally
+
+### 195. testing architecture
+
+<image src="exercise_files/udemy-docker-section10-195-1-using-jest-for-testing.png" width="800px"/>  
+
+- we will be doing test1 - basic request handling 
+- testing with Jest 
+  - start in-memory copy of MongoDB
+  - start express app
+  - use [`supertest`](https://www.npmjs.com/package/supertest) library to make fake request to our express app.
+  - run assertions to make sure the request did the right thing
+
+  
+#### supatest
+- to summarise -> testing requires the express instance so extract this from index.ts
+
+<image src='exercise_files/udemy-docker-section10-195-2-testing-with-supertest.png' width="800px" />
+
+- REQUIRED: express instance
+- supatest provides a request() function that you pass the express object
+- ideal architecture: refactoring express to its own app.js so that it can also be used for testing
+
+<image src='exercise_files/udemy-docker-section10-195-3-current-setup-express-listens-on-port-3000.png' width="800px" />
+
+- note: express runs on default port 3000, 
+- multiple services all listing on same port 3000 will cause errors
+- wont be able to run test running on same machine at same time because they both listening on same port.
+- with supertest -> if the server is not already listening for connections, then it will listen on an ephemeral port (random port)
+- TODO: the code in index.ts cant automatically listen on fixed port eg. 3000 -> extract the express logic from index.ts so it can also be used in tests.
+
+<image src='exercise_files/udemy-docker-section10-195-4-ideal-setup.png' width="800px" />
 
 ---
 
