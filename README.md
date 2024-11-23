@@ -6070,7 +6070,8 @@ export { router as currentUserRouter };
 
 ### 192. Requiring Auth for Route Access  
 
-![udemy-docker-section09-190-extracting-code-as-middleware.png](exercise_files/udemy-docker-section09-190-extracting-code-as-middleware.png) 
+<image src="exercise_files/udemy-docker-section09-190-extracting-code-as-middleware.png" width="800px"/>  
+
 - TODO: make middleware to reject request if user not logged in ie. respond with an error
 
 #### Middleware throwing NotAuthorizedError
