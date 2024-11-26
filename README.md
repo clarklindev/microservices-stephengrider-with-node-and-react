@@ -6287,6 +6287,98 @@ const start = async () => {
 start();
 
 ```
+
+### 197. --omit=dev Install Flag
+- UPDATE: `--omit=dev` replaces `--only=prod` flag
+
+
+```Dockerfile
+FROM node:alpine
+ 
+WORKDIR /app
+COPY package.json .
+RUN npm install --omit=dev
+COPY . .
+ 
+CMD ["npm", "start"]
+```
+
+### 198. more dependencies
+- NOTE: tests are not going to be run inside the docker containers (WILL ONLY RUN LOCALLY SO EXCLUDED FROM IMAGE BUILD)
+- installing `mongodb-memory-server` -> mongodb in memory so we can test multiple databases at the same time
+  - ie. running tests for different services concurrently on the same machine -> so shouldnt connect to the same mongodb instance
+  - each service we are testing will get its own mongodb instance in memory
+
+```cmd
+npm install --save-dev @types/jest @types/supertest jest ts-jest supertest mongodb-memory-server
+```
+
+- NOTE: the app will be running inside the docker container 
+  - installing these dependencies as `--save-dev` 
+  - because we dont need these dependencies for the docker image (only for tests and it will be running locally) 
+- the dockerfile should be updated so it will NOT install these testing dependencies everytime the docker image is built (see above lesson 197)
+  - `npm install --omit=dev`
+
+### 199. requiring MongoMemoryServer updates
+- TODO: setting up our test environment with MongoMemoryServer
+- If you are using the latest versions of this library, a change:
+- updates for [REFERENCE](https://nodkz.github.io/mongodb-memory-server/docs/guides/migration/migrate7/https://nodkz.github.io/mongodb-memory-server/docs/guides/migration/migrate7/)
+
+### update 1
+```ts
+//auth/src/test/setup.ts
+mongo = new MongoMemoryServer();
+
+  // update this
+  // const mongoUri = await mongo.getUri();
+
+  // to this:
+  mongo = await MongoMemoryServer.create();
+  const mongoUri = mongo.getUri();
+
+```
+
+### update 2
+- Remove the `useNewUrlParser` and `useUnifiedTopology` parameters from the connect method. Change this:
+
+```ts
+
+// update this
+// await mongoose.connect(mongoUri, {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// });
+
+//to this...
+await mongoose.connect(mongoUri, {});
+```
+
+### update 3
+- find the afterAll hook and add a conditional check:
+
+```ts
+afterAll(async () => {
+  if (mongo) {
+    await mongo.stop();
+  }
+  await mongoose.connection.close();
+});
+```
+
+### update 4
+- find the beforeEach hook and add a conditional check
+
+```ts
+beforeEach(async () => {
+  if (mongoose.connection.db) {
+    const collections = await mongoose.connection.db.collections();
+ 
+    for (let collection of collections) {
+      await collection.deleteMany({});
+    }
+  }
+});
+```
 ---
 
 ## section 11 - integrating a server side rendered react app (3hr01min)
