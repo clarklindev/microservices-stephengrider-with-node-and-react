@@ -6,8 +6,8 @@ RUN npm install -g pnpm
 WORKDIR /app
 # Copy package.json and pnpm-lock.yaml (pnpm's lockfile)
 COPY package.json pnpm-lock.yaml ./
-# Install dependencies with pnpm
-RUN pnpm install
+# Install dependencies with pnpm (OMIT DEV)
+RUN pnpm install --omit=dev
 # Copy the rest of the application code
 COPY . .
 # Expose the application port

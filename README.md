@@ -6319,7 +6319,7 @@ npm install --save-dev @types/jest @types/supertest jest ts-jest supertest mongo
 - the dockerfile should be updated so it will NOT install these testing dependencies everytime the docker image is built (see above lesson 197)
   - `npm install --omit=dev`
 
-### 199. requiring MongoMemoryServer updates
+### 199. requiring MongoMemoryServer updates (prep for lesson 200.)
 - TODO: setting up our test environment with MongoMemoryServer
 - If you are using the latest versions of this library, a change:
 - updates for [REFERENCE](https://nodkz.github.io/mongodb-memory-server/docs/guides/migration/migrate7/https://nodkz.github.io/mongodb-memory-server/docs/guides/migration/migrate7/)
@@ -6379,6 +6379,92 @@ beforeEach(async () => {
   }
 });
 ```
+
+### 200. testing environment setup
+- `ts-jest` : so jest understands typescript
+- NOTE: the convention is to create a `__test__` folder in the same folder as the file you want to test.
+
+<img src="exercise_files/udemy-docker-section10-200-test-environment-setup.png" width="800"/>
+
+```json
+//package.json
+//...
+  "jest":{
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "./src/test/setup.ts"
+    ]
+  },
+//...
+```
+- TODO: setup src/test/setup.ts startup mongodb memory server, get mongoose to connect to it.
+- TODO: create the test: `routes/__test__/signup.test.ts`
+
+```ts
+//src/test/setup.ts
+import {MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose from 'mongoose';
+import {app} from '../app';
+
+let mongo:any;
+
+beforeAll(async ()=>{
+  process.env.JWT_KEY = 'adsopsdfisd';
+
+  //OLD WAY
+  // const mongo = new MongoMemoryServer();
+  // const mongoUri = await mongo.getUri();
+  mongo = await MongoMemoryServer.create();
+  const mongoUri = mongo.getUri();
+
+  //OLD WAY
+  // await mongoose.connect(mongoUri, {
+  //   useNewUrlParser: true,
+  //   useUnifiedTopology: true,
+  // });
+  await mongoose.connect(mongoUri, {});
+});
+
+beforeEach(async ()=>{
+  const collections = await mongoose.connection.db?.collections();
+
+  if(collections){
+    for(let collection of collections){
+      await collection.deleteMany({});
+    }
+  }
+});
+
+afterAll(async () => {
+  if (mongo) {
+    await mongo.stop();
+  }
+  await mongoose.connection.close();
+});
+```
+
+### 201. Our First test
+- `routes/__test__/signup.test.ts`
+- ensure that you can send in a request with email and password as req.body and ge a response with status of 201.
+- NOTE: the environment variable needs to be set in test/setup.ts `process.env.JWT_KEY = 'adsopsdfisd';` (see code above).
+
+```ts
+//routest/__test__/signup.test.ts
+import request from 'supertest';
+import {app} from '../../app';
+
+it('returns a 201 on successful signup', async ()=>{
+  return request(app)
+    .post('/api/users/signup')
+    .send({
+      email: 'test@test.com',
+      password: 'password'
+    })
+    .expect(201);
+});
+```
+
 ---
 
 ## section 11 - integrating a server side rendered react app (3hr01min)
