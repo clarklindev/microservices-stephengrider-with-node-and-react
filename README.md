@@ -6649,6 +6649,69 @@ it('fails when an email that does not exist is supplied', async ()=>{
 });
 ```
 
+### 207. cookie request is possibly undefined error 
+- TODO: signout test (lesson 208)
+- TODO: UPDATE Supertest type declarations
+ - OLD -> get request for a cookie would return only a string[]
+ - UDPATE -> get request for a cookie returns `string[]` or `undefined`.
+- `auth/src/routes/__test__ /signout.test.ts`
+
+<img src="exercise_files/udemy-docker-section10-208-sign-out.png" width="800"/>
+
+
+#### OLD
+```ts
+  expect(response.get('Set-Cookie')[0]).toEqual(
+    'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly'
+  );
+```
+
+#### update
+```ts
+const cookie = response.get("Set-Cookie");
+if (!cookie) {
+  throw new Error("Expected cookie but got undefined.");
+}
+
+expect(cookie[0]).toEqual(
+  "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly"
+);
+```
+
+### 208. testing signout
+```ts
+import request from 'supertest';
+import {app} from '../../app';
+
+it('clears the cookie after signing out', async ()=>{
+
+  //signup
+  await request(app)
+    .post('/api/users/signup')
+    .send({
+      email: 'test@test.com',
+      password: 'password'
+    })
+    .expect(201)
+
+  //signout
+  const response = await request(app)
+    .post('/api/users/signout')
+    .send({})
+    .expect(200);
+
+  
+  const cookie = response.get('Set-Cookie');
+  if (!cookie) {
+    throw new Error("Expected cookie but got undefined.");
+  }
+
+  //check that there is no cookie 
+  expect(cookie[0]).toEqual(
+    "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly"
+  );
+});
+```
 
 ---
 
