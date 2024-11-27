@@ -6399,7 +6399,6 @@ beforeEach(async () => {
 //...
 ```
 - TODO: setup src/test/setup.ts startup mongodb memory server, get mongoose to connect to it.
-- TODO: create the test: `routes/__test__/signup.test.ts`
 
 ```ts
 //src/test/setup.ts
@@ -6445,9 +6444,12 @@ afterAll(async () => {
 ```
 
 ### 201. Our First test
+- TODO: create the test: `routes/__test__/signup.test.ts`
 - `routes/__test__/signup.test.ts`
 - ensure that you can send in a request with email and password as req.body and ge a response with status of 201.
 - NOTE: the environment variable needs to be set in test/setup.ts `process.env.JWT_KEY = 'adsopsdfisd';` (see code above).
+  - it is currently only part of deployment `infra/k8s/auth-depl.yaml`
+- NOTE: assertion `.expect();`
 
 ```ts
 //routest/__test__/signup.test.ts
