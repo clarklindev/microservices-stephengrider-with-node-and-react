@@ -6713,6 +6713,100 @@ it('clears the cookie after signing out', async ()=>{
 });
 ```
 
+### 209. issues with cookies during testing
+- TODO: test `/api/users/currentuser`
+- NOTE: supatest does not automatically manage cookies (unlike the browser which does) so the cookie does not get added to the follow up request
+
+```ts
+//src/routes/__test__
+import request from 'supertest';
+import {app} from '../../app';
+
+it('responds with details about the current user', async ()=>{
+
+  //signup so we have a user
+  await request(app)
+    .post('/api/users/signup')
+    .send({
+      email:'test@test.com',
+      password: 'password'
+    })
+    .expect(201);
+
+  const response = await request(app)
+    .get('/api/users/currentuser')
+    .send()
+    .expect(200);
+
+  console.log(response.body);
+});
+```
+
+### 210. no overload matches this call error with cookie
+- preparation for lesson 211. updating our current-user test
+- NOTE: IMPORTANT - most of this code will eventually be removed by the end of the Auth Helper Function lecture.
+- `auth/src/routes/__test__/current-user.test.ts` add a conditional check above the response here:
+
+```ts
+//auth/src/routes/__test__/current-user.test.ts
+if (!cookie) {
+  throw new Error("Cookie not set after signup");
+}
+
+const response = await request(app)
+  .get("/api/users/currentuser")
+  .set("Cookie", cookie)
+  .send()
+  .expect(200);
+
+expect(response.body.currentUser.email).toEqual("test@test.com");
+```
+
+### 211. easy auth solution
+- NOTE: the problem is we want to have authentication(cookies) - for all tests
+- to get there in the tests, we have to:
+  1. first sign up
+  2. then get cookie 
+  3. set cookie in header and get currentuser 
+
+<img src='exercise_files/udemy-docker-section10-211-sign-in-response-cookie.png' width="800"/>
+
+```ts
+//auth/src/routes/__test__/current-user.test.ts
+
+import request from 'supertest';
+import {app} from '../../app';
+
+it('responds with details about the current user', async ()=>{
+
+  //signup so we have a user
+  const authResponse = await request(app)
+    .post('/api/users/signup')
+    .send({
+      email:'test@test.com',
+      password: 'password'
+    })
+    .expect(201);
+
+  //get cookie from response
+  const cookie = authResponse.get('Set-Cookie');
+  if (!cookie) {
+    throw new Error("Cookie not set after signup");
+  }
+
+  //make a request
+  const response = await request(app)
+    .get('/api/users/currentuser')
+    .set('Cookie', cookie)
+    .send()
+    .expect(200);
+
+  expect(response.body.currentUser.email).toEqual('test@test.com');
+});
+```
+- TODO: move this authentication part of tests into helper function
+
+
 ---
 
 ## section 11 - integrating a server side rendered react app (3hr01min)
