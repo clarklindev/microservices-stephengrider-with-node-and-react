@@ -6790,6 +6790,7 @@ it('responds with details about the current user', async ()=>{
 
   //get cookie from response
   const cookie = authResponse.get('Set-Cookie');
+
   if (!cookie) {
     throw new Error("Cookie not set after signup");
   }
@@ -6806,9 +6807,109 @@ it('responds with details about the current user', async ()=>{
 ```
 - TODO: move this authentication part of tests into helper function
 
+### 212. globalThis has no index signature TS Error
+- for 213. you may get an error like:
+
+### FIX 1
+`Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.ts(7017)`
+
+- FIX: `src/test/setup.ts`
+
+```ts
+//src/test/setup.ts
+
+//OLD
+// declare global {
+//   namespace NodeJS {
+//     export interface Global {
+//       signin(): Promise<string[]>;
+//     }
+//   }
+// }
+
+//UPDATED
+declare global {
+  var signin: () => Promise<string[]>;
+}
+```
+
+### fix2
+- add another conditional to check for the cookie
+
+```ts
+//OLD
+// const cookie = response.get('Set-Cookie');
+// return cookie;
+
+//NEW
+const cookie = response.get("Set-Cookie");
+if (!cookie) {
+  throw new Error("Failed to get cookie from response");
+}
+return cookie;
+```
+
+### 213. Auth Helper function
+- TODO: extracting auth helper functions 
+- src/test/setup.ts
+- NOTE: it is a global function for ease of use. `const cookie = await global.signin();`
+- NOTE: you can extract function to its own file and use es/module import too
+
+```ts
+//src/test/setup.ts
+import request from 'supertest';
+
+declare global {
+  var signin: () => Promise<string[]>;
+}
+
+//...
+
+global.signin = async () => {
+  const email = 'test@test.com';
+  const password = 'password';
+
+  const response = await request(app)
+    .post('/api/users/signup')
+    .send({
+      email, password
+    })
+    .expect(201);
+}
+
+```
+#### usage
+- using the helper function in `src/routes/__test__/current-user.test.ts`
+- NOTE: calling global function
+
+```ts
+//src/routes/__test__/current-user.test.ts
+
+it('responds with details about the current user', async ()=>{
+  //OLD
+  //signup so we have a user
+  // const authResponse = await request(app)
+  //   .post('/api/users/signup')
+  //   .send({
+  //     email:'test@test.com',
+  //     password: 'password'
+  //   })
+  //   .expect(201);
+
+  // //get cookie from response
+  // const cookie = authResponse.get('Set-Cookie');
+  // if (!cookie) {
+  //   throw new Error("Cookie not set after signup");
+  // }
+
+  //UPDATE
+  const cookie = await global.signin();
+
+  //...
+});
+```
 
 ---
-
 ## section 11 - integrating a server side rendered react app (3hr01min)
 
 ---
