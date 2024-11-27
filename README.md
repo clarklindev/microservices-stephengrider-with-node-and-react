@@ -6541,6 +6541,49 @@ it('dissallows duplicate emails', async ()=>{
     .expect(400);
 });
 ```
+
+### 205. changing node env during tests
+
+- when the JWT is stored on the session object (signup.ts) 
+- the session object will be turned into a string by cookie session
+- cookie session middleware will send response with a header name `Set-Cookie`
+- TODO: use `response.get()` to lookup headers set in response
+- NOTE: test fails because when we set `cookieSession({secure:true})` it only sets a cookie if connection is secure and supatest is making plain http requests. 
+- FIX: when running tests, use `process.env.NODE_ENV !== 'test'`  
+
+```ts
+//signup.test.ts
+it('sets a cookie after successful signup', async () =>{
+  const response = await request(app)
+    .post('/api/users/signup')
+    .send({
+      email: 'test@test.com',
+      password: 'password'
+    })
+    .expect(201);
+
+  expect(response.get('Set-Cookie')).toBeDefined();
+});
+```
+- update app.ts
+
+```ts
+//app.ts
+
+//...
+
+app.use(
+  cookieSession({
+    signed: false,
+    secure: process.env.NODE_ENV !== 'test',
+  })
+);
+
+//...
+```
+- tests are passing  
+<img src="exercise_files/udemy-docker-section10-205-testing-signup-changing-node-env-during-tests.png" width="800"/>
+
 ---
 
 ## section 11 - integrating a server side rendered react app (3hr01min)
