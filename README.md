@@ -6466,7 +6466,57 @@ it('returns a 201 on successful signup', async ()=>{
     .expect(201);
 });
 ```
+### 202. note
+- if you make changes to test and tests still failing, restart. 
+  - this is because ts-jest sometimes doesnt work
 
+### 203. testing invalid input
+- TODO: if you send incorrect email or password, ensure status code 400
+- NOTE: to do 2 requests in one handler, use async/await syntax 
+- NOTE: if you dont return, the test will auto `return`, so either a 'await' or 'return' is required
+
+```ts
+it('returns a 400 with an invalid email', async ()=> {
+  return request(app)
+    .post('/api/users/signup')
+    .send({
+      email:'test23@test.com',
+      password: 'password'
+    })
+    .expect(400);
+});
+
+it('returns a 400 with an invalid password', async ()=> {
+  return request(app)
+    .post('/api/users/signup')
+    .send({
+      email:'test@test.com',
+      password: 'p'
+    })
+    .expect(400);
+});
+
+it('returns a 400 with missing email AND password', async ()=> {
+  //valid email missing password
+  await request(app)
+    .post('/api/users/signup')
+    .send({
+      email:'test@test.com',
+    })
+    .expect(400); 
+
+  //valid password missing email
+  await request(app)
+    .post('/api/users/signup')
+    .send({
+      password: 'password'
+    })
+    .expect(400);
+});
+
+
+
+```
 ---
 
 ## section 11 - integrating a server side rendered react app (3hr01min)
