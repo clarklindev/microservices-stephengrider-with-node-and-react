@@ -6905,6 +6905,7 @@ it('responds with details about the current user', async () => {
   //UPDATE
   const cookie = await global.signin();
 
+  const response = //...
   //...
 });
 ```
