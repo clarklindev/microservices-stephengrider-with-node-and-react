@@ -6885,7 +6885,7 @@ global.signin = async () => {
 ```ts
 //src/routes/__test__/current-user.test.ts
 
-it('responds with details about the current user', async ()=>{
+it('responds with details about the current user', async () => {
   //OLD
   //signup so we have a user
   // const authResponse = await request(app)
@@ -6908,6 +6908,24 @@ it('responds with details about the current user', async ()=>{
   //...
 });
 ```
+
+### 214. testing non-authed requests
+
+- `src/routes/__test__/current-user.ts`
+
+```ts
+//src/routes/__test__/current-user.ts
+
+it('responds with null if not authenticated', async () => {
+  const response = await request(app)
+    .get('/api/users/currentuser')
+    .send()
+    .expect(200);
+
+  expect(response.body.currentUser).toEqual(null);
+});
+```
+
 
 ---
 ## section 11 - integrating a server side rendered react app (3hr01min)
