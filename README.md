@@ -6584,6 +6584,15 @@ app.use(
 - tests are passing  
 <img src="exercise_files/udemy-docker-section10-205-testing-signup-changing-node-env-during-tests.png" width="800"/>
 
+
+### 206. testing around sign in functionality
+- `routes/__test__/signin.test.ts`
+- TODO: test when signin with account not in db or never signed up before, then should get -> 400 error
+- TODO: test incorrect password -> 400 error
+- TODO: test cookie should be in header if correct credentials used to sign in
+
+
+
 ---
 
 ## section 11 - integrating a server side rendered react app (3hr01min)
