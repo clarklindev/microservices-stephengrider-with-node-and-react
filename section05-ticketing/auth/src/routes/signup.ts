@@ -55,7 +55,7 @@ router.post(
 
     //store on req.session object
     req.session = {
-      jwt: userJwt,
+      jwt: userJwt
     };
 
     //send response

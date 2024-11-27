@@ -6514,8 +6514,32 @@ it('returns a 400 with missing email AND password', async ()=> {
     .expect(400);
 });
 
+```
 
+### 204. requiring unique emails
+- TODO: test and ensure that user cannot signup with same email twice
+- `src/routes/__test__/signup.test.ts`
+- NOTE: because we use async express handler you can import in app.ts: `import "express-async-errors";`
 
+```ts
+//dissallow signing up with same email
+it('dissallows duplicate emails', async ()=>{
+  await request(app)
+    .post('/api/users/signup')
+    .send({
+      email: 'test@test.com',
+      password: 'password'
+    })
+    .expect(201);
+
+    await request(app)
+    .post('/api/users/signup')
+    .send({
+      email: 'test@test.com',
+      password: 'password'
+    })
+    .expect(400);
+});
 ```
 ---
 

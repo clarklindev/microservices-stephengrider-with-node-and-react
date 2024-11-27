@@ -9,6 +9,7 @@ import { Password } from '../services/password';
 
 const router = express.Router();
 
+//postman POST: https://ticketing.dev/api/users/signin
 router.post(
   '/api/users/signin',
   [
@@ -40,16 +41,18 @@ router.post(
     //generate JWT
     const userJwt = jwt.sign(
       {
-        id: existingUser.id, //id from mongodb
-        email: existingUser.email,
+        id: existingUser.id,
+        email: existingUser.email
       },
-      // 'asdf' //signing key NOTE: for production this should go in kubernetes
+      // 'asdf' //signing key NOTE: for production this should go in kubernetes (see infra/k8s/)
       process.env.JWT_KEY!
     );
 
+    console.log('userJwt: ', userJwt);
+
     //store on req.session object
     req.session = {
-      jwt: userJwt,
+      jwt: userJwt
     };
 
     //send response
