@@ -3480,16 +3480,24 @@ app.get('/api/users/currentuser', (req, res) => {
   - https://cloud.google.com/free/docs/free-cloud-features#kubernetes-engine
 - https://console.cloud.google.com
 - create project
-- create a kubernetes cluster (select Kubernetes engine)
-  - cluster basics -> (switch to default cluster (SELECT THIS) / switch to autopilot cluster (CHEAPER-google manages infrastructure))
+- create a kubernetes cluster OPTIONS: `switch to default cluster` (SELECT THIS) / `switch to autopilot cluster` (CHEAPER-google manages infrastructure)
+
     - `name`
     - `location type` -> zonal -> zone (select)
     - `master version` (kubernetes version) -> target: `regular (recommended)` / version: `default`
   - node pools -> default-pool
-    - number of nodes -> 3
-    - nodes -> machine configuration -> `general purpose` -> `N1` series
-    - machine type -> `g1-small`
+  - clusters -> default pool -> size -> number of `nodes -> 3`
+    -NOTE: also try use `nodes -> 1` and `turn OFF auto-scaling`
+    - nodes -> machine family: `(E2) (E2 is Low cost, day-to-day computing)` -> type: `shared core (e2-micro)` -> bootdisk size (83gb) 
+    - NOTE: for the course Stephen chooses -> N1 -> g1-small : `N1	Balanced price & performance	0.5 - 96	1.7 - 624 GB	Intel Skylake`
+    - machine type -> `shared core (e2-micro)`
   - TODO: click `create`
+
+- machine configuration  
+<img src="exercise_files/udemy-docker-section06-122-kubernetes-cluster-machine-configuration.png" width="800" alt="udemy-docker-section06-122-kubernetes-cluster-machine-configuration.png"/>
+
+- machine type  
+<img src="exercise_files/udemy-docker-section06-122-kubernetes-cluster-machine-type.png" width="800" alt="udemy-docker-section06-122-kubernetes-cluster-machine-type.png"/>
 
 ### 123. Kubectl Contexts
 
