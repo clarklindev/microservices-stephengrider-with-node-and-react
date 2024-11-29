@@ -7175,26 +7175,33 @@ const Signup = ()=>{
 
   const onSubmit = (event)=>{
     event.preventDefault();
+    console.log(email, password);
   }
 
   return (
-    <form onSubmit={onSubmit}>
-      <h1>Sign up</h1>
-      <div className="form-group">
-        <label>Email address</label>
-        <input value={email} onChange={e=> setEmail(e.target.value)} className="form-control"/>
-      </div>
-      <div className="form-group">
-        <label>password</label>
-        <input value={password} onChange={e => setPassword(e.target.value)} type="password" className="form-control"/>
-      </div>
-      <button className="btn btn-primary">Sign up</button>
-    </form>
+    <div className="container">
+      <form onSubmit={onSubmit}>
+        <h1>Sign up</h1>
+        <div className="form-group">
+          <label>Email address</label>
+          <input value={email} onChange={e=> setEmail(e.target.value)} className="form-control"/>
+        </div>
+        <div className="form-group">
+          <label>password</label>
+          <input value={password} onChange={e => setPassword(e.target.value)} type="password" className="form-control"/>
+        </div>
+        <br/>
+        <button className="btn btn-primary">Sign up</button>
+      </form>
+    </div>
   )
 }
 
 export default Signup;
 ```
+##### expected result  
+
+<image src="exercise_files/udemy-microservices-section11-225-handling-email-and-password-inputs.png" width="800"/>
 
 
 ---

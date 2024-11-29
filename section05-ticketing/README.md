@@ -59,9 +59,21 @@ gcloud console -> view all products -> networking -> network services -> load ba
 
 #### TROUBLESHOOT
 
+##### deleting nginx ingress controller
+```ts
+kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0-beta.0/deploy/static/provider/cloud/deploy.yaml
+```
+
+##### delete individual components
+```cmd
+kubectl delete deployment ingress-nginx-controller --namespace=ingress-nginx
+kubectl delete service ingress-nginx-controller --namespace=ingress-nginx
+```
+
 - NOTE: if you delete the load balancer (but no the cluster), running the `create ingres-controller/ load balancer` command doesnt re-create the loadbalancer as the controller still exists.
 - FIX: by deleting and starting again
 
+##### gcloud
 9. google cloud dashboard
 
 - [google cloud dashboard](https://console.cloud.google.com/apis/dashboard?pli=1)
