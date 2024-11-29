@@ -7080,8 +7080,18 @@ spec:
 ### 221. Small Update for Custom Webpack Config
 - NOTE: in lesson 222 -> next.config.js file and adding some configuration to it
 - The latest versions of Next.js use a newer version of Webpack which moves watchOptions out from webpackDevMiddleware
+
 ```js
 //next.config.js
+//OLD:
+// module.exports = {
+//   webpackDevMiddleware: config => {
+//     config.watchOptions.poll = 300;
+//     return config;
+//   }
+// }
+
+//UPDATE:
 module.exports = {
   webpack: (config) => {
     config.watchOptions.poll = 300;
@@ -7089,8 +7099,46 @@ module.exports = {
   },
 };
 ```
----
 
+### 222. note on file change detection
+- FIX: list pods, delete the pod, pod will be recreated with updates
+- nextjs might not show updates for file change detection running inside docker container
+- SEE update (lesson 221)
+- TODO: next.config.js needs to show inside running pod (restart pod)
+- TROUBLESHOOT -> updates note reflecting? restart skaffold
+  - TODO: manually kill the client pod -> deployment will create a new pod
+  - `kubectl get pods`
+
+  #### delete pod
+  - `kubectl delete pod [podname]`
+
+### 223. adding global css
+- lesson deals with how to work with bootstrap css and nextjs
+- NOTE: Bootstrap css is a global css file
+- any global css can be ONLY be imported into _app.js
+
+#### _app.js page handler 
+- `client/pages/_app.js`-> we are defining our own custom _app component
+- when you navigate to a page with nextjs, nextjs will import your component from within the page files by wrapping it up inside a component (app)
+- we are overriding the handling of this component by defining our own custom app component -> pages will pass through `_app.js`
+
+```js
+import 'bootstrap/dist/css/bootstrap.css';
+
+export default ({Component, pageProps}) => {
+  return <Component {...pageProps}/>
+};
+```
+#### install bootstrap
+- `section05-ticketing/client/` folder
+- `npm install bootstrap`
+- adding boostrap to package.json, skaffold will detect a change and rebuild  the client image
+
+- NOTE: the styling should reflect bootstrap successfully installed  
+
+<img src="exercise_files/udemy-microservices-section11-223-bootstrapcss.png" width="800"/>
+
+---
 ## section 12 - code sharing and re-use between services (52min)
 
 ---
