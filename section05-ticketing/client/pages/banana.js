@@ -1,4 +1,4 @@
-const banana = () => {
+const Banana = () => {
   return <h1>banana</h1>
 }
-export default banana;
+export default Banana;

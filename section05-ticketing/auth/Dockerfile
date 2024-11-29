@@ -13,4 +13,4 @@ COPY . .
 # Expose the application port
 EXPOSE 3000
 # Run the app
-CMD ["pnpm", "start"]
+CMD ["pnpm", "run", "start"]

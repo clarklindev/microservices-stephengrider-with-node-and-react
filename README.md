@@ -7138,6 +7138,29 @@ export default ({Component, pageProps}) => {
 
 <img src="exercise_files/udemy-microservices-section11-223-bootstrapcss.png" width="800"/>
 
+### 224. adding a sign up form  
+
+- `ticketing.dev`
+
+<img src="exercise_files/udemy-microservices-section11-215-landing-signup.png" width="800"/>
+
+- TODO: create folder: `pages/auth/signup.js` -> this creates the route
+
+<img src="exercise_files/udemy-microservices-section11-224-adding-a-sign-up-form-signup-boostrapped.png" width="800"/>
+
+#### TROUBLESHOOT
+- NOTE: docker desktop is running (updates to codebase gets pushed to docker hub)
+- NOTE: dockerfile command should be: 
+
+```
+CMD ["pnpm", "run", "start"]`
+```
+
+- and NOT:
+```
+CMD ["pnpm", "start"]
+```
+
 ---
 ## section 12 - code sharing and re-use between services (52min)
 
