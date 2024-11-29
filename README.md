@@ -6930,7 +6930,165 @@ it('responds with null if not authenticated', async () => {
 
 ---
 ## section 11 - integrating a server side rendered react app (3hr01min)
+- 3hr 1min / 40 lessons
+- TODO: Auth part of react app (YOU CAN SKIP TO END IF YOU DONT WANT TO FOLLOW ALONG BUILDING THE REACT PAGES)
 
+### 215. starting the react app
+
+<img src="exercise_files/udemy-microservices-section11-215-landing-signup.png" width="800"/>
+<img src="exercise_files/udemy-microservices-section11-215-signin-landing-loggedin.png" width="800"/>
+
+### 216. reminder on server side rendering
+
+#### Normal react flow (atleast 2-3 requests)
+<img src="exercise_files/udemy-microservices-section11-216-normal-react-flow.png" width="800"/>
+
+#### server side rendering (nextjs)
+<img src="exercise_files/udemy-microservices-section11-216-serverside.png" width="800">
+
+- nextjs server will make requests to services
+- the point is to setup server side rendering in the context of microservices
+
+### 217. Suggestion Regarding a Default Export Warning
+
+- ERROR -> `Anonymous arrow functions cause Fast Refresh to not preserve local component state.`
+- FIX -> use named function: dont use default export
+```ts
+//named
+const Landing = () => <div />;
+//...  
+
+export default Landing;
+```
+
+### 218. basics of nextjs
+- folder: section05-ticketing/client
+- npm init -y
+- pnpm i react react-dom next
+- pages/ folder (react-router)
+  - note: REMINDER the pages folder's files map up to pages
+- pages/index is the default
+
+### 219. building a next image
+- using js, if you use typscript you will have to type a lot of nextjs related stuff
+- TODO: be able to run nextjs inside Kubernetes cluster
+
+```Dockerfile
+# Use an official Node.js image
+FROM node:18-alpine
+# Install pnpm
+RUN npm install -g pnpm
+# Set working directory
+WORKDIR /app
+# Copy package.json and pnpm-lock.yaml (pnpm's lockfile)
+COPY package.json pnpm-lock.yaml ./
+# Install dependencies with pnpm (OMIT DEV)
+RUN pnpm install --prod
+# Copy the rest of the application code
+COPY . .
+
+# Run the app
+CMD ["pnpm", "run", "dev"]
+```
+- NOTE: docker desktop is running, kubernetes is running
+- NOTE: skaffold is running
+- build on local machine (from client/ folder): `docker build -t clarklindev/client .` 
+
+### 220. Running Client (Nextjs) in kubernetes
+- So either use google cloud kubernetes...or docker-desktop and get images from dockerhub (you will know from yaml files by the url of the containers image)
+- NOTE: if running gcloud kubernetes, you dont have to upload to dockerhub
+- NOTE: if using docker-desktop push to docker hub -> `docker push clarklindev/client`
+- TODO: get client/ running in kubernetes cluster on gcloud
+
+#### 1. creating the pod
+  - create folder: infra/k8s/client-depl.yaml (similar to auth-depl.yaml)
+  - NOTE: `port: 3000` because nextjs by default listens to port 3000
+
+```yaml
+#infra/k8s/client-depl.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-depl
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+        - name: client
+          image: clarklindev/client   #asia.gcr.io/golden-index-441407-u9/client:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-srv
+spec:
+  selector:
+    app: client
+  ports:
+    - name: client
+      protocol: TCP
+      port: 3000
+      targetPort: 3000 # nextjs by default listens to port 3000
+```
+
+#### 2. UPDATE filesync with skaffold 
+- tracks changes to ts files
+- add entry to skaffold.yaml (under `artifacts`)
+
+```yaml
+# section05-ticketing/skaffold.yaml
+#...
+    - image: asia.gcr.io/golden-index-441407-u9/client
+      context: client
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: '**/*.js'
+            dest: .
+```
+#### 3. UPDATE ingress-srv.yaml 
+- TODO: ingress-srv.yaml is for routing within cluster
+- ie. add path (catch all ) that routes to client service -> add at end
+- NOTE: order of the path matching matters (the paths array) -> specific to general pathing route rules 
+
+
+```yaml
+#...
+- path: /?(.*)
+  pathType: ImplementationSpecific
+  backend:
+    service:
+      name: client-srv
+      port:
+        number: 3000
+
+#...
+
+```
+##### TROUBLESHOOT
+- NOTE: Starting with Kubernetes 1.18, the pathType field became mandatory to specify how the path matching should behave.
+- ERROR: `The Ingress "ingress-service" is invalid: spec.rules[0].http.paths[1].pathType: Required value: pathType must be specified`
+
+### 221. Small Update for Custom Webpack Config
+- NOTE: in lesson 222 -> next.config.js file and adding some configuration to it
+- The latest versions of Next.js use a newer version of Webpack which moves watchOptions out from webpackDevMiddleware
+```js
+//next.config.js
+module.exports = {
+  webpack: (config) => {
+    config.watchOptions.poll = 300;
+    return config;
+  },
+};
+```
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
