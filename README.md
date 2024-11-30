@@ -7211,6 +7211,31 @@ export default Signup;
 
 <image src="exercise_files/udemy-microservices-section11-225-handling-email-and-password-inputs.png" width="800"/>
 
+### 226. successful account signup
+
+<img src="exercise_files/udemy-microservices-section11-226-success-signup-sends-data-to-auth-service.png" width="800"/>
+
+- auth service has api route: /api/users/signup
+- client -> nginx (routing: cluster ip service) -> auth container
+- TODO: use axios: client/ folder : `pnpm i axios`
+
+```js
+//client/pages/auth/signup.js
+//...
+
+const [email, setEmail] = useState('');
+const [password, setPassword] = useState('');
+
+const onSubmit = async event => {
+  event.preventDefault();
+  const response = await axios.post('/api/users/signup', {
+    email, password
+  });
+
+  console.log(response.data);
+
+}
+```
 
 ---
 ## section 12 - code sharing and re-use between services (52min)
