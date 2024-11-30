@@ -7218,6 +7218,7 @@ export default Signup;
 - auth service has api route: /api/users/signup
 - client -> nginx (routing: cluster ip service) -> auth container
 - TODO: use axios: client/ folder : `pnpm i axios`
+- NOTE: skaffold needs to rebuild
 
 ```js
 //client/pages/auth/signup.js
@@ -7236,6 +7237,100 @@ const onSubmit = async event => {
 
 }
 ```
+- successful signup response is a cookie with the response header
+<img src="exercise_files/udemy-microservices-section11-226-signup-response-headers.png" alt="udemy-microservices-section11-226-signup-response-headers.png" width="800"/>
+
+### 227. Handling validation errors
+- submitting signup form with invalid email / passord
+<img src="exercise_files/udemy-microservices-section11-227-handling-validation-errors.png" alt="udemy-microservices-section11-227-handling-validation-errors.png" width="800"/>
+
+- validation error response should also be handled by showing updates to html
+<img src="exercise_files/udemy-microservices-section11-227-handling-validation-errors-error-response.png" alt="udemy-microservices-section11-227-handling-validation-errors-error-response.png" width="800"/>
+
+- NOTE: we access the response errors via `err.response.data.` and we are returning `errors` which is an array of error objects: `err.response.data.errors`
+- NOTE: request-validation-errors.ts -> errors return an array of errors objects `{ message: err.msg, field: err.path }`
+- showing validation errors
+
+<img src="exercise_files/udemy-microservices-section11-227-showing-validation-errors.png" width="800" alt="udemy-microservices-section11-227-showing-validation-errors.png"/>
+
+- map through the errors from onSubmit set via `setErrors`
+- the field property can also be used to show errors directly under each input
+
+- client/pages/auth/signup.js
+
+```ts
+//client/pages/auth/signup.js
+import { useState } from 'react';
+import axios from 'axios';
+
+const Signup = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState([]);
+
+  const onSubmit = async event => {
+    event.preventDefault();
+    try{
+      const response = await axios.post('/api/users/signup', {
+        email, password
+      });
+    
+      console.log(response.data);
+    }
+    catch(err){
+      console.log(err.response.data);
+      setErrors(err.response.data.errors)
+    }
+  }
+
+  return (
+    <div className="container">
+      <form onSubmit={onSubmit}>
+        <h1>Sign up</h1>
+        <div className="form-group">
+          <label>Email address</label>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="form-control"
+          />
+        </div>
+        <div className="form-group">
+          <label>password</label>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            className="form-control"
+          />
+        </div>
+        <br/>
+        {errors.length > 0 &&
+          <div className='alert alert-danger'>
+            <h4>oops..</h4>
+            <ul className="my-0">
+            {
+              errors.map((err, index) => {
+                return <li key={index}>err.message</li>
+              })
+            }
+            </ul>
+          </div>
+        }
+        <button className="btn btn-primary">Sign up</button>
+      </form>
+    </div>
+  );
+};
+
+export default Signup;
+```
+
+#### TODO:
+- NOTE: validation/error displaying logic will be repeated for many parts of the site
+- NOTE: request logic (to api) will be repeated for many parts of the site
+- other forms (sign-in, creating order, creating ticket, editing ticket etc) could use this logic, which can be extracted to a helper funciton
+
 
 ---
 ## section 12 - code sharing and re-use between services (52min)
