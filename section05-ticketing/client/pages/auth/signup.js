@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Router from 'next/router';
 
 import useRequest from '../../hooks/use-request'; //our custom reusable request hook :)
 
@@ -14,13 +15,12 @@ const Signup = () => {
       email,
       password,
     },
+    onSuccess: () => Router.push('/'),
   });
 
   const onSubmit = async (event) => {
     event.preventDefault();
-
-    //using re-usable fetch hook...
-    doRequest();
+    await doRequest(); //using re-usable fetch hook...
   };
 
   return (

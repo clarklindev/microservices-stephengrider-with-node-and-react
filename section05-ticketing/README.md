@@ -146,6 +146,20 @@ kubectl delete service ingress-nginx-controller --namespace=ingress-nginx
 - NOTE: if you delete the load balancer (but no the cluster), running the `create ingres-controller/ load balancer` command doesnt re-create the loadbalancer as the controller still exists.
 - FIX: by deleting and starting again
 
+#### TROUBLESHOOT - skaffold not updating
+
+- if you do `git commit --amend` this actually doesnt update the git repository, it uses the same commit id used last to ammend changes, this may have an effect on change detection
+- change detection in tools like Docker, Skaffold:
+
+##### Docker
+
+- When you're building Docker images, the tool typically looks at the git repository to detect changes by considering the commit hash or timestamps of files. If you amend a commit but the commit hash remains the same, Docker might not detect a change because it's looking for a new commit hash or changes in file states, not just content modifications.
+- In this case, Docker may not trigger a rebuild if the commit hash hasn’t changed. To trigger a rebuild, you would need to have a new commit hash that reflects the new state of your code.
+
+##### Skaffold
+
+- Skaffold monitors the changes in your project and can rebuild containers or redeploy applications based on changes in the git repository (among other things). If you amend a commit but the commit hash remains unchanged, Skaffold might not detect the change unless you force it to do so (by, for example, pushing the amended commit to a remote repository, which would trigger a new commit hash).
+
 ## REQUIRED STEP!
 
 ##### gcloud

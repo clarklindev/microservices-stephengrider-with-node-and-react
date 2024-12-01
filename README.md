@@ -7569,6 +7569,58 @@ const Signup = () => {
 export default Signup;
 ```
 
+### 230. on success callback
+
+- navigate user after sign-in back to root route: /
+- use `react router` to programatically navigate
+- TODO: redirect after success login
+- client/pages/auth/signup.js
+
+- UPDATE: add another prop to useRequest hook (a callback): `useRequest({ onSuccess:()=>{}})` -> it is a callback function if successful
+- NOTE: we are creating a callback to be called by passing it in...it is inside the hook where we will know if api request was successful.
+
+- TEST -> `ticketing.dev/auth/signup`
+
+#### OUTCOME
+
+- SUCCESS -> redirect to landing page
+
+<img src="exercise_files/udemy-microservices-section11-230-on-success-callback-redirect-to-root.png" alt="udemy-microservices-section11-230-on-success-callback-redirect-to-root.png" width="800"/>
+
+- ERROR -> show error
+
+<img src="exercise_files/udemy-microservices-section11-230-on-error.png" alt="udemy-microservices-section11-230-on-error.png" width="800"/>
+
+```js
+import { useState } from 'react';
+import Router from 'next/router';
+
+import useRequest from '../../hooks/use-request'; //our custom reusable request hook :)
+
+const Signup = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  //note: useRequest receives an object
+  const { doRequest, errors } = useRequest({
+    url: '/api/users/signup',
+    method: 'post',
+    body: {
+      email,
+      password,
+    },
+    onSuccess: () => Router.push('/'),
+  });
+
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    await doRequest(); //using re-usable fetch hook...
+  };
+
+  //...
+};
+```
+
 ---
 
 ## section 12 - code sharing and re-use between services (52min)

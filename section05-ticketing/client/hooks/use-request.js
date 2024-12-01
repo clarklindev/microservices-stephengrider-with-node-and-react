@@ -3,13 +3,18 @@ import { useState } from 'react';
 
 //url, method (GET, PUT, POST, PATCH, DELETE)
 // method must be equal to 'get' || 'put' || 'patch' || 'post' || 'delete'
-const useRequest = ({ url, method, body }) => {
+const useRequest = ({ url, method, body, onSuccess }) => {
   const [errors, setErrors] = useState(null);
 
   const doRequest = async () => {
     try {
       setErrors(null);
       const response = await axios[method](url, body);
+
+      if (onSuccess) {
+        onSuccess(response.data);
+      }
+
       return response.data;
     } catch (err) {
       setErrors(
@@ -22,6 +27,8 @@ const useRequest = ({ url, method, body }) => {
           </ul>
         </div>
       );
+
+      // throw err;
     }
   };
 
