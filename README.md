@@ -7758,6 +7758,59 @@ export default LandingPage;
 
 ### 235. two solutions
 
+- 2 step solution -> axios request will behave differently depending if request is from browser, or nextjs app (server-side)
+
+### browser -> baseurl = ''
+
+<img src="exercise_files/udemy-microservices-section11-235-two-possible-solutions-for-solving-domain-error.png" alt="udemy-microservices-section11-235-two-possible-solutions-for-solving-domain-error.png" width="800"/>
+
+### nextjs (server-side) -> baseurl = 'domain of service/'
+
+- the base url can be figured out using 2 options
+
+<img src="exercise_files/udemy-microservices-section11-235-option2.png" alt="udemy-microservices-section11-235-option2.png" width="800"/>
+
+- OPTION 1 (PREFERED METHOD)
+
+  - nextjs reaches out to ingress nginx controller (already in the cluster) which already has the routing mapped
+  - ingress nginx can figure out from `path` by itself what the service name/port should be (configured with the `paths`) (infra/k8s/ingress-srv.yaml )
+  - NOTE: from local machine (reach out to nginx via ticketing.dev or localhost:80)
+  - just have to figure out how to reach out to nginx from within clusters pod (container)
+
+<img src="exercise_files/udemy-microservices-section11-235-ingress-nginx-controller.png" alt="udemy-microservices-section11-235-ingress-nginx-controller.png" width="800"/>
+
+- OPTION 2
+
+  - the cons of option2 is that we have to remember the name of every service associations of the domain mapping to path (specified in infra/k8s/ yaml files) which domain is associated with which route path etc.
+  - the react app then needs to encode the service name into the url
+  - infra/k8s/auth-depl.yaml -> named service 'auth-srv'
+  - then in nextjs (client) app we use the same reference 'auth-srv'
+  - which will then forward the request to auth service
+
+<img src="exercise_files/udemy-microservices-section11-235-option2-kubernetes-nginx-reference-using-auth-srv.png" alt="udemy-microservices-section11-235-option2-kubernetes-nginx-reference-using-auth-srv.png" width="800"/>
+
+### cookies from requests and follow up requests from nextjs
+
+- also note that when request come in from browser, cookie may be attached and follow up requests from nextjs client also need to include the cookie
+- so our nextjs : `client/pages/index.js` axios call does NOT have the browser to automatically manage the cookie (so this needs to be handled)
+
+```js
+//...
+LandingPage.getInitialProps = async () => {
+  console.log('i am on the server');
+  const response = await axios.get('/api/users/currentuser');
+
+  return response.data;
+};
+//...
+```
+
+<img src="exercise_files/udemy-microservices-section11-235-requests-to-server-have-cookies-follow-up-requests-need-to-include-this-cookie.png" alt="udemy-microservices-section11-235-requests-to-server-have-cookies-follow-up-requests-need-to-include-this-cookie.png" width="800"/>
+
+- TODO: extract cookie from incoming request -> so cookie can be included in follow up requests to auth service
+
+---
+
 ## section 12 - code sharing and re-use between services (52min)
 
 ---
