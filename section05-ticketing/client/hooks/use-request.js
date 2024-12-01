@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 //url, method (GET, PUT, POST, PATCH, DELETE)
 // method must be equal to 'get' || 'put' || 'patch' || 'post' || 'delete'
-const useRequest = (url, method, body) => {
+const useRequest = ({ url, method, body }) => {
   const [errors, setErrors] = useState(null);
 
   const doRequest = async () => {
@@ -28,4 +28,4 @@ const useRequest = (url, method, body) => {
   return { doRequest, errors };
 };
 
-export default useRequest;
+export default useRequest; //note: hooks use smallcase

@@ -7452,6 +7452,15 @@ export default Signup;
 ### 229. using useRequest hook
 
 - folder: `section-05-ticketing/client/hooks/use-request.js`
+- note: useRequest hook receives an object {url, method, body}
+
+#### Troubleshoot
+
+FIX: the browser page fails to load -> turn browser shield down
+
+- NOTE: this is the problem with self issued SSL certificates picked up as unsafe (metioned earlier too)
+
+<img src="exercise_files/udemy-microservices-section11-229-browser-fix-turn-shield-down.png" alt="udemy-microservices-section11-229-browser-fix-turn-shield-down.png" width="400">
 
 #### the use-request hook
 
@@ -7463,7 +7472,8 @@ import { useState } from 'react';
 
 //url, method (GET, PUT, POST, PATCH, DELETE)
 // method must be equal to 'get' || 'put' || 'patch' || 'post' || 'delete'
-const useRequest = (url, method, body) => {
+//NOTE: receives an object
+const useRequest = ({ url, method, body }) => {
   const [errors, setErrors] = useState(null);
 
   const doRequest = async () => {
