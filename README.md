@@ -7453,6 +7453,7 @@ export default Signup;
 
 - folder: `section-05-ticketing/client/hooks/use-request.js`
 - note: useRequest hook receives an object {url, method, body}
+- testing: `https://ticketing.dev/auth/signup`
 
 #### Troubleshoot
 
@@ -7461,6 +7462,10 @@ FIX: the browser page fails to load -> turn browser shield down
 - NOTE: this is the problem with self issued SSL certificates picked up as unsafe (metioned earlier too)
 
 <img src="exercise_files/udemy-microservices-section11-229-browser-fix-turn-shield-down.png" alt="udemy-microservices-section11-229-browser-fix-turn-shield-down.png" width="400">
+
+#### TROUBLESHOOT
+
+- FIX: if the browser is not loading after `skaffold dev` close the window and open again
 
 #### the use-request hook
 
