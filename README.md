@@ -7621,7 +7621,76 @@ const Signup = () => {
 };
 ```
 
----
+- TODO -> detect if user is signed in, if not show `you are not signed in`, else show `you are signed in`
+
+### 231. overview on server-side rendering
+
+<img src="exercise_files/udemy-microservices-section11-231-overview-ssr.png" alt="udemy-microservices-section11-231-overview-ssr.png" width="800"/>
+
+- with nextjs and server-side rendering (SSR) -> the initial response should send back information about whether we are signed-in (nextjs: we need to figure out at that point before the initial response how to get extra info on server)
+- whenever we make a request to nextjs app
+
+<img src="exercise_files/udemy-microservices-section11-231-nextjs-server-side-rendering.png" alt="udemy-microservices-section11-231-nextjs-server-side-rendering.png" width="800"/>
+
+#### calling .getInitialProps()
+
+- regarding nextjs -> with a named page, calling `.getIntialProps()` static method
+  -> nextjs will call this function while trying to render our app on the server
+  -> gives an oportunity to fetch data that the page component needs during server rendering process.
+
+#### returned data from calling .getInitialProps() (server-side)
+
+- invoking this function -> returns a data object which will be provided to our component as a prop.
+- we use this data to render our component.
+- if we have to fetch initial data, we have to do it inside .getIntialProps() afterwards, clientside takes over
+- nextjs then takes html from all rendered components and sends back the response.
+- the results from SSR are rendered once and sent back, afterwards clientside takes over..
+
+- folder: client/pages/index.js
+
+```js
+//client/pages/index.js
+const LandingPage = ({ color }) => {
+  console.log('i am in the component', color);
+  return <h1>landing page</h1>;
+};
+
+LandingPage.getInitialProps = () => {
+  console.log('i am on the server');
+
+  return { color: 'red' };
+};
+
+export default LandingPage;
+```
+
+### 232. a note about ECONNREFUSED errors
+
+- TODO: lesson 233. moving the axios request from the getInitialProps function directly to the LandingPage
+  -> This will likely fail with a long ECONNREFUSED error in your Skaffold output
+  -> Node Alpine Docker images are now likely using the v16 version of Node, so it requires a `catch block`.
+
+```js
+// client/pages/index.js
+
+//OLD
+// const LandingPage = ({ currentUser }) => {
+//   console.log(currentUser);
+//   axios.get('/api/users/currentuser');
+
+//   return <h1>Landing Page</h1>;
+// };
+
+//UPDATED
+const LandingPage = ({ currentUser }) => {
+  console.log(currentUser);
+  axios.get('/api/users/currentuser').catch((err) => {
+    console.log(err.message);
+  });
+
+  return <h1>Landing Page</h1>;
+};
+```
 
 ## section 12 - code sharing and re-use between services (52min)
 
