@@ -7809,6 +7809,70 @@ LandingPage.getInitialProps = async () => {
 
 - TODO: extract cookie from incoming request -> so cookie can be included in follow up requests to auth service
 
+### 236. cross namespace service communication
+
+- telling nextjs to visit localhost will be the pods localhost will result in `connect ECONNREFUSED 127.0.0.1:80` error
+- whereas from browser (ticketing.dev / localhost:80) is okay as it reaches ingress nginx
+- TODO: tell pod to reach out to nginx directly
+
+#### when 2 pods that needs to communicate with each other
+
+- use cluster ip services (ONLY WHEN IN SAME NAMESPACE)
+
+<img src="exercise_files/udemy-microservices-section11-236-cross-namespace-service-communication-when-pods-want-to-communicate-use-their-sevice-name.png" alt="udemy-microservices-section11-236-cross-namespace-service-communication-when-pods-want-to-communicate-use-their-sevice-name.png" width="800"/>
+
+- in kubernetes, objects we create are under a namespace `default` and we created `ingress-nginx` namespace
+- BUT we can reach out to another service in another namespace by referencing the service name
+
+```cmd
+kubectl get namespace
+```
+
+<img src="exercise_files/udemy-microservices-section11-236-kubectl-get-namespace.png" alt="udemy-microservices-section11-236-kubectl-get-namespace.png" width="800"/>
+
+#### cross namespace service communication
+
+<img src="exercise_files/udemy-microservices-section11-236-cross-namespace-communication-pattern.png" alt="udemy-microservices-section11-236-cross-namespace-communication-pattern.png" width="800"/>
+
+- we have to use a different way to reference a service in another namespace
+- `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local`
+
+1. what is the namespace to reach? `ingress-nginx`
+2. what is the name of service to reach?
+
+<img src="exercise_files/udemy-microservices-section11-236-getting-services-in-namespace.png" alt="udemy-microservices-section11-236-getting-services-in-namespace.png" width="800"/>
+
+- we first list all namespaces
+- NOTE: `kubectl get services` lists services in default namespace
+- we are listing all services in `ingress-nginx` namespace
+- which gives us the name of the service we are trying to reach in ingress-nginx 'ingress-nginx-controller'
+- NOTE: UPDATE.. service name of all platforms is now: `ingress-nginx-controller`
+
+```cmd
+kubectl get namespace
+kubectl get services
+kubectl get services -n ingress-nginx
+```
+
+- this is the domain of service we want to reach
+  <img src="exercise_files/udemy-microservices-section11-236-full-domain-of-service.png" alt="udemy-microservices-section11-236-full-domain-of-service.png" width="800"/>
+
+- so from nextjs to reach outside the pod to nginx, the url world have this syntax:
+
+  - `http:???/api/users/currentuser`
+  - specifically `http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser`
+
+  <img src="exercise_files/udemy-microservices-section11-236-reach-nginx-from-pod.png" alt="udemy-microservices-section11-236-reach-nginx-from-pod.png" width="800"/>
+
+- we do not implement this because its difficult to rememeber
+
+#### OPTIONAL
+
+- there is something called an `external name service` which remaps the name of the request (can create more friendly shorter domain)
+- the course does NOT implement external name service because (out-of-scope / difficult to recall) but it can be done.
+
+<img src="exercise_files/udemy-microservices-section11-236-external-name-service.png" alt="udemy-microservices-section11-236-external-name-service.png" width="800"/>
+
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
