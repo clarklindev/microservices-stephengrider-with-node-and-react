@@ -7666,7 +7666,11 @@ export default LandingPage;
 
 ### 232. a note about ECONNREFUSED errors
 
-- TODO: lesson 233. moving the axios request from the getInitialProps function directly to the LandingPage
+- in lesson 233. econnrefused error -> what happens is making the request from server (.getInitialProps()) fails, but in browser (client component), it succeeds
+
+<img src="exercise_files/udemy-microservices-section11-232-econnrefused-error.png" alt="udemy-microservices-section11-232-econnrefused-error.png" width="800">
+
+- TODO: lesson 233. moving the axios request from the getInitialProps() function directly to the LandingPage component
   -> This will likely fail with a long ECONNREFUSED error in your Skaffold output
   -> Node Alpine Docker images are now likely using the v16 version of Node, so it requires a `catch block`.
 
@@ -7691,6 +7695,68 @@ const LandingPage = ({ currentUser }) => {
   return <h1>Landing Page</h1>;
 };
 ```
+
+### 233. fetching data during server side rendering (SSR)
+
+- during initial request, ie. server-side calls `.getInitialProps()` to fetch data from auth service to check if authenticated
+
+### hooks are ONLY for react components
+
+- NOTE: we are using `axios` server side (even though we created that client/hooks/use-request.js hook)
+- so .getInitialProps() is not a component, but plain function, so cant use hook.
+- to re-interate, getInitialProps() returns something (see `/api/users/currentuser` for what it returns), and this is received by the component
+
+```js
+//client/pages/index.js
+
+import axios from 'axios';
+
+const LandingPage = ({ currentUser }) => {
+  console.log('currentUser: ', currentUser);
+  return <h1>landing page</h1>;
+};
+
+LandingPage.getInitialProps = async () => {
+  console.log('i am on the server');
+  const response = await axios.get('/api/users/currentuser').catch((err) => {
+    console.log(err.message);
+  });
+
+  return response.data;
+};
+
+export default LandingPage;
+```
+
+- if signed-in return will not be `{currentUser: null}`
+- response from axios looks like this:
+
+<img src="exercise_files/udemy-microservices-section11-233-fetching-data-during-server-side-rendering.png" width="800" alt="udemy-microservices-section11-233-fetching-data-during-server-side-rendering.png"/>
+
+### 234. why the error?
+
+#### client-side request working...
+
+- NOTE: client side using axios -> making requests from the browser
+- succeeds because our host file translates the domain and when using partial paths eg. '/something/etc' it gets ammended to the domain (this is what happens normally normal)
+
+<img src="exercise_files/udemy-microservices-section11-234-making-request-from-browser.png" alt="udemy-microservices-section11-234-making-request-from-browser.png" width="800"/>
+
+#### server-side request not-working...
+
+- when server handles the request:
+- the path is relative, ingress nginx passes request -> to our default handler (client service handles it)
+  - nextjs then shows the root route (index.js)
+  - which invokes the .getInitialProps() which requests `/api/users/currentuser` (NO DOMAIN)
+  - nodes HTTP layer sees no domain, so it assumes request is on local machine...
+  - so it uses local domain (127.0.0.1:80) BUT... we are running our nextjs app inside its own container (kubernetes world...) so localhost refers to the client container (which is nextjs apps port 80 (and there is nothing running or listening on port 80)) NOT ingress nginx (which handles routing)
+  - the request should have been handled by nginx (which requests auth service) becomes handled by the container...
+
+<img src="exercise_files/udemy-microservices-section11-234-making-request-from-server.png" alt="udemy-microservices-section11-234-making-request-from-server.png" width="800">
+
+<img src="exercise_files/udemy-microservices-section11-234-redirect-to-local-container-not-nginx.png" alt="udemy-microservices-section11-234-redirect-to-local-container-not-nginx.png" width="800"/>
+
+### 235. two solutions
 
 ## section 12 - code sharing and re-use between services (52min)
 
