@@ -1215,12 +1215,15 @@ docker run clarklindev/event-bus
 - Install option -> Docker for Windows / Mac /linux
 
   #### mac
+
   - RECOMMENDED -> macOS users should use Docker Desktops kubernetes instead of Minikube
 
   #### Linux
+
   - RECOMMENDED -> Minikube
-  
+
   #### Windows -> enable kubernetes
+
   - RECOMMENDED -> Windows users should use -> Docker Desktop with WSL2
   - docker toolbox icon -> preferences -> kubernetes -> enable kubernetes -> restart
 
@@ -1259,15 +1262,19 @@ Unable to connect to the server: dial tcp [::1]:8080: connectex: No connection c
 - Delete the folder (hidden folder) `C:\ProgramData\DockerDesktop\pki` OR `C:\Users\<user_name>\AppData\Local\Docker\pki`
 
 ### update .kube/config
+
 - update kube config file `c:\Users\<user folder>\.kube\config` -> update clusters server -> `server: https://localhost:6443`
 - why this works? -> When you use localhost in the server URL (e.g., server: https://localhost:6443), your system will attempt to resolve localhost using DNS resolution (starting with the local hosts file).
-```c:\Users\<user folder>\.kube\config
+
+```c:\Users<user folder>.kube\config
     server: https://localhost:6443
 ```
 
 ### update system32/drivers/etc/host
-- update c:/windows/system32/drivers/host 
+
+- update c:/windows/system32/drivers/host
 - `c:\Windows\System32\drivers\etc\hosts` (AS ADMINISTRATOR)
+
 ```hosts
 127.0.0.1 kubernetes.docker.internal
 localhost kubernetes.docker.internal
@@ -1289,6 +1296,7 @@ localhost kubernetes.docker.internal
   - Minikube is an alternative option to using Docker Desktop's built-in Kubernetes.
 
 ## 64. kubernetes tour
+
 #### terminology
 
 - NOTE: a `pod` OR `container` by definition is more or less the same thing.
@@ -2598,6 +2606,7 @@ kubectl get services
 - add to blog/client/Dockerfile:
 
 ```yaml
+# blog/client/Dockerfile
 # Add the following lines
 #...
 ENV CI=true
@@ -3482,22 +3491,22 @@ app.get('/api/users/currentuser', (req, res) => {
 - create project
 - create a kubernetes cluster OPTIONS: `switch to default cluster` (SELECT THIS) / `switch to autopilot cluster` (CHEAPER-google manages infrastructure)
 
-    - `name`
-    - `location type` -> zonal -> zone (select)
-    - `master version` (kubernetes version) -> target: `regular (recommended)` / version: `default`
+  - `name`
+  - `location type` -> zonal -> zone (select)
+  - `master version` (kubernetes version) -> target: `regular (recommended)` / version: `default`
   - node pools -> default-pool
   - clusters -> default pool -> size -> number of `nodes -> 3`
     -NOTE: also try use `nodes -> 1` and `turn OFF auto-scaling`
-    - nodes -> machine family: `(E2) (E2 is Low cost, day-to-day computing)` -> type: `shared core (e2-micro)` -> bootdisk size (83gb) 
+    - nodes -> machine family: `(E2) (E2 is Low cost, day-to-day computing)` -> type: `shared core (e2-micro)` -> bootdisk size (83gb)
     - NOTE: for the course Stephen chooses -> N1 -> g1-small : `N1	Balanced price & performance	0.5 - 96	1.7 - 624 GB	Intel Skylake`
     - machine type -> `shared core (e2-micro)`
   - TODO: click `create`
 
 - machine configuration  
-<img src="exercise_files/udemy-docker-section06-122-kubernetes-cluster-machine-configuration.png" width="800" alt="udemy-docker-section06-122-kubernetes-cluster-machine-configuration.png"/>
+  <img src="exercise_files/udemy-docker-section06-122-kubernetes-cluster-machine-configuration.png" width="800" alt="udemy-docker-section06-122-kubernetes-cluster-machine-configuration.png"/>
 
 - machine type  
-<img src="exercise_files/udemy-docker-section06-122-kubernetes-cluster-machine-type.png" width="800" alt="udemy-docker-section06-122-kubernetes-cluster-machine-type.png"/>
+  <img src="exercise_files/udemy-docker-section06-122-kubernetes-cluster-machine-type.png" width="800" alt="udemy-docker-section06-122-kubernetes-cluster-machine-type.png"/>
 
 ### 123. Kubectl Contexts
 
@@ -5867,6 +5876,7 @@ export { router as signinRouter };
   - if it is valid - send back the info stored in the JWT (payload): `{currentUser: {id:'', email:''}}`
 
 ### 188. returning the current user
+
 - this must first be called
 
 ```ts
@@ -5886,7 +5896,7 @@ app.use(
 - otherwise send back a payload.
 - `verify()` uses the `JWT_KEY` to decode the token
 - we already did the check in start() of index.ts for JWT_KEY so we use !
-- if the jwt token has been messed around with in anyway, then verify() will throw an error  
+- if the jwt token has been messed around with in anyway, then verify() will throw an error
 - wrap in try/catch as it throws an error if the token has been tampered with
 
 ```ts
@@ -5894,35 +5904,32 @@ app.use(
 import jwt from 'jsonwebtoken';
 
 //...
-router.get('/api/users/currentuser', (req:Request, res:Response) => {
-  if(!req.session?.jwt){
-    return res.send({currentUser:null});
+router.get('/api/users/currentuser', (req: Request, res: Response) => {
+  if (!req.session?.jwt) {
+    return res.send({ currentUser: null });
   }
-  try{
-    const payload = jwt.verify(
-      req.session.jwt,
-      process.env.JWT_KEY!
-    )
-    res.send({currentUser: payload});
-  }
-  catch(err){
-    res.send({currentUser: null});
+  try {
+    const payload = jwt.verify(req.session.jwt, process.env.JWT_KEY!);
+    res.send({ currentUser: payload });
+  } catch (err) {
+    res.send({ currentUser: null });
   }
 });
 
 //...
-
 ```
+
 - TODO: update code above into a middleware to automatically figure out if user is logged in
 
+#### TEST with cookie
 
-#### TEST with cookie 
-- POSTMAN: 
+- POSTMAN:
   - NOTE: sign in first as this creates the jwt token on req.session.jwt by passing {email, password}
-  - test  GET: `/api/users/currentuser`
+  - test GET: `/api/users/currentuser`
   - NOTE: inside postman, if the cookie has been set, POSTMAN sends the cookie with any follow up requests (see cookies tab inside POSTMAN) to the same domain
   - NOTE: iat (issued at time)
-- EXPECT RESULTS:  
+- EXPECT RESULTS:
+
 ```
 {
   currentUser:{
@@ -5933,8 +5940,10 @@ router.get('/api/users/currentuser', (req:Request, res:Response) => {
 }
 ```
 
-#### TEST without cookie 
-- EXPECT RESULTS:  
+#### TEST without cookie
+
+- EXPECT RESULTS:
+
 ```
 {
   "currentUser": null
@@ -5942,39 +5951,41 @@ router.get('/api/users/currentuser', (req:Request, res:Response) => {
 ```
 
 ### 189. sign out
+
 - signing out user route: `/api/users/signout`
 - you can use npm package `cookie-session` to handle cookie related..like destroying a session
 
 ```
 req.session = null
 ```
+
 ```ts
 // src/routes/signout.ts
 import express, { Request, Response } from 'express';
 const router = express.Router();
 
-router.post('/api/users/signout', (req:Request, res:Response) => {
+router.post('/api/users/signout', (req: Request, res: Response) => {
   req.session = null;
   res.send({});
 });
 
 export { router as signoutRouter };
-
 ```
+
 - Test with POSTMAN:
   - `https://ticketing.dev/api/users/signout`
   - in header: Content-Type `application/json`
 
 ### 190. creating a current user middleware
+
 - TODO: create a middleware to check if user is logged in
 - this code should be extacted because we always have to repeat this code in every route that requires auth checking
 - middleware is automatic code execution "automatic check" so makes sense to refactor code.
 
-![udemy-docker-section09-190-extracting-code-as-middleware.png](exercise_files/udemy-docker-section09-190-extracting-code-as-middleware.png) 
+![udemy-docker-section09-190-extracting-code-as-middleware.png](exercise_files/udemy-docker-section09-190-extracting-code-as-middleware.png)
 
 - NOTE: with the middleware, we always call `next()` because we want to continue on to the next middleware
-- NOTE: typescript complains that you cant just add new property `req.currentUser` on existing types eg.`:Request` 
-
+- NOTE: typescript complains that you cant just add new property `req.currentUser` on existing types eg.`:Request`
 
 ### 191. augmenting type definitions
 
@@ -5985,13 +5996,16 @@ export { router as signoutRouter };
 - HOW? - create an interface that describes the payload
 
 ```ts
-interface UserPayload{
+interface UserPayload {
   id: string;
   email: string;
 }
 
 //...
-const payload = jwt.verify(req.session.jwt, process.env.JWT_KEY!) as UserPayload;
+const payload = jwt.verify(
+  req.session.jwt,
+  process.env.JWT_KEY!
+) as UserPayload;
 req.currentUser = payload;
 ```
 
@@ -6001,18 +6015,20 @@ req.currentUser = payload;
 
 ```ts
 declare global {
-  namespace Express{
-    interface Request{
+  namespace Express {
+    interface Request {
       currentUser?: UserPayload;
     }
   }
 }
 ```
-- after fix:  
+
+- after fix:
 
 ![udemy-docker-section09-190-creating-current-user-middleware-typescript-adding-onto-req-after-fix.png](exercise_files/udemy-docker-section09-190-creating-current-user-middleware-typescript-adding-onto-req-after-fix.png)
 
 - so after middlewares/current-user.ts we can import the middleware in routes/current-user.ts
+
 ```ts
 //middlewares/current-user.ts
 import { Request, Response, NextFunction } from 'express';
@@ -6020,14 +6036,14 @@ import jwt from 'jsonwebtoken';
 
 import { CustomError } from '../errors/custom-error';
 
-interface UserPayload{
+interface UserPayload {
   id: string;
   email: string;
 }
 
 declare global {
-  namespace Express{
-    interface Request{
+  namespace Express {
+    interface Request {
       currentUser?: UserPayload;
     }
   }
@@ -6038,22 +6054,23 @@ export const currentUser = (
   res: Response,
   next: NextFunction
 ) => {
-  if(!req.session?.jwt){
+  if (!req.session?.jwt) {
     return next();
   }
 
-  try{
-    const payload = jwt.verify(req.session.jwt, process.env.JWT_KEY!) as UserPayload;
+  try {
+    const payload = jwt.verify(
+      req.session.jwt,
+      process.env.JWT_KEY!
+    ) as UserPayload;
     req.currentUser = payload;
-  }
-  catch(err){
-  }
+  } catch (err) {}
   next();
-
 };
-
 ```
+
 ### use the middleware
+
 - just import the middleware: `import {currentUser} from '../middlewares/current-user';`
 - add to route function: `router.get('/api/users/currentuser', currentUser, (req:Request, res:Response) => {}`
 - routes/current-user.ts
@@ -6061,129 +6078,156 @@ export const currentUser = (
 
 ```ts
 //routes/current-user.ts
-import express, {Request, Response} from 'express';
+import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-import {currentUser} from '../middlewares/current-user';
+import { currentUser } from '../middlewares/current-user';
 
 const router = express.Router();
 
-router.get('/api/users/currentuser', currentUser, (req:Request, res:Response) => {
-  res.send({currentUser: req.currentUser || null});
-});
+router.get(
+  '/api/users/currentuser',
+  currentUser,
+  (req: Request, res: Response) => {
+    res.send({ currentUser: req.currentUser || null });
+  }
+);
 
 export { router as currentUserRouter };
-
 ```
 
-### 192. Requiring Auth for Route Access  
+### 192. Requiring Auth for Route Access
 
-<image src="exercise_files/udemy-docker-section09-190-extracting-code-as-middleware.png" width="800px"/>  
+<image src="exercise_files/udemy-docker-section09-190-extracting-code-as-middleware.png" width="800px"/>
 
 - TODO: make middleware to reject request if user not logged in ie. respond with an error
 
 #### Middleware throwing NotAuthorizedError
+
 - middlewares/require-auth.ts
 - import { NotAuthorizedError } from '../errors/not-authorized-error';
 
 ```ts
 //middlewares/require-auth.ts
-import {Request, Response, NextFunction} from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { NotAuthorizedError } from '../errors/not-authorized-error';
 
-export const requireAuth = (req:Request, res:Response, next:NextFunction) => {
-  if(!req.currentUser){
+export const requireAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.currentUser) {
     throw new NotAuthorizedError();
   }
 
   next();
-}
+};
 ```
 
 #### NotAuthorizedError
+
 - TODO: make a new custom error to handle when user tries to access a resource they are not authorized to access.
 - `src/middlewares/require-auth.ts`
 
 ```ts
-import {CustomError} from './custom-error';
+import { CustomError } from './custom-error';
 
-export class NotAuthorizedError extends CustomError{
+export class NotAuthorizedError extends CustomError {
   statusCode = 401;
 
-  constructor(){
+  constructor() {
     super('Not authorized');
     Object.setPrototypeOf(this, NotAuthorizedError.prototype);
   }
 
-  serializeErrors(): { message: string; field?: string; }[] {
-    return [{message: 'Not authorized'}]
+  serializeErrors(): { message: string; field?: string }[] {
+    return [{ message: 'Not authorized' }];
   }
 }
 ```
+
 ### Testing require-auth.ts
+
 - NOTE: we temporarily add the middleware to current-user.ts because currently it doesnt have auth checking yet...
 - `requireAuth` middleware should come after `currentUser` middleware
 - middlewares/current-user.ts
 
 ```ts
 //middlewares/current-user.ts
-import express, {Request, Response} from 'express';
+import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-import {currentUser} from '../middlewares/current-user';
+import { currentUser } from '../middlewares/current-user';
 import { requireAuth } from '../middlewares/require-auth';
 
 const router = express.Router();
 
-router.get('/api/users/currentuser', currentUser, requireAuth, (req:Request, res:Response) => {
-  res.send({currentUser: req.currentUser || null});
-});
+router.get(
+  '/api/users/currentuser',
+  currentUser,
+  requireAuth,
+  (req: Request, res: Response) => {
+    res.send({ currentUser: req.currentUser || null });
+  }
+);
 
 export { router as currentUserRouter };
-
 ```
 
 ---
+
 ## section 10 - testing isolated microservices (1hr22min)
 
 ### 193. scope of tests
+
 #### some type of tests
+
 <image src="exercise_files/udemy-docker-section10-193-testing-type-of-tests.png" width="800px"/>
 
-- testing services working together is really difficult 
+- testing services working together is really difficult
 - the tests we will do is tests in isolation (unit tests)
 
-##### unit tests  
+##### unit tests
+
 <image src="exercise_files/udemy-docker-section10-193-testing-unit-test.png" width="800px"/>
 
-##### pieces of code working together   
+##### pieces of code working together
+
 <image src="exercise_files/udemy-docker-section10-193-testing-pieces-of-code-working-together.png" width="800px"/>
 
-##### components working together  
+##### components working together
+
 <image src="exercise_files/udemy-docker-section10-193-testing-components-working-together.png" width="800px"/>
 
-##### services working together  
+##### services working together
+
 - this is challenging
 - wont focus on this
 
 <image src="exercise_files/udemy-docker-section10-193-testing-services-working-together.png" width="800px"/>
 
-##### current app architecture:  
+##### current app architecture:
+
 <image src="exercise_files/udemy-docker-section10-193-testing-app-architecture.png" width="800px"/>
 
 ### 194. testing goals
-#### test1 - basic request handling 
+
+#### test1 - basic request handling
+
 - test eg. if a request is sent to sign up with auth service - it should respond with a cookie with jwt inside
 - assert writing data into mongodb
 
 <image src="exercise_files/udemy-docker-section10-194-test1-basic-request-handling.png" width="800px"/>
 
 #### test2 - unit test around data models
+
 - looking at a model and do some tests around it
 
 <image src="exercise_files/udemy-docker-section10-194-test2-unit-test-style.png" width="800px"/>
 
 #### test3 - event emitting + receiving
+
 - this "simulates" different services working together, as whats implied from emitting/receiving events will be similar to testing services working together
 - these tests handle the receiving and emitting of events from our auth service
 - test receive incoming events
@@ -6192,22 +6236,23 @@ export { router as currentUserRouter };
 <image src="exercise_files/udemy-docker-section10-194-test3-emitting-and-receiving.png" width="800px"/>
 
 #### running tests
+
 - run in terminal
 - locally
 
 ### 195. testing architecture
 
-<image src="exercise_files/udemy-docker-section10-195-1-using-jest-for-testing.png" width="800px"/>  
+<image src="exercise_files/udemy-docker-section10-195-1-using-jest-for-testing.png" width="800px"/>
 
-- we will be doing test1 - basic request handling 
-- testing with Jest 
+- we will be doing test1 - basic request handling
+- testing with Jest
   - start in-memory copy of MongoDB
   - start express app
   - use [`supertest`](https://www.npmjs.com/package/supertest) library to make fake request to our express app.
   - run assertions to make sure the request did the right thing
 
-  
 #### supatest
+
 - to summarise -> testing requires the express instance so extract this from index.ts
 
 <image src='exercise_files/udemy-docker-section10-195-2-testing-with-supertest.png' width="800px" />
@@ -6218,7 +6263,7 @@ export { router as currentUserRouter };
 
 <image src='exercise_files/udemy-docker-section10-195-3-current-setup-express-listens-on-port-3000.png' width="800px" />
 
-- note: express runs on default port 3000, 
+- note: express runs on default port 3000,
 - multiple services all listing on same port 3000 will cause errors
 - wont be able to run test running on same machine at same time because they both listening on same port.
 - with supertest -> if the server is not already listening for connections, then it will listen on an ephemeral port (random port)
@@ -6227,9 +6272,11 @@ export { router as currentUserRouter };
 <image src='exercise_files/udemy-docker-section10-195-4-ideal-setup.png' width="800px" />
 
 ### 196. index to app refactor
+
 - app now only has the configuration for the server then exports it
 
 - create auth/src/app.ts
+
 ```ts
 import express from 'express';
 import { json } from 'body-parser';
@@ -6265,14 +6312,14 @@ app.use(signupRouter);
 
 app.use(errorHandler);
 
-export {app};
-
+export { app };
 ```
+
 - update index.ts
 
 ```ts
 import mongoose from 'mongoose';
-import {app} from './app';
+import { app } from './app';
 
 const start = async () => {
   if (!process.env.JWT_KEY) {
@@ -6293,25 +6340,25 @@ const start = async () => {
 };
 
 start();
-
 ```
 
 ### 197. --omit=dev Install Flag
-- UPDATE: `--omit=dev` replaces `--only=prod` flag
 
+- UPDATE: `--omit=dev` replaces `--only=prod` flag
 
 ```Dockerfile
 FROM node:alpine
- 
+
 WORKDIR /app
 COPY package.json .
 RUN npm install --omit=dev
 COPY . .
- 
+
 CMD ["npm", "start"]
 ```
 
 ### 198. more dependencies
+
 - NOTE: tests are not going to be run inside the docker containers (WILL ONLY RUN LOCALLY SO EXCLUDED FROM IMAGE BUILD)
 - installing `mongodb-memory-server` -> mongodb in memory so we can test multiple databases at the same time
   - ie. running tests for different services concurrently on the same machine -> so shouldnt connect to the same mongodb instance
@@ -6321,36 +6368,37 @@ CMD ["npm", "start"]
 npm install --save-dev @types/jest @types/supertest jest ts-jest supertest mongodb-memory-server
 ```
 
-- NOTE: the app will be running inside the docker container 
-  - installing these dependencies as `--save-dev` 
-  - because we dont need these dependencies for the docker image (only for tests and it will be running locally) 
+- NOTE: the app will be running inside the docker container
+  - installing these dependencies as `--save-dev`
+  - because we dont need these dependencies for the docker image (only for tests and it will be running locally)
 - the dockerfile should be updated so it will NOT install these testing dependencies everytime the docker image is built (see above lesson 197)
   - `npm install --omit=dev`
 
 ### 199. requiring MongoMemoryServer updates (prep for lesson 200.)
+
 - TODO: setting up our test environment with MongoMemoryServer
 - If you are using the latest versions of this library, a change:
 - updates for [REFERENCE](https://nodkz.github.io/mongodb-memory-server/docs/guides/migration/migrate7/https://nodkz.github.io/mongodb-memory-server/docs/guides/migration/migrate7/)
 
 ### update 1
+
 ```ts
 //auth/src/test/setup.ts
 mongo = new MongoMemoryServer();
 
-  // update this
-  // const mongoUri = await mongo.getUri();
+// update this
+// const mongoUri = await mongo.getUri();
 
-  // to this:
-  mongo = await MongoMemoryServer.create();
-  const mongoUri = mongo.getUri();
-
+// to this:
+mongo = await MongoMemoryServer.create();
+const mongoUri = mongo.getUri();
 ```
 
 ### update 2
+
 - Remove the `useNewUrlParser` and `useUnifiedTopology` parameters from the connect method. Change this:
 
 ```ts
-
 // update this
 // await mongoose.connect(mongoUri, {
 //   useNewUrlParser: true,
@@ -6362,6 +6410,7 @@ await mongoose.connect(mongoUri, {});
 ```
 
 ### update 3
+
 - find the afterAll hook and add a conditional check:
 
 ```ts
@@ -6374,13 +6423,14 @@ afterAll(async () => {
 ```
 
 ### update 4
+
 - find the beforeEach hook and add a conditional check
 
 ```ts
 beforeEach(async () => {
   if (mongoose.connection.db) {
     const collections = await mongoose.connection.db.collections();
- 
+
     for (let collection of collections) {
       await collection.deleteMany({});
     }
@@ -6389,6 +6439,7 @@ beforeEach(async () => {
 ```
 
 ### 200. testing environment setup
+
 - `ts-jest` : so jest understands typescript
 - NOTE: the convention is to create a `__test__` folder in the same folder as the file you want to test.
 
@@ -6406,17 +6457,18 @@ beforeEach(async () => {
   },
 //...
 ```
+
 - TODO: setup src/test/setup.ts startup mongodb memory server, get mongoose to connect to it.
 
 ```ts
 //src/test/setup.ts
-import {MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
-import {app} from '../app';
+import { app } from '../app';
 
-let mongo:any;
+let mongo: any;
 
-beforeAll(async ()=>{
+beforeAll(async () => {
   process.env.JWT_KEY = 'adsopsdfisd';
 
   //OLD WAY
@@ -6433,11 +6485,11 @@ beforeAll(async ()=>{
   await mongoose.connect(mongoUri, {});
 });
 
-beforeEach(async ()=>{
+beforeEach(async () => {
   const collections = await mongoose.connection.db?.collections();
 
-  if(collections){
-    for(let collection of collections){
+  if (collections) {
+    for (let collection of collections) {
       await collection.deleteMany({});
     }
   }
@@ -6452,6 +6504,7 @@ afterAll(async () => {
 ```
 
 ### 201. Our First test
+
 - TODO: create the test: `routes/__test__/signup.test.ts`
 - `routes/__test__/signup.test.ts`
 - ensure that you can send in a request with email and password as req.body and ge a response with status of 201.
@@ -6462,89 +6515,92 @@ afterAll(async () => {
 ```ts
 //routest/__test__/signup.test.ts
 import request from 'supertest';
-import {app} from '../../app';
+import { app } from '../../app';
 
-it('returns a 201 on successful signup', async ()=>{
+it('returns a 201 on successful signup', async () => {
   return request(app)
     .post('/api/users/signup')
     .send({
       email: 'test@test.com',
-      password: 'password'
+      password: 'password',
     })
     .expect(201);
 });
 ```
+
 ### 202. note
-- if you make changes to test and tests still failing, restart. 
+
+- if you make changes to test and tests still failing, restart.
   - this is because ts-jest sometimes doesnt work
 
 ### 203. testing invalid input
+
 - TODO: if you send incorrect email or password, ensure status code 400
-- NOTE: to do 2 requests in one handler, use async/await syntax 
+- NOTE: to do 2 requests in one handler, use async/await syntax
 - NOTE: if you dont return, the test will auto `return`, so either a 'await' or 'return' is required
 
 ```ts
-it('returns a 400 with an invalid email', async ()=> {
+it('returns a 400 with an invalid email', async () => {
   return request(app)
     .post('/api/users/signup')
     .send({
-      email:'test23@test.com',
-      password: 'password'
+      email: 'test23@test.com',
+      password: 'password',
     })
     .expect(400);
 });
 
-it('returns a 400 with an invalid password', async ()=> {
+it('returns a 400 with an invalid password', async () => {
   return request(app)
     .post('/api/users/signup')
     .send({
-      email:'test@test.com',
-      password: 'p'
+      email: 'test@test.com',
+      password: 'p',
     })
     .expect(400);
 });
 
-it('returns a 400 with missing email AND password', async ()=> {
+it('returns a 400 with missing email AND password', async () => {
   //valid email missing password
   await request(app)
     .post('/api/users/signup')
     .send({
-      email:'test@test.com',
+      email: 'test@test.com',
     })
-    .expect(400); 
+    .expect(400);
 
   //valid password missing email
   await request(app)
     .post('/api/users/signup')
     .send({
-      password: 'password'
+      password: 'password',
     })
     .expect(400);
 });
-
 ```
 
 ### 204. requiring unique emails
+
 - TODO: test and ensure that user cannot signup with same email twice
 - `src/routes/__test__/signup.test.ts`
 - NOTE: because we use async express handler you can import in app.ts: `import "express-async-errors";`
 
 ```ts
 //dissallow signing up with same email
-it('dissallows duplicate emails', async ()=>{
+it('dissallows duplicate emails', async () => {
   await request(app)
     .post('/api/users/signup')
     .send({
       email: 'test@test.com',
-      password: 'password'
+      password: 'password',
     })
     .expect(201);
 
-    await request(app)
+  await request(app)
     .post('/api/users/signup')
     .send({
       email: 'test@test.com',
-      password: 'password'
+      password: 'password',
     })
     .expect(400);
 });
@@ -6552,27 +6608,28 @@ it('dissallows duplicate emails', async ()=>{
 
 ### 205. changing node env during tests
 
-- when the JWT is stored on the session object (signup.ts) 
+- when the JWT is stored on the session object (signup.ts)
 - the session object will be turned into a string by cookie session
 - cookie session middleware will send response with a header name `Set-Cookie`
 - TODO: use `response.get()` to lookup headers set in response
-- NOTE: test fails because when we set `cookieSession({secure:true})` it only sets a cookie if connection is secure and supatest is making plain http requests. 
-- FIX: when running tests, use `process.env.NODE_ENV !== 'test'`  
+- NOTE: test fails because when we set `cookieSession({secure:true})` it only sets a cookie if connection is secure and supatest is making plain http requests.
+- FIX: when running tests, use `process.env.NODE_ENV !== 'test'`
 
 ```ts
 //signup.test.ts
-it('sets a cookie after successful signup', async () =>{
+it('sets a cookie after successful signup', async () => {
   const response = await request(app)
     .post('/api/users/signup')
     .send({
       email: 'test@test.com',
-      password: 'password'
+      password: 'password',
     })
     .expect(201);
 
   expect(response.get('Set-Cookie')).toBeDefined();
 });
 ```
+
 - update app.ts
 
 ```ts
@@ -6589,37 +6646,37 @@ app.use(
 
 //...
 ```
-- tests are passing  
-<img src="exercise_files/udemy-docker-section10-205-testing-signup-changing-node-env-during-tests.png" width="800"/>
 
+- tests are passing  
+  <img src="exercise_files/udemy-docker-section10-205-testing-signup-changing-node-env-during-tests.png" width="800"/>
 
 ### 206. testing around sign in functionality
+
 - `routes/__test__/signin.test.ts`
 
 ```ts
 import request from 'supertest';
-import {app} from '../../app';
+import { app } from '../../app';
 
 //- TODO: test when signin with account not in db or never signed up before, then should get -> 400 error
-it('fails when an email that does not exist is supplied', async ()=>{
+it('fails when an email that does not exist is supplied', async () => {
   await request(app)
     .post('/api/users/signin')
     .send({
-      email:'test@test.com', 
-      password: 'password'
+      email: 'test@test.com',
+      password: 'password',
     })
     .expect(400);
 });
 
 //- TODO: test incorrect password -> 400 error
-it('fails when an incorrect password is supplied', async ()=>{
-
+it('fails when an incorrect password is supplied', async () => {
   //sign up
   await request(app)
     .post('/api/users/signup')
     .send({
-      email:'test@test.com', 
-      password: 'password'
+      email: 'test@test.com',
+      password: 'password',
     })
     .expect(201);
 
@@ -6627,19 +6684,19 @@ it('fails when an incorrect password is supplied', async ()=>{
   await request(app)
     .post('/api/users/signin')
     .send({
-      email:'test@test.com', 
-      password: 'asdasddfdgfgdgd'
+      email: 'test@test.com',
+      password: 'asdasddfdgfgdgd',
     })
     .expect(400);
 });
 
 //- TODO: test cookie should be in header if correct credentials used to sign in
-it('fails when an email that does not exist is supplied', async ()=>{
+it('fails when an email that does not exist is supplied', async () => {
   await request(app)
     .post('/api/users/signup')
     .send({
-      email:'test@test.com', 
-      password: 'password'
+      email: 'test@test.com',
+      password: 'password',
     })
     .expect(201);
 
@@ -6647,60 +6704,61 @@ it('fails when an email that does not exist is supplied', async ()=>{
   const response = await request(app)
     .post('/api/users/signin')
     .send({
-      email:'test@test.com', 
-      password: 'password'
+      email: 'test@test.com',
+      password: 'password',
     })
     .expect(200);
 
   expect(response.get('Set-Cookie')).toBeDefined();
-  
 });
 ```
 
-### 207. cookie request is possibly undefined error 
+### 207. cookie request is possibly undefined error
+
 - TODO: signout test (lesson 208)
 - TODO: UPDATE Supertest type declarations
- - OLD -> get request for a cookie would return only a string[]
- - UDPATE -> get request for a cookie returns `string[]` or `undefined`.
+- OLD -> get request for a cookie would return only a string[]
+- UDPATE -> get request for a cookie returns `string[]` or `undefined`.
 - `auth/src/routes/__test__ /signout.test.ts`
 
 <img src="exercise_files/udemy-docker-section10-208-sign-out.png" width="800"/>
 
-
 #### OLD
+
 ```ts
-  expect(response.get('Set-Cookie')[0]).toEqual(
-    'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly'
-  );
+expect(response.get('Set-Cookie')[0]).toEqual(
+  'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly'
+);
 ```
 
 #### update
+
 ```ts
-const cookie = response.get("Set-Cookie");
+const cookie = response.get('Set-Cookie');
 if (!cookie) {
-  throw new Error("Expected cookie but got undefined.");
+  throw new Error('Expected cookie but got undefined.');
 }
 
 expect(cookie[0]).toEqual(
-  "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly"
+  'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly'
 );
 ```
 
 ### 208. testing signout
+
 ```ts
 import request from 'supertest';
-import {app} from '../../app';
+import { app } from '../../app';
 
-it('clears the cookie after signing out', async ()=>{
-
+it('clears the cookie after signing out', async () => {
   //signup
   await request(app)
     .post('/api/users/signup')
     .send({
       email: 'test@test.com',
-      password: 'password'
+      password: 'password',
     })
-    .expect(201)
+    .expect(201);
 
   //signout
   const response = await request(app)
@@ -6708,36 +6766,35 @@ it('clears the cookie after signing out', async ()=>{
     .send({})
     .expect(200);
 
-  
   const cookie = response.get('Set-Cookie');
   if (!cookie) {
-    throw new Error("Expected cookie but got undefined.");
+    throw new Error('Expected cookie but got undefined.');
   }
 
-  //check that there is no cookie 
+  //check that there is no cookie
   expect(cookie[0]).toEqual(
-    "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly"
+    'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly'
   );
 });
 ```
 
 ### 209. issues with cookies during testing
+
 - TODO: test `/api/users/currentuser`
 - NOTE: supatest does not automatically manage cookies (unlike the browser which does) so the cookie does not get added to the follow up request
 
 ```ts
 //src/routes/__test__
 import request from 'supertest';
-import {app} from '../../app';
+import { app } from '../../app';
 
-it('responds with details about the current user', async ()=>{
-
+it('responds with details about the current user', async () => {
   //signup so we have a user
   await request(app)
     .post('/api/users/signup')
     .send({
-      email:'test@test.com',
-      password: 'password'
+      email: 'test@test.com',
+      password: 'password',
     })
     .expect(201);
 
@@ -6751,6 +6808,7 @@ it('responds with details about the current user', async ()=>{
 ```
 
 ### 210. no overload matches this call error with cookie
+
 - preparation for lesson 211. updating our current-user test
 - NOTE: IMPORTANT - most of this code will eventually be removed by the end of the Auth Helper Function lecture.
 - `auth/src/routes/__test__/current-user.test.ts` add a conditional check above the response here:
@@ -6758,24 +6816,25 @@ it('responds with details about the current user', async ()=>{
 ```ts
 //auth/src/routes/__test__/current-user.test.ts
 if (!cookie) {
-  throw new Error("Cookie not set after signup");
+  throw new Error('Cookie not set after signup');
 }
 
 const response = await request(app)
-  .get("/api/users/currentuser")
-  .set("Cookie", cookie)
+  .get('/api/users/currentuser')
+  .set('Cookie', cookie)
   .send()
   .expect(200);
 
-expect(response.body.currentUser.email).toEqual("test@test.com");
+expect(response.body.currentUser.email).toEqual('test@test.com');
 ```
 
 ### 211. easy auth solution
+
 - NOTE: the problem is we want to have authentication(cookies) - for all tests
 - to get there in the tests, we have to:
   1. first sign up
-  2. then get cookie 
-  3. set cookie in header and get currentuser 
+  2. then get cookie
+  3. set cookie in header and get currentuser
 
 <img src='exercise_files/udemy-docker-section10-211-sign-in-response-cookie.png' width="800"/>
 
@@ -6783,16 +6842,15 @@ expect(response.body.currentUser.email).toEqual("test@test.com");
 //auth/src/routes/__test__/current-user.test.ts
 
 import request from 'supertest';
-import {app} from '../../app';
+import { app } from '../../app';
 
-it('responds with details about the current user', async ()=>{
-
+it('responds with details about the current user', async () => {
   //signup so we have a user
   const authResponse = await request(app)
     .post('/api/users/signup')
     .send({
-      email:'test@test.com',
-      password: 'password'
+      email: 'test@test.com',
+      password: 'password',
     })
     .expect(201);
 
@@ -6800,7 +6858,7 @@ it('responds with details about the current user', async ()=>{
   const cookie = authResponse.get('Set-Cookie');
 
   if (!cookie) {
-    throw new Error("Cookie not set after signup");
+    throw new Error('Cookie not set after signup');
   }
 
   //make a request
@@ -6813,12 +6871,15 @@ it('responds with details about the current user', async ()=>{
   expect(response.body.currentUser.email).toEqual('test@test.com');
 });
 ```
+
 - TODO: move this authentication part of tests into helper function
 
 ### 212. globalThis has no index signature TS Error
+
 - for 213. you may get an error like:
 
 ### FIX 1
+
 `Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.ts(7017)`
 
 - FIX: `src/test/setup.ts`
@@ -6842,6 +6903,7 @@ declare global {
 ```
 
 ### fix2
+
 - add another conditional to check for the cookie
 
 ```ts
@@ -6850,15 +6912,16 @@ declare global {
 // return cookie;
 
 //NEW
-const cookie = response.get("Set-Cookie");
+const cookie = response.get('Set-Cookie');
 if (!cookie) {
-  throw new Error("Failed to get cookie from response");
+  throw new Error('Failed to get cookie from response');
 }
 return cookie;
 ```
 
 ### 213. Auth Helper function
-- TODO: extracting auth helper functions 
+
+- TODO: extracting auth helper functions
 - src/test/setup.ts
 - NOTE: it is a global function for ease of use. `const cookie = await global.signin();`
 - NOTE: you can extract function to its own file and use es/module import too
@@ -6880,13 +6943,15 @@ global.signin = async () => {
   const response = await request(app)
     .post('/api/users/signup')
     .send({
-      email, password
+      email,
+      password,
     })
     .expect(201);
-}
-
+};
 ```
+
 #### usage
+
 - using the helper function in `src/routes/__test__/current-user.test.ts`
 - NOTE: calling global function
 
@@ -6935,9 +7000,10 @@ it('responds with null if not authenticated', async () => {
 });
 ```
 
-
 ---
+
 ## section 11 - integrating a server side rendered react app (3hr01min)
+
 - 3hr 1min / 40 lessons
 - TODO: Auth part of react app (YOU CAN SKIP TO END IF YOU DONT WANT TO FOLLOW ALONG BUILDING THE REACT PAGES)
 
@@ -6949,9 +7015,11 @@ it('responds with null if not authenticated', async () => {
 ### 216. reminder on server side rendering
 
 #### Normal react flow (atleast 2-3 requests)
+
 <img src="exercise_files/udemy-microservices-section11-216-normal-react-flow.png" width="800"/>
 
 #### server side rendering (nextjs)
+
 <img src="exercise_files/udemy-microservices-section11-216-serverside.png" width="800">
 
 - nextjs server will make requests to services
@@ -6961,15 +7029,17 @@ it('responds with null if not authenticated', async () => {
 
 - ERROR -> `Anonymous arrow functions cause Fast Refresh to not preserve local component state.`
 - FIX -> use named function: dont use default export
+
 ```ts
 //named
 const Landing = () => <div />;
-//...  
+//...
 
 export default Landing;
 ```
 
 ### 218. basics of nextjs
+
 - folder: section05-ticketing/client
 - npm init -y
 - pnpm i react react-dom next
@@ -6978,6 +7048,7 @@ export default Landing;
 - pages/index is the default
 
 ### 219. building a next image
+
 - using js, if you use typscript you will have to type a lot of nextjs related stuff
 - TODO: be able to run nextjs inside Kubernetes cluster
 
@@ -6998,19 +7069,22 @@ COPY . .
 # Run the app
 CMD ["pnpm", "run", "dev"]
 ```
+
 - NOTE: docker desktop is running, kubernetes is running
 - NOTE: skaffold is running
-- build on local machine (from client/ folder): `docker build -t clarklindev/client .` 
+- build on local machine (from client/ folder): `docker build -t clarklindev/client .`
 
 ### 220. Running Client (Nextjs) in kubernetes
+
 - So either use google cloud kubernetes...or docker-desktop and get images from dockerhub (you will know from yaml files by the url of the containers image)
 - NOTE: if running gcloud kubernetes, you dont have to upload to dockerhub
 - NOTE: if using docker-desktop push to docker hub -> `docker push clarklindev/client`
 - TODO: get client/ running in kubernetes cluster on gcloud
 
 #### 1. creating the pod
-  - create folder: infra/k8s/client-depl.yaml (similar to auth-depl.yaml)
-  - NOTE: `port: 3000` because nextjs by default listens to port 3000
+
+- create folder: infra/k8s/client-depl.yaml (similar to auth-depl.yaml)
+- NOTE: `port: 3000` because nextjs by default listens to port 3000
 
 ```yaml
 #infra/k8s/client-depl.yaml
@@ -7018,7 +7092,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: client-depl
-spec: 
+spec:
   replicas: 1
   selector:
     matchLabels:
@@ -7030,7 +7104,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: clarklindev/client   #asia.gcr.io/golden-index-441407-u9/client:latest
+          image: clarklindev/client #asia.gcr.io/golden-index-441407-u9/client:latest
 ---
 apiVersion: v1
 kind: Service
@@ -7046,27 +7120,29 @@ spec:
       targetPort: 3000 # nextjs by default listens to port 3000
 ```
 
-#### 2. UPDATE filesync with skaffold 
+#### 2. UPDATE filesync with skaffold
+
 - tracks changes to ts files
 - add entry to skaffold.yaml (under `artifacts`)
 
 ```yaml
 # section05-ticketing/skaffold.yaml
 #...
-    - image: asia.gcr.io/golden-index-441407-u9/client
-      context: client
-      docker:
-        dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: '**/*.js'
-            dest: .
+- image: asia.gcr.io/golden-index-441407-u9/client
+  context: client
+  docker:
+    dockerfile: Dockerfile
+  sync:
+    manual:
+      - src: '**/*.js'
+        dest: .
 ```
-#### 3. UPDATE ingress-srv.yaml 
+
+#### 3. UPDATE ingress-srv.yaml
+
 - TODO: ingress-srv.yaml is for routing within cluster
 - ie. add path (catch all ) that routes to client service -> add at end
-- NOTE: order of the path matching matters (the paths array) -> specific to general pathing route rules 
-
+- NOTE: order of the path matching matters (the paths array) -> specific to general pathing route rules
 
 ```yaml
 #...
@@ -7077,15 +7153,16 @@ spec:
       name: client-srv
       port:
         number: 3000
-
 #...
-
 ```
+
 ##### TROUBLESHOOT
+
 - NOTE: Starting with Kubernetes 1.18, the pathType field became mandatory to specify how the path matching should behave.
 - ERROR: `The Ingress "ingress-service" is invalid: spec.rules[0].http.paths[1].pathType: Required value: pathType must be specified`
 
 ### 221. Small Update for Custom Webpack Config
+
 - NOTE: in lesson 222 -> next.config.js file and adding some configuration to it
 - The latest versions of Next.js use a newer version of Webpack which moves watchOptions out from webpackDevMiddleware
 
@@ -7109,44 +7186,51 @@ module.exports = {
 ```
 
 ### 222. note on file change detection
+
 - FIX: list pods, delete the pod, pod will be recreated with updates
 - nextjs might not show updates for file change detection running inside docker container
 - SEE update (lesson 221)
 - TODO: next.config.js needs to show inside running pod (restart pod)
 - TROUBLESHOOT -> updates note reflecting? restart skaffold
+
   - TODO: manually kill the client pod -> deployment will create a new pod
   - `kubectl get pods`
 
   #### delete pod
+
   - `kubectl delete pod [podname]`
 
 ### 223. adding global css
+
 - lesson deals with how to work with bootstrap css and nextjs
 - NOTE: Bootstrap css is a global css file
-- any global css can be ONLY be imported into _app.js
+- any global css can be ONLY be imported into \_app.js
 
-#### _app.js page handler 
-- `client/pages/_app.js`-> we are defining our own custom _app component
+#### \_app.js page handler
+
+- `client/pages/_app.js`-> we are defining our own custom \_app component
 - when you navigate to a page with nextjs, nextjs will import your component from within the page files by wrapping it up inside a component (app)
 - we are overriding the handling of this component by defining our own custom app component -> pages will pass through `_app.js`
 
 ```js
 import 'bootstrap/dist/css/bootstrap.css';
 
-export default ({Component, pageProps}) => {
-  return <Component {...pageProps}/>
+export default ({ Component, pageProps }) => {
+  return <Component {...pageProps} />;
 };
 ```
+
 #### install bootstrap
+
 - `section05-ticketing/client/` folder
 - `npm install bootstrap`
-- adding boostrap to package.json, skaffold will detect a change and rebuild  the client image
+- adding boostrap to package.json, skaffold will detect a change and rebuild the client image
 
-- NOTE: the styling should reflect bootstrap successfully installed  
+- NOTE: the styling should reflect bootstrap successfully installed
 
 <img src="exercise_files/udemy-microservices-section11-223-bootstrapcss.png" width="800"/>
 
-### 224. adding a sign up form  
+### 224. adding a sign up form
 
 - `ticketing.dev`
 
@@ -7157,131 +7241,36 @@ export default ({Component, pageProps}) => {
 <img src="exercise_files/udemy-microservices-section11-224-adding-a-sign-up-form-signup-boostrapped.png" width="800"/>
 
 #### TROUBLESHOOT
+
 - NOTE: docker desktop is running (updates to codebase gets pushed to docker hub)
-- NOTE: dockerfile command should be: 
+- NOTE: dockerfile command should be:
 
 ```
 CMD ["pnpm", "run", "start"]`
 ```
 
 - and NOT:
+
 ```
 CMD ["pnpm", "start"]
 ```
 
 ### 225. handling email and password inputs
+
 - adding submit handler for the form which then makes request to auth service
 - add hooks to keep track of state
 
 ```js
-import {useState} from 'react';
-
-const Signup = ()=>{
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const onSubmit = (event)=>{
-    event.preventDefault();
-    console.log(email, password);
-  }
-
-  return (
-    <div className="container">
-      <form onSubmit={onSubmit}>
-        <h1>Sign up</h1>
-        <div className="form-group">
-          <label>Email address</label>
-          <input value={email} onChange={e=> setEmail(e.target.value)} className="form-control"/>
-        </div>
-        <div className="form-group">
-          <label>password</label>
-          <input value={password} onChange={e => setPassword(e.target.value)} type="password" className="form-control"/>
-        </div>
-        <br/>
-        <button className="btn btn-primary">Sign up</button>
-      </form>
-    </div>
-  )
-}
-
-export default Signup;
-```
-##### expected result  
-
-<image src="exercise_files/udemy-microservices-section11-225-handling-email-and-password-inputs.png" width="800"/>
-
-### 226. successful account signup
-
-<img src="exercise_files/udemy-microservices-section11-226-success-signup-sends-data-to-auth-service.png" width="800"/>
-
-- auth service has api route: /api/users/signup
-- client -> nginx (routing: cluster ip service) -> auth container
-- TODO: use axios: client/ folder : `pnpm i axios`
-- NOTE: skaffold needs to rebuild
-
-```js
-//client/pages/auth/signup.js
-//...
-
-const [email, setEmail] = useState('');
-const [password, setPassword] = useState('');
-
-const onSubmit = async event => {
-  event.preventDefault();
-  const response = await axios.post('/api/users/signup', {
-    email, password
-  });
-
-  console.log(response.data);
-
-}
-```
-- successful signup response is a cookie with the response header
-<img src="exercise_files/udemy-microservices-section11-226-signup-response-headers.png" alt="udemy-microservices-section11-226-signup-response-headers.png" width="800"/>
-
-### 227. Handling validation errors
-- submitting signup form with invalid email / passord
-<img src="exercise_files/udemy-microservices-section11-227-handling-validation-errors.png" alt="udemy-microservices-section11-227-handling-validation-errors.png" width="800"/>
-
-- validation error response should also be handled by showing updates to html
-<img src="exercise_files/udemy-microservices-section11-227-handling-validation-errors-error-response.png" alt="udemy-microservices-section11-227-handling-validation-errors-error-response.png" width="800"/>
-
-- NOTE: we access the response errors via `err.response.data.` and we are returning `errors` which is an array of error objects: `err.response.data.errors`
-- NOTE: request-validation-errors.ts -> errors return an array of errors objects `{ message: err.msg, field: err.path }`
-- showing validation errors
-
-<img src="exercise_files/udemy-microservices-section11-227-showing-validation-errors.png" width="800" alt="udemy-microservices-section11-227-showing-validation-errors.png"/>
-
-- map through the errors from onSubmit set via `setErrors`
-- the field property can also be used to show errors directly under each input
-
-- client/pages/auth/signup.js
-
-```ts
-//client/pages/auth/signup.js
 import { useState } from 'react';
-import axios from 'axios';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState([]);
 
-  const onSubmit = async event => {
+  const onSubmit = (event) => {
     event.preventDefault();
-    try{
-      const response = await axios.post('/api/users/signup', {
-        email, password
-      });
-    
-      console.log(response.data);
-    }
-    catch(err){
-      console.log(err.response.data);
-      setErrors(err.response.data.errors)
-    }
-  }
+    console.log(email, password);
+  };
 
   return (
     <div className="container">
@@ -7304,19 +7293,126 @@ const Signup = () => {
             className="form-control"
           />
         </div>
-        <br/>
-        {errors.length > 0 &&
-          <div className='alert alert-danger'>
+        <br />
+        <button className="btn btn-primary">Sign up</button>
+      </form>
+    </div>
+  );
+};
+
+export default Signup;
+```
+
+##### expected result
+
+<image src="exercise_files/udemy-microservices-section11-225-handling-email-and-password-inputs.png" width="800"/>
+
+### 226. successful account signup
+
+<img src="exercise_files/udemy-microservices-section11-226-success-signup-sends-data-to-auth-service.png" width="800"/>
+
+- auth service has api route: /api/users/signup
+- client -> nginx (routing: cluster ip service) -> auth container
+- TODO: use axios: client/ folder : `pnpm i axios`
+- NOTE: skaffold needs to rebuild
+
+```js
+//client/pages/auth/signup.js
+//...
+
+const [email, setEmail] = useState('');
+const [password, setPassword] = useState('');
+
+const onSubmit = async (event) => {
+  event.preventDefault();
+  const response = await axios.post('/api/users/signup', {
+    email,
+    password,
+  });
+
+  console.log(response.data);
+};
+```
+
+- successful signup response is a cookie with the response header
+  <img src="exercise_files/udemy-microservices-section11-226-signup-response-headers.png" alt="udemy-microservices-section11-226-signup-response-headers.png" width="800"/>
+
+### 227. Handling validation errors
+
+- submitting signup form with invalid email / passord
+  <img src="exercise_files/udemy-microservices-section11-227-handling-validation-errors.png" alt="udemy-microservices-section11-227-handling-validation-errors.png" width="800"/>
+
+- validation error response should also be handled by showing updates to html
+  <img src="exercise_files/udemy-microservices-section11-227-handling-validation-errors-error-response.png" alt="udemy-microservices-section11-227-handling-validation-errors-error-response.png" width="800"/>
+
+- NOTE: we access the response errors via `err.response.data.` and we are returning `errors` which is an array of error objects: `err.response.data.errors`
+- NOTE: request-validation-errors.ts -> errors return an array of errors objects `{ message: err.msg, field: err.path }`
+- showing validation errors
+
+<img src="exercise_files/udemy-microservices-section11-227-showing-validation-errors.png" width="800" alt="udemy-microservices-section11-227-showing-validation-errors.png"/>
+
+- map through the errors from onSubmit set via `setErrors`
+- the field property can also be used to show errors directly under each input
+
+- client/pages/auth/signup.js
+
+```ts
+//client/pages/auth/signup.js
+import { useState } from 'react';
+import axios from 'axios';
+
+const Signup = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState([]);
+
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post('/api/users/signup', {
+        email,
+        password,
+      });
+
+      console.log(response.data);
+    } catch (err) {
+      console.log(err.response.data);
+      setErrors(err.response.data.errors);
+    }
+  };
+
+  return (
+    <div className="container">
+      <form onSubmit={onSubmit}>
+        <h1>Sign up</h1>
+        <div className="form-group">
+          <label>Email address</label>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="form-control"
+          />
+        </div>
+        <div className="form-group">
+          <label>password</label>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            className="form-control"
+          />
+        </div>
+        <br />
+        {errors.length > 0 && (
+          <div className="alert alert-danger">
             <h4>oops..</h4>
             <ul className="my-0">
-            {
-              errors.map((err, index) => {
-                return <li key={index}>err.message</li>
-              })
-            }
+              {errors.map((err, index) => {
+                return <li key={index}>err.message</li>;
+              })}
             </ul>
           </div>
-        }
+        )}
         <button className="btn btn-primary">Sign up</button>
       </form>
     </div>
@@ -7327,12 +7423,139 @@ export default Signup;
 ```
 
 #### TODO:
+
 - NOTE: validation/error displaying logic will be repeated for many parts of the site
 - NOTE: request logic (to api) will be repeated for many parts of the site
 - other forms (sign-in, creating order, creating ticket, editing ticket etc) could use this logic, which can be extracted to a helper funciton
 
+### 228. The useRequest Hook
+
+- moving logic to re-usable hook:
+- TODO: make a useRequest hook
+
+<img src="exercise_files/udemy-microservices-section11-228-useRequest-hook.png" width="800" alt="udemy-microservices-section11-228-useRequest-hook.png">
+
+- hook takes:
+
+  1. request (url)
+  2. method ('PUT', 'PATCH', 'POST', 'GET', 'DELETE')
+  3. (optional) body: these (PUT, PATCH, POST) http methods have a body
+
+- hook outputs:
+  1. function to execute request
+  2. errors
+- section05-ticketing/client/hooks/use-request.js
+- error will be null by default.
+- NOTE: axios call... we dont know ahead of time what the method is, so we use `axios[method]` by do a lookup `method` to the axios call
+- NOTE: method must be equal to 'get' || 'put' || 'patch' || 'post' || 'delete'
+
+### 229. using useRequest hook
+
+- folder: `section-05-ticketing/client/hooks/use-request.js`
+
+#### the use-request hook
+
+```js
+//client/hooks/use-request.js
+
+import axios from 'axios';
+import { useState } from 'react';
+
+//url, method (GET, PUT, POST, PATCH, DELETE)
+// method must be equal to 'get' || 'put' || 'patch' || 'post' || 'delete'
+const useRequest = (url, method, body) => {
+  const [errors, setErrors] = useState(null);
+
+  const doRequest = async () => {
+    try {
+      setErrors(null);
+      const response = await axios[method](url, body);
+      return response.data;
+    } catch (err) {
+      setErrors(
+        <div className="alert alert-danger">
+          <h4>oops..</h4>
+          <ul className="my-0">
+            {err.response?.data?.errors.map((err, index) => {
+              return <li key={index}>err.message</li>;
+            })}
+          </ul>
+        </div>
+      );
+    }
+  };
+
+  return { doRequest, errors };
+};
+
+export default useRequest;
+```
+
+#### using the use-request.js hook
+
+- using the useRequest hook
+- client/pages/auth/signup.js
+
+```js
+//client/pages/auth/signup.js
+import { useState } from 'react';
+
+import useRequest from '../../hooks/use-request'; //our custom reusable request hook :)
+
+const Signup = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const { doRequest, errors } = useRequest({
+    url: '/api/users/signup',
+    method: 'post',
+    body: {
+      email,
+      password,
+    },
+  });
+
+  const onSubmit = async (event) => {
+    event.preventDefault();
+
+    //using re-usable fetch hook...
+    doRequest();
+  };
+
+  return (
+    <div className="container">
+      <form onSubmit={onSubmit}>
+        <h1>Sign up</h1>
+        <div className="form-group">
+          <label>Email address</label>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="form-control"
+          />
+        </div>
+        <div className="form-group">
+          <label>password</label>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            className="form-control"
+          />
+        </div>
+        <br />
+        {errors}
+        <button className="btn btn-primary">Sign up</button>
+      </form>
+    </div>
+  );
+};
+
+export default Signup;
+```
 
 ---
+
 ## section 12 - code sharing and re-use between services (52min)
 
 ---
