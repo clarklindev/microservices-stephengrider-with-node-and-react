@@ -8367,11 +8367,52 @@ export default AppComponent;
   - remove `<a>`
   - move className up to `<Link className={}>`
   - see [nextjs doc](https://nextjs.org/docs/messages/invalid-new-link-with-extra-anchor)
-  
+
 ```js
 <Link className="navbar-brand" href="/">
   GitTix
 </Link>
+```
+
+### 251. building the header
+- building out the header
+  - has logo (left)
+  - right-side has buttons `signup` and `signin` OR `signout` if already logged-in
+
+### 252. conditionally showing Links
+- links will be an array which we filter any falsy items
+- map over each remaining item in links, destructure out label and href
+
+```js
+//client/components/header.js
+import Link from 'next/link';
+
+const HeaderComponent = ({ currentUser }) => {
+  const links = [
+    !currentUser && { label: 'Sign Up', href: '/auth/signup' },
+    !currentUser && { label: 'Sign In ', href: '/auth/signin' },
+    currentUser && { label: 'Signout', href: '/auth/signout' },
+  ]
+    .filter((linkConfig) => linkConfig)
+    .map(({ label, href }) => {
+      return <li key={href}>{label}</li>;
+    });
+
+  return (
+    <nav className="navbar navbar-light bg-light">
+      <Link className="navbar-brand" href="/">
+        GitTix
+      </Link>
+      <div className="d-flex justify-content-end">
+        <ul className="nav d-flex align-items-center">{links}</ul>
+      </div>
+    </nav>
+  );
+};
+
+export default HeaderComponent;
+
+
 ```
 
 ---
