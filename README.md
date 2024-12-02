@@ -5,6 +5,8 @@
 - [microservices-with-node-js-and-react](https://www.udemy.com/course/microservices-with-node-js-and-react/)
 
 - given /exercise_files
+- NOTE: `section01-04-blog` is for sections 1-4
+- NOTE: `section05-ticketing` is for section05 and all sections that continue building on the project
 
 ## Table of contents
 
