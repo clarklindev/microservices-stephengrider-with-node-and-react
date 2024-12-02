@@ -8411,8 +8411,43 @@ const HeaderComponent = ({ currentUser }) => {
 };
 
 export default HeaderComponent;
+```
 
+### 253. signing out 
+- auth route is /api/users/signout
+- TODO: create a page to allow users to signout
+- NOTE: the request to signout MUST be coming from a component, NOT getInitalProps (which is serverside), 
+  - server doesnt know what to do with cookies
+  - ONLY client side browser can work with cookies so our request MUST come from clientside browser
+- CREATE client/pages/auth/signout.js
+  - by default it will show the message 'signing you out'
+  - after initial render, useEffect should call the api route `/api/users/signout`
+  - then if we clear the cookie session -> after redirect to landing page
 
+```js
+//client/pages/auth/signout.js
+
+import { useEffect } from 'react';
+import Router from 'next/router';
+
+import useRequest from '../../hooks/use-request';
+
+const SignOutPage = () => {
+  const { doRequest } = useRequest({
+    url: '/api/users/signout',
+    method: 'post',
+    body: {},
+    onSuccess: () => Router.push('/'),
+  });
+
+  useEffect(() => {
+    doRequest();
+  }, []);
+
+  return <div>signing you out...</div>;
+};
+
+export default SignOutPage;
 ```
 
 ---
