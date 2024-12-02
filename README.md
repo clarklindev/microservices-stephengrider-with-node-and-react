@@ -8050,6 +8050,71 @@ LandingPage.getInitialProps = async ({req}) => {
 
 - TODO: fix up .getInitialProps() , extract the test for `typeof window === 'undefined'` to check server/client sending request
 
+### 242. a reusable api client (buildClient)
+
+- OUTCOME: `buildClient()` helper (client/api/build-client.js) which creates a configured axios client
+
+- currently everytime we call getInitialProps() we have to: 
+  - setup `if(typeof window === 'undefined'){...}` 
+  - `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/` domain url
+- TODO: update so we extract this to helper file -> by creating `buildClient` helper
+  - it will preconfigure axios request regardless whether we are on client or on server making requests to a service
+
+<img src="exercise_files/udemy-microservices-section11-242-reusable-api-client-buildclient-prefconfigures-axios.png" alt="udemy-microservices-section11-242-reusable-api-client-buildclient-prefconfigures-axios.png" width="400"/>
+
+- create: client/api/build-client.js
+
+```js
+//client/api/build-client.js
+import axios from 'axios';
+
+//usage: call buildClient() passing in an object with request attached
+const buildClient = ({ req }) => {
+  if (typeof window === 'undefined') {
+    //server
+    return axios.create({
+      baseURL:
+        'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local',
+      headers: req.headers,
+    });
+  } else {
+    //client (browser)
+    return axios.create({
+      baseURL: '/',
+    });
+  }
+};
+
+export default buildClient;
+
+```
+
+#### usage of build-client.js
+- NOTE: the first argument of getIntialProps() is reffered to as 'context' which is the object with the props like `req` etc
+  - instead of destructuring this object and getting request `{req}` pass the `context` object.
+- define axios client `const client = buildClient(context)` 
+  - gets the configured axios instance then we need to pass the requested route
+- `const request = await client.get(route)` 
+
+```js
+// client/pages/index.js
+import buildClient from '../api/build-client';
+
+const LandingPage = ({ currentUser }) => {
+  console.log(currentUser);
+  return <h1>landing page</h1>;
+};
+
+LandingPage.getInitialProps = async (context) => {
+  
+  const client = buildClient(context);
+  const request = await client.get('/api/users/currentuser');
+  return request.data;
+};
+
+export default LandingPage;
+
+```
 
 ---
 
