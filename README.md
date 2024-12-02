@@ -8127,11 +8127,87 @@ export default LandingPage;
 - docker desktop started -> docker OK -> kubernetes OK
   - kubernetes context is correctly selected
 - section05-ticketing/ `skaffold dev`
+- visit: ticketing.dev/auth/signin -> type on page `thisisunsafe` -> close browser window -> reopen browser window
 
 - TODO: after signing in -> you will see the respective message -> 'you are signed in'
 - TODO: to sign-out, clear cookies in browser (application -> cookies -> select the domain -> clear) -> browser refresh -> 'you are NOT signed in'
 
+### 244. sign-in form
 
+- still TODO: navigation header
+- still TODO: sign-in page
+
+- will be similar to signup.js
+- client/pages/auth/signin.js
+  - header changes to 'sign in'
+  - url request path `/api/users/signin`
+
+- TEST: `ticketing.dev/auth/signin`
+- BROWSER -> browser tools -> application -> ensure no cookies for domain: cookies -> 'ticketing-dev' -> clear
+- then sign-in
+- then sign-out (cant sign out YET, but clear the cookie and refresh page should reflect NOT signed-in)
+
+<img src="exercise_files/udemy-microservices-section11-244-testing-sign-in.png" alt="udemy-microservices-section11-244-testing-sign-in.png" width="600" />
+
+```js
+//client/pages/auth/signin.js
+import { useState } from 'react';
+import Router from 'next/router';
+
+import useRequest from '../../hooks/use-request'; //our custom reusable request hook :)
+
+const Signin = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  //note: useRequest receives an object
+  const { doRequest, errors } = useRequest({
+    url: '/api/users/signin',
+    method: 'post',
+    body: {
+      email,
+      password,
+    },
+    onSuccess: () => Router.push('/'),
+  });
+
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    await doRequest(); //using re-usable fetch hook...
+  };
+
+  return (
+    <div className="container">
+      <form onSubmit={onSubmit}>
+        <h1>Sign in</h1>
+        <div className="form-group">
+          <label>Email address</label>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="form-control"
+          />
+        </div>
+        <div className="form-group">
+          <label>password</label>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            className="form-control"
+          />
+        </div>
+        <br />
+        {errors}
+        <button className="btn btn-primary">Sign in</button>
+      </form>
+    </div>
+  );
+};
+
+export default Signin;
+
+```
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
