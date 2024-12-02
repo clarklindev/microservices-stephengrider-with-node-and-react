@@ -8232,6 +8232,148 @@ export default Signin;
 
 <img src="exercise_files/udemy-microservices-section11-245-update-architecture.png" alt="udemy-microservices-section11-245-update-architecture.png" width="800">
 
+### 246. moving GetInitialProps
+- in _app.js change `export default` and assign app to a variable
+
+```js
+//client/pages/_app.js
+
+import 'bootstrap/dist/css/bootstrap.css';
+import buildClient from '../api/build-client';
+
+const AppComponent = ({ Component, pageProps }) => {
+  return (
+    <div>
+      <h1>hello</h1>
+      <Component {...pageProps} />
+    </div>
+  );
+};
+
+AppComponent.getInitialProps = () => {};
+
+export default AppComponent;
+```
+
+### 247. Issues with Custom App GetInitalProps
+- _app.js is not a page, it is a custom component that wraps a page
+- PROBLEM? the props of getInitialProps() of a custom App component and a Page component are different
+  - the props of Page has context with context:`{req, res}`  
+  - the props of Custom App Component has context with context:`Component, ctx: {req, res}` 
+
+<img src="exercise_files/udemy-microservices-section11-247-props-for-getinitialprops-of-page-component-vs-custom-app-component.png" alt="udemy-microservices-section11-247-props-for-getinitialprops-of-page-component-vs-custom-app-component.png" width="600">
+
+- FIX: AppComponents' getInitialProps should receive appContext.ctx 
+
+```js
+import 'bootstrap/dist/css/bootstrap.css';
+import buildClient from '../api/build-client';
+const AppComponent = ({ Component, pageProps }) => {
+  return (
+    <div>
+      <h1>hello</h1>
+      <Component {...pageProps} />
+    </div>
+  );
+};
+
+AppComponent.getInitalProps = async (appContext) => {
+  const client = buildClient(appContext.ctx);
+  const { data } = await client.get('/api/users/currentuser');
+  console.log(data);
+
+  let pageProps = {};
+  if (appContext.Component.getInitalProps) {
+    pageProps = await appContext.Component.getInitalProps(appContext.ctx);
+  }
+  console.log(pageProps);
+  return data;
+};
+
+export default AppComponent;
+```
+
+#### TROUBLESHOOT
+- NOTE: with nextjs, getInitalProps being also in _app, causes the Pages' eg. LandingPage.getInitialProps() to not be automatically invoked.
+
+### 248. handling multiple GetInitialProps
+
+<img src="exercise_files/udemy-microservices-section11-248-handling-multiple-getInitialProps.png" alt="udemy-microservices-section11-248-handling-multiple-getInitialProps.png" width="600">
+
+- the LandingPage (index.js) getInitialProps() is not being invoked if we also have getInitialProps up at _app.js
+
+### fixing multiple getInitialProps
+
+<img src="exercise_files/udemy-microservices-section11-248-handling-multiple-getInitialProps-fix.png" alt="udemy-microservices-section11-248-handling-multiple-getInitialProps-fix.png" width="600">
+
+- FIX: call the landingPage's getInitialProp() from _app.js's getInitialProps() 
+- FIX: which will then pass the data for BOTH _app.js AND LandingPage down to AppComponent as props and SOME of it goes to LandingPage
+- from AppComponent -> console log the appContext from getInitialProps()
+- notice `Component` property which is a reference to the component Page we are trying to render in _app.js
+  - and because we have a reference to the component, we can call its Component.getInitialProps() function directly
+- NOTE: we will pass it some data by returning data from _app's getInitialProps() call
+  - the appContext goes into AppComponent 
+  - the appContext.ctx goes into a page
+- this means we are executing AppComponents getInitialProps AND Page component (LandingPage's) getInitialProps() and both currently return a console log of the currentUser
+
+<img src="exercise_files/udemy-microservices-section11-248-appContext-has-reference-to-component-its-trying-to-render.png" alt="udemy-microservices-section11-248-appContext-has-reference-to-component-its-trying-to-render.png" width="600">
+
+- NOTE: pages without the .getInitialProps() function have that common header code (we set in _app.js) and we are invoking Component.getInitialProps() which might not exists eg. signin.js and signup.js do not have this .getInitialProps
+
+- now, AppComponents.getInitialProps() has data common for everypage `const { data } = await client.get('/api/users/currentuser')`
+AND we can also call .getInitialProps() of Pages from AppComponents getInitialProps()
+
+- TODO: taking the pageProps, and data we are are fetching for AppComponent itself -> return this -> passes it through as props to the component -> ensure the props is used by the components that need it
+
+### 249. passing props through
+- TODO: passing data through as props to the server component
+  - by returning an object with the properties and values we need
+  - NOTE: spreading `data`, because data is what gets returned from `/api/users/currentuser` call -> is an object with currentUser property.
+
+```js
+//pages/_app.js
+import 'bootstrap/dist/css/bootstrap.css';
+import buildClient from '../api/build-client';
+
+const AppComponent = ({ Component, pageProps, currentUser }) => {
+  return (
+    <div>
+      <h1>hello {currentUser.email} </h1>
+      <Component {...pageProps} />
+    </div>
+  );
+};
+
+AppComponent.getInitalProps = async (appContext) => {
+  const client = buildClient(appContext.ctx);
+  const { data } = await client.get('/api/users/currentuser');
+
+  let pageProps = {};
+  if (appContext.Component.getInitalProps) {
+    pageProps = await appContext.Component.getInitalProps(appContext.ctx);
+  }
+  console.log(pageProps);
+  return {
+    pageProps,
+    ...data,
+  };
+};
+
+export default AppComponent;
+```
+
+### 250. error: invalid `<Link>` with `<a>` child
+- with nextjs 13 UPDATE:  
+  - remove `<a>`
+  - move className up to `<Link className={}>`
+  - see [nextjs doc](https://nextjs.org/docs/messages/invalid-new-link-with-extra-anchor)
+  
+```js
+<Link className="navbar-brand" href="/">
+  GitTix
+</Link>
+```
+
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
