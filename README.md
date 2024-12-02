@@ -7873,6 +7873,62 @@ kubectl get services -n ingress-nginx
 
 <img src="exercise_files/udemy-microservices-section11-236-external-name-service.png" alt="udemy-microservices-section11-236-external-name-service.png" width="800"/>
 
+### 237. When is .getInitialProps() called? (SUMMARY LESSON)
+
+<img src="exercise_files/udemy-microservices-section11-237-component-request-vs-ssr-getinitalprops.png" alt="udemy-microservices-section11-237-component-request-vs-ssr-getinitalprops.png" width="800"/>
+
+- this lesson summarises the past 3 lessons:
+- Required to customize request based on environment...
+- client side -> when using browser, given url path, axios baseURL of empty string (browser figures out the domain)
+- server sided -> SSR (from server nextjs app...) will need to add `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/`
+
+### How do we know when a request is going to be executed in browser vs server-side (nextjs)?
+
+- component requests are always client-side (browser)
+- .getInitialProps is server side and return is provided to server component as props
+- the server component (nextjs component) is rendered EXACTLY once wont wait for requests to be resolved during server rendering process.
+
+  - cant update state
+  - cant make use of lifecyle methods
+  - no hooks
+
+### .getInitialProps() called in browser
+
+- `.getInitialProps()` will also be called inside browser under particular circumstances
+
+<img src="exercise_files/udemy-microservices-section11-237-request-sources.png" alt="udemy-microservices-section11-237-request-sources.png" width="800"/>
+
+### when is getInitialProps() executed?
+
+- to test, add a console log in .getInitialProps() of client/pages/index.js
+  - if console.log shows in terminal (server)
+  - if console.log shows in console of browser dev tools (client)
+- anytime we call getInitialProps, we have to consider adding the domain
+- anytime request comes from a component or hook, dont have to worry about the domain problem
+
+#### getInitialProps() execution on server
+
+- hard refresh of page
+- clicking link from different domain
+- typing url into address bar
+
+#### getInitialProps() execution on client
+
+- navigating from one page to another while in the app
+  - TEST: signin-in causes change to url, which should call getInitialProps() of page (see browser console log)
+
+### 238. on the server or browser
+
+- `window` object is a browser concept, if we test typeof window === 'undefined', then we are on the server
+
+```ts
+if (typeof window === 'undefined') {
+  //we are on the server requests should follow this format: `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/`
+} else {
+  //we are on the , baseURL of ''
+}
+```
+
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
