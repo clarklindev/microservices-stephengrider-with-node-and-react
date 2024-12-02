@@ -7969,7 +7969,9 @@ const LandingPage = ({ currentUser }) => {
   return <h1>landing page</h1>;
 };
 
-LandingPage.getInitialProps = async () => {
+LandingPage.getInitialProps = async ({req}) => {
+  console.log(req.headers);
+
   if (typeof window === 'undefined') {
     //we are on the server requests should follow this format: `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/` 
     const response = await axios.get(
@@ -7995,6 +7997,53 @@ LandingPage.getInitialProps = async () => {
 - FIX: add a cookie to request going to auth service (if its coming from server)
 
 <img src="exercise_files/udemy-microservices-section11-240-returns-null-from-request-because-no-cookie-from-nginx-to-auth-service.png" alt="udemy-microservices-section11-240-returns-null-from-request-because-no-cookie-from-nginx-to-auth-service.png" width="800"/>
+
+### 241. server passing through the cookies
+- TODO: when server (nextjs SSR) sending a request to service, needs to include the cookie going out to nginx
+- when getInitialProps() gets called on server (see updated getInitialProps() lesson 240), first argument to server is an object with some properties (including request object)
+  - same as express app request object
+
+```js
+LandingPage.getInitialProps = async ({req}) => {
+  console.log(req.headers)
+};
+```
+
+<img src="exercise_files/udemy-microservices-section11-241-req-headers-cookie.png" alt="udemy-microservices-section11-241-req-headers-cookie.png" width="800"/>
+
+- NOTE: cookie is passed as a header, so we can look at `req.headers` for cookie
+- NOTE: the headers also includes `host` which is what we need as well. 
+- so we can update the code by passing throught the headers -> req.headers:
+
+```js
+//client/pages/index.js
+
+//...
+LandingPage.getInitialProps = async ({req}) => {
+  if (typeof window === 'undefined') {
+    const response = await axios.get(
+      'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser',
+      headers: req.headers  
+    );
+
+    //...
+  }
+}
+```
+
+#### outcome
+- TODO: to test SERVER request -> we hard refresh the browser (we are testing the server sending the request see lesson 237 when is getInitialProps() called -> section getInitialProps() execution on server) 
+
+- confirmation on browser console (console.log of currentUser)
+
+<img src="exercise_files/udemy-microservices-section11-241-signed-in-client-confirmation-browser-console.png" alt= "udemy-microservices-section11-241-signed-in-client-confirmation-browser-console.png" width="800"/>
+
+- confirmation in terminal (console.log of currentUser) 
+
+<img src="exercise_files/udemy-microservices-section11-241-signed-in-server-confirmation-terminal.png" alt="udemy-microservices-section11-241-signed-in-server-confirmation-terminal.png" width="800"/>
+
+- TODO: fix up .getInitialProps() , extract the test for `typeof window === 'undefined'` to check server/client sending request
+
 
 ---
 

@@ -1,15 +1,20 @@
 import axios from 'axios';
 
 const LandingPage = ({ currentUser }) => {
-  console.log('i am: ', currentUser);
+  console.log(currentUser);
   return <h1>landing page</h1>;
 };
 
-LandingPage.getInitialProps = async () => {
+LandingPage.getInitialProps = async ({ req }) => {
+  console.log(req.headers);
+
   if (typeof window === 'undefined') {
     //we are on the server requests should follow this format: `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/`
     const response = await axios.get(
-      'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser'
+      'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser',
+      {
+        headers: req.headers,
+      }
     );
     return response.data;
   } else {
