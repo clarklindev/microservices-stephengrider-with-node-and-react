@@ -6,19 +6,20 @@ const AppComponent = ({ Component, pageProps, currentUser }) => {
 
   return (
     <div>
-      <h1>hello {currentUser.email}</h1>
+      <h1>hello {currentUser?.email}</h1>
       <Component {...pageProps} />
     </div>
   );
 };
 
+//getInitialProps of this component
 AppComponent.getInitialProps = async (appContext) => {
   const client = buildClient(appContext.ctx);
   const { data } = await client.get('/api/users/currentuser');
 
   let pageProps = {};
   if (appContext.Component.getInitialProps) {
-    pageProps = await appContext.Component.getInitialProps(appContext.ctx);
+    pageProps = await appContext.Component.getInitialProps(appContext.ctx); //getInitialProps of Component this component tries to render
   }
   console.log('pageProps: ', pageProps);
   return {
