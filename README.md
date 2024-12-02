@@ -8208,6 +8208,30 @@ const Signin = () => {
 export default Signin;
 
 ```
+
+### 245. reusable header
+- the header at the top of every single page 
+- you can add to _app.js
+- TODO: add to nextjs as template's extra content
+- the header navigation should update to reflect the signed-in status
+  - signed in -> show `sign out`
+  - not signedin -> show `sign in` and `signup`
+
+<img src="exercise_files/udemy-microservices-section11-245-reusable-header-_app.png" alt="udemy-microservices-section11-245-reusable-header-_app.png" width="800"/>
+
+- currently our index.js (landing page) knows who loggedin-user is, but we want the header to know it too
+
+- current architecture  
+
+<img src="exercise_files/udemy-microservices-section11-245-current-architecture.png" alt="udemy-microservices-section11-245-current-architecture.png" width="800">
+ 
+- updated architecture  
+- extract the fetching of currentuser to app-component so both the index page AND header will receive `currentUser` as prop
+- moving getInitialProps() to app component -> later, index.js (at some stage) might both have getInitialProps() -> but this is tricky with nextjs (both should be able to fetch data from their getInitialProps())
+- TODO: moving getInitalProps() from landing page to app component
+
+<img src="exercise_files/udemy-microservices-section11-245-update-architecture.png" alt="udemy-microservices-section11-245-update-architecture.png" width="800">
+
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
