@@ -8116,6 +8116,22 @@ export default LandingPage;
 
 ```
 
+### 243. content on the landing page
+- the landing page is now prepped to display user logged-in status 
+  - 'you are logged in' if the server-component runs getInitialProps() -> receives `currentUser` and its NOT null
+  - 'you are NOT logged in' if the server-component runs getInitialProps() -> receives `currentUser`and it IS null
+
+#### TESTING
+- gcloud kubernetes engine -> cluster is created -> running
+- gcloud network load balancer is created -> running
+- docker desktop started -> docker OK -> kubernetes OK
+  - kubernetes context is correctly selected
+- section05-ticketing/ `skaffold dev`
+
+- TODO: after signing in -> you will see the respective message -> 'you are signed in'
+- TODO: to sign-out, clear cookies in browser (application -> cookies -> select the domain -> clear) -> browser refresh -> 'you are NOT signed in'
+
+
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
