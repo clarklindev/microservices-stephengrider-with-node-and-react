@@ -7978,8 +7978,10 @@ LandingPage.getInitialProps = async ({req}) => {
     //we are on the server requests should follow this format: `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/` 
     const response = await axios.get(
       'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser',
-      headers: {
-        Host: 'ticketing.dev'
+      {
+        headers: {
+          Host: 'ticketing.dev' //this will be replaced by {headers: req.headers}
+        }
       }
     );
     return response.data;
@@ -8025,7 +8027,9 @@ LandingPage.getInitialProps = async ({req}) => {
   if (typeof window === 'undefined') {
     const response = await axios.get(
       'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser',
-      headers: req.headers  
+      {
+        headers: req.headers  
+      }
     );
 
     //...
