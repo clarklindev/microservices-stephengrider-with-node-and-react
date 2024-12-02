@@ -7900,7 +7900,7 @@ kubectl get services -n ingress-nginx
 
 ### when is getInitialProps() executed?
 
-- to test, add a console log in .getInitialProps() of client/pages/index.js
+- to test, add a console log in client/pages/index.js .getInitialProps() 
   - if console.log shows in terminal (server)
   - if console.log shows in console of browser dev tools (client)
 - anytime we call getInitialProps, we have to consider adding the domain
@@ -7918,7 +7918,7 @@ kubectl get services -n ingress-nginx
   - TEST: signin-in causes change to url, which should call getInitialProps() of page (see browser console log)
 
 ### 238. on the server or browser
-
+- TODO: determining whether we are executing request in browser or on server...
 - `window` object is a browser concept, if we test typeof window === 'undefined', then we are on the server
 
 ```ts
@@ -7927,7 +7927,74 @@ if (typeof window === 'undefined') {
 } else {
   //we are on the , baseURL of ''
 }
+return {}
+
 ```
+
+### 239. ingress-nginx namespace and service important update
+
+- TODO: adding the ingress-nginx service name and namespace to our axios request.
+- run `kubectl get services -n ingress-nginx` see [236. cross namespace service communication](#236-cross-namespace-service-communication)
+- UPATE: the service name for all platforms (Windows, Mac, Linux) and Docker clients (Docker Desktop and Minikube) should be:
+- sevice name: `ingress-nginx-controller`
+
+### 240. specifying the host
+- NOTE: what is returned from calling getInitialProps() is passed as props to the page component.
+- both the requests (from client and server) look identical, but on server, there needs to pass the domain too.
+
+#### on client (browser)
+- recall that returning response.data is an object with currentUser prop that gets passed to the component
+- and to get LandingPage's getInitialProps() to be called, sign in (which causes it to execute on client)
+- requests reaching nginx, ingress wants to know about the host we are trying to reach. 
+  - well, requests issued within a browser, includes domain (ticketing.dev) info
+
+#### on server (nextjs)
+- identical but we will have to specify domain.
+- `kubectl get services -n ingress-nginx` to get service of namespace
+- the request has to include the domain AND route
+  - NOTE: infra/k8s/ingress-srv.yaml -> we specify under routing rules, the host (ticketing.dev) this is given with browser
+- but this is not the browser, so domain is not included
+- requests via getInitialProps on server does not have the included domain we are trying to reach.
+- FIX: add a second parameter: headers (object) to axios target...add host
+- success will return null (on server) meaning we reached service successfully
+
+
+```ts
+//client/pages/index.js
+import axios from 'axios';
+
+const LandingPage = ({ currentUser }) => {
+  console.log(currentUser);
+
+  return <h1>landing page</h1>;
+};
+
+LandingPage.getInitialProps = async () => {
+  if (typeof window === 'undefined') {
+    //we are on the server requests should follow this format: `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/` 
+    const response = await axios.get(
+      'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser',
+      headers: {
+        Host: 'ticketing.dev'
+      }
+    );
+    return response.data;
+
+  } else {
+    //we are on the browser, baseURL of ''
+    const response = await axios.get('/api/users/currentuser');
+    return response.data;
+  }
+
+  return {};
+};
+```
+
+#### why return null?
+- the request is going from nginx to auth service to get logged in user: `/api/users/currentuser` but its not sending with the cookie in the request, so auth service is not sending data back (because it assumes no cookie means not signed in)
+- FIX: add a cookie to request going to auth service (if its coming from server)
+
+<img src="exercise_files/udemy-microservices-section11-240-returns-null-from-request-because-no-cookie-from-nginx-to-auth-service.png" alt="udemy-microservices-section11-240-returns-null-from-request-because-no-cookie-from-nginx-to-auth-service.png" width="800"/>
 
 ---
 
