@@ -8457,6 +8457,22 @@ export default SignOutPage;
 
 ## section 12 - code sharing and re-use between services (52min)
 ### 255. Shared Logic Between Services
+- event-related stuff for auth service ? - no other service really need to know about what the auth service is doing
+- everything auth service does is exposed through JWT in the cookie
+- TODO: ticketing service
+  - list all tickets
+  - show a ticket
+  - create a ticket (AUTH)
+  - edit a ticket (AUTH)
+
+#### moving things from auth service to shared lib
+- extract (refactor) code from auth to a common shared library to be used between services
+  - TODO: - re-use `requireAuth` middleware
+  - TODO: - re-use `NotAuthorizedError`
+  - TODO: - re-use request validation middleware
+
+<img src="exercise_files/udemy-microservices-section12-255-code-sharing-between-services-shared-logic-between-services.png" alt="udemy-microservices-section12-255-code-sharing-between-services-shared-logic-between-services.png" width="800" />
+
 ### 256. Options for Code Sharing
 ### 257. NPM Organizations
 ### 258. Publishing NPM Modules
