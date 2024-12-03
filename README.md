@@ -8453,51 +8453,322 @@ export default SignOutPage;
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
+### 255. Shared Logic Between Services
+### 256. Options for Code Sharing
+### 257. NPM Organizations
+### 258. Publishing NPM Modules
+### 259. Project Setup
+### 260. Typo in package.json "files" Field - Do Not Skip
+### 261. An Easy Publish Command
+### 262. Relocating Shared Code
+### 263. Updating Import Statements
+### 264. NPM Update Command
+### 265. Updating the Common Module
 
 ---
 
 ## section 13 - create-read-update-destroy server setup (2hr28min)
-
+### 266. Ticketing Service Overview
+### 267. Project Setup
+### 268. Running the Ticket Service
+### 269. Mongo Connection URI
+### 270. Quick Auth Update
+### 271. Test-First Approach
+### 272. Creating the Router
+### 273. Adding Auth Protection
+### 274. Faking Authentication During Tests
+### 275. A Required Session Fix and a Global Signin Reminder
+### 276. Building a Session
+### 277. Testing Request Validation
+### 278. Validating Title and Price
+### 279. Reminder on Mongoose with TypeScript
+### 280. Defining the Ticket Model
+### 281. Creation via Route Handler
+### 282. Testing Show Routes
+### 283. Unexpected Failure!
+### 284. What's that Error?!
+### 285. Better Error Logging
+### 286. Complete Index Route Implementation
+### 287. Ticket Updating
+### 288. Handling Updates
+### 289. Permission Checking
+### 290. Final Update Changes
+### 291. Manual Testing
 ---
 
 ## section 14 - NATS streaming server - an event bus implementation (2hr57min)
+### 292. What Now?
+### 293. NATS Server Status - IMPORTANT NOTE
+### 294. Three Important Items
+### 295. Creating a NATS Streaming Deployment
+### 296. Big Notes on NATS Streaming
+### 297. Building a NATS Test Project
+### 298. Port-Forwarding with Kubectl
+### 299. Publishing Events
+### 300. Small Required Command Change
+### 301. Listening For Data
+### 302. Accessing Event Data
+### 303. Client ID Generation
+### 304. Queue Groups
+### 305. Manual Ack Mode
+### 306. Client Health Checks
+### 307. Graceful Client Shutdown
+### 308. Core Concurrency Issues
+### 309. Common Questions
+### 310. [Optional] More Possible Concurrency Solutions
+### 311. Solving Concurrency Issues
+### 312. Concurrency Control with the Tickets App
+### 313. Event Redelivery
+### 314. Durable Subscriptions
 
 ---
 
 ## section 15 - connecting to NATS in a nodejs world (1hr22min)
-
----
+### 315. Reusable NATS Listeners
+### 316. The Listener Abstract Class
+### 317. Extending the Listener
+### 318. Quick Refactor
+### 319. Leveraging TypeScript for Listener Validation
+### 320. Subjects Enum
+### 321. Custom Event Interface
+### 322. Enforcing Listener Subjects
+### 323. Quick Note: 'readonly' in Typescript
+### 324. Enforcing Data Types
+### 325. Where Does this Get Used?
+### 326. Custom Publisher
+### 327. Using the Custom Publisher
+### 328. Awaiting Event Publication
+### 329. Common Event Definitions Summary
+### 330. Updating the Common Module
+### 331. Restarting NATS
 
 ## section 16 - managing a NATS client (1hr37min)
+### 332. Publishing Ticket Creation
+### 333. More on Publishing
+### 334. NATS Client Singleton
+### 335. Node Nats Streaming Installation
+### 336. Remember Mongoose?
+### 337. TS Error - Did you forget to include 'void' in your type argument
+### 338. Singleton Implementation
+### 339. Accessing the NATS Client
+### 340. Graceful Shutdown
+### 341. Successful Listen!
+### 342. Ticket Update Publishing
+### 343. Failed Event Publishing
+### 344. Handling Publish Failures
+### 345. Fixing a Few Tests
+### 346. Redirecting Imports
+### 347. Providing a Mock Implementation
+### 348. Test-Suite Wide Mocks
+### 349. Ensuring Mock Invocations
+### 350. NATS Env Variables
 
 ---
 
 ## section 17 - cross-service data replication in action (2hr44min)
-
+### 351. The Orders Service
+### 352. Scaffolding the Orders Service
+### 353. A Touch More Setup
+### 354. Ingress Routing Rules
+### 355. Scaffolding a Few Route Handlers
+### 356. Subtle Service Coupling
+### 357. Associating Orders and Tickets
+### 358. Order Model Setup
+### 359. The Need for an Enum
+### 360. Creating an Order Status Enum
+### 361. More on Mongoose Refs
+### 362. Defining the Ticket Model
+### 363. Order Creation Logic
+### 364. Finding Reserved Tickets
+### 365. Convenience Document Methods
+### 366. Order Expiration Times
+### 367. globalThis has no index signature TS Error
+### 368. Test Suite Setup
+### 369. Small Update for "Value of type 'typeof ObjectId' is not callable"
+### 370. Asserting Tickets Exist
+### 371. Asserting Reserved Tickets
+### 372. Testing the Success Case
+### 373. Fetching a User's Orders
+### 374. A Slightly Complicated Testn
+### 375. Fetching Individual Orders
+### 376. Does Fetching Work?
+### 377. Cancelling an Order
+### 378. Can We Cancel?
 ---
 
 ## section 18 - understanding event flow (30min)
+### 379. Orders Service Events
+### 380. Creating the Events
+### 381. Implementing the Publishers
+### 382. Publishing the Order Creation
+### 383. Publishing Order Cancellation
+### 384. Testing Event Publishing
 
 ---
 
 ## section 19 - listening for events and handling concurrency issues (4hr13min)
-
+### 385. Heads Up Regarding Some Mongoose TS Errors
+### 386. Time for Listeners!
+### 387. Reminder on Listeners
+### 388. Blueprint for Listeners
+### 389. A Few More Reminders
+### 390. Simple onMessage Implementation
+### 391. ID Adjustment
+### 392. Ticket Updated Listener Implementation
+### 393. Initializing the Listeners
+### 394. A Quick Manual Test
+### 395. Clear Concurrency Issues
+### 396. Reminder on Versioning Records
+### 397. Optimistic Concurrency Control
+### 398. Mongoose Update-If-Current
+### 399. Implementing OCC with Mongoose
+### 400. Test functions cannot both take a 'done' callback and return something Error
+### 401. Testing OCC
+### 402. One More Test
+### 403. Who Updates Versions?
+### 404. Including Versions in Events
+### 405. Updating Tickets Event Definitions
+### 406. Property 'version' is missing TS Errors After Running Skaffold
+### 407. Applying a Version Query
+### 408. Did it Work?
+### 409. Abstracted Query Method
+### 410. [Optional] Versioning Without Update-If-Current
+### 411. Testing Listeners
+### 412. A Complete Listener Test
+### 413. Testing the Ack Call
+### 414. Testing the Ticket Updated Listener
+### 415. Success Case Testing
+### 416. Out-Of-Order Events
+### 417. The Next Few Videos
+### 418. Fixing a Few Tests
+### 419. Listeners in the Tickets Service
+### 420. Building the Listener
+### 421. Strategies for Locking a Ticket
+### 422. Reserving a Ticket
+### 423. Setup for Testing Reservation
+### 424. Test Implementation
+### 425. Missing Update Event
+### 426. Private vs Protected Properties
+### 427. Publishing While Listening
+### 428. Mock Function Arguments
+### 429. Order Cancelled Listener
+### 430. A Lightning-Quick Test
+### 431. Don't Forget to Listen!
+### 432. Rejecting Edits of Reserved Tickets
 ---
 
 ## section 20 - worker services (1hr36min)
+### 433. The Expiration Service
+### 434. Expiration Options
+### 435. Initial Setup
+### 436. Skaffold errors - Expiration Image Can't be Pulled
+### 437. A Touch of Kubernetes Setup
+### 438. File Sync Setup
+### 439. Listener Creation
+### 440. What's Bull All About?
+### 441. Creating a Queue
+### 442. Queueing a Job on Event Arrival
+### 443. Testing Job Processing
+### 444. Delaying Job Processing
+### 445. Defining the Expiration Complete Event
+### 446. Publishing an Event on Job Processing
+### 447. Handling an Expiration Event
+### 448. Emitting the Order Cancelled Event
+### 449. Testing the Expiration Complete Listener
+### 450. A Touch More Testing
+### 451. Listening for Expiration
 
 ---
 
 ## section 21 - handling payments (2hr40min)
+### 452. The Payments Service
+### 453. globalThis has no index signature TS Error
+### 454. Initial Setup
+### 455. Replicated Fields
+### 456. Another Order Model!
+### 457. Update-If-Current
+### 458. Replicating Orders
+### 459. Testing Order Creation
+### 460. Marking an Order as Cancelled
+### 461. Cancelled Testing
+### 462. Starting the Listeners
+### 463. Payments Flow with Stripe
+### 464. Implementing the Create Charge Handler
+### 465. Validating Order Payment
+### 466. Testing Order Validation Before Payment
+### 467. Testing Same-User Validation
+### 468. Stripe Setup
+### 469. Creating a Stripe Secret
+### 470. Creating a Charge with Stripe
+### 471. Manual Testing of Payments
+### 472. Automated Payment Testing
+### 473. Mocked Stripe Client
+### 474. A More Realistic Test Setup
+### 475. Realistic Test Implementation
+### 476. Tying an Order and Charge Together
+### 477. Testing Payment Creation
+### 478. Publishing a Payment Created Event
+### 479. More on Publishing
+### 480. Marking an Order as Complete
+### 481. Important Info About the Next Lecture - Don't Skip
+### 482. Don't Cancel Completed Orders!
 
 ---
 
 ## section 22 - back to the client (1hr43min)
-
----
+### 483. A Few More Pages
+### 484. Reminder on Data Fetching with Next
+### 485. Two Quick Fixes
+### 486. Scaffolding a Form
+### 487. Sanitizing Price Input
+### 488. Ticket Creation
+### 489. Listing All Ticketst
+### 490. Reminder on Invalid <Link> with <a> child Errors
+### 491. Linking to Wildcard Routes
+### 492. Creating an Order
+### 493. Programmatic Navigation to Wildcard Routes
+### 494. The Expiration Timer
+### 495. Displaying the Expiration
+### 496. Showing a Stripe Payment Formt
+### 497. Module not found: Can't resolve 'prop-types'
+### 498. Configuring Stripe
+### 499. Test Credit Card Numbers
+### 500. Paying for an Order
+### 501. Filtering Reserved Tickets
+### 502. Header Links
+### 503. Rendering a List of Orders
 
 ## section 23 - CI/CD (2hr17min)
-
+### 504. Development Workflow
+### 505. Git Repository Approaches
+### 506. Creating a GitHub Action
+### 507. Adding a CI Test Script
+### 508. Tests in GitHub Actions Hang - Jest did not exit
+### 509. Running Tests on PR Creation
+### 510. Output of Failing Tests
+### 511. Running Tests in Parallel
+### 512. Verifying a Test Run
+### 513. Selective Test Execution
+### 514. Deployment Options
+### 515. Creating a Hosted Cluster
+### 516. Reminder on Kubernetes Context
+### 517. Reminder on Swapping Contexts
+### 518. The Deployment Plan
+### 519. Building an Image in an Action
+### 520. Testing the Image Build
+### 521. Restarting the Deployment
+### 522. Applying Kubernetes Manifests
+### 523. Prod vs Dev Manifest Files
+### 524. Manual Secret Creation
+### 525. Don't Forget Ingress-Nginx!
+### 526. Testing Automated Deployment
+### 527. Additional Deploy Files
+### 528. A Successful Deploy!
+### 529. Buying a Domain Name
+### 530. Three Important Changes Needed to Deploy - Do Not Skip!
+### 531. Configuring the Domain Name
+### 532. I Really Hope This Works
+### 533. Next Steps
 ---
 
 ## section 24 - basics of Docker (3hr3min)
