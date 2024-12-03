@@ -8474,6 +8474,29 @@ export default SignOutPage;
 <img src="exercise_files/udemy-microservices-section12-255-code-sharing-between-services-shared-logic-between-services.png" alt="udemy-microservices-section12-255-code-sharing-between-services-shared-logic-between-services.png" width="800" />
 
 ### 256. Options for Code Sharing
+- we decide that npm package is the way
+- i've ordered it from prefferred to least prefferred so diff from slides
+
+- OPTION 1 (npm package) (PREFFERED)
+  - adding git repo to npm registry
+  - versioning
+  - services using the package can use different versions until updated
+
+<img src="exercise_files/udemy-microservices-section12-256-code-sharing-option1-npm-package.png" alt="udemy-microservices-section12-256-code-sharing-option1-npm-package.png" width="600"/>
+
+- OPTION 2 (git submodule)
+- using a common git repo for common code -> the code gets copied into the project (we can track which version)
+  - ie. we have a repository and copy another git repository inside as a submodule
+- PROS -> version control of common code
+
+<img src="exercise_files/udemy-microservices-section12-256-code-sharing-option2-git-submodules.png" alt="udemy-microservices-section12-256-code-sharing-option2-git-submodules.png" width="600"/>
+
+- OPTION 3 (copy-and-paste)
+  - bad because the code will not be insync if changes occur
+  - difficult to keep track of changes
+
+<img src="exercise_files/udemy-microservices-section12-256-code-sharing-option3-copy-and-paste.png" alt="udemy-microservices-section12-256-code-sharing-option3-copy-and-paste.png" width="600"/>
+
 ### 257. NPM Organizations
 ### 258. Publishing NPM Modules
 ### 259. Project Setup
