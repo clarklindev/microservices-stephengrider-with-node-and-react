@@ -8522,6 +8522,68 @@ export default SignOutPage;
 - To delete an organization: select organization name (bottom-left) -> billing -> delete organization
 
 ### 258. Publishing NPM Modules
+
+#### create project
+- creating a shared common library
+- create /common/ folder
+- from common folder:
+```cmd
+npm init -y
+```
+- package.json -> use the organization name like: @organization
+- we give our package a name `common` 
+- ie. we are publishing a package called common to our organization `"name": "@organization/common",`
+
+#### create package: common
+```json
+{
+  "name": "@organization/common",
+}
+```
+- from common/ folder, we make a git repository, npm checks our repo and checks everything is commited before publishing to the registry
+- `git init`
+- `git -am "initial commit"`
+
+#### publish to organization
+- NOTE: you need to be logged in to npmjs: `npm login`
+- `npm publish --access public` 
+- NOTE: the --access public (if you omit this, npm assumes we want to publish private package in our org which will throw error because it costs money to publish private package)
+- in npmjs under packages -> `@clarklindev/common@1.0.0`
+
+<img src="exercise_files/udemy-microservices-section12-258-publishing-npm-modules.png" alt="udemy-microservices-section12-258-publishing-npm-modules.png" width="800"/>
+
+- NOTE: because `common/` npm module was made its own git repo, npm will ignore the common/ folder when main project git folder is pushing to git.
+- NB! it is not included in your git repo for `microservices-stephengrider-with-node-and-react` - thats ok
+- go to section05-11-ticketing/common and manage the repo
+- By default, if you run `git init` inside common/ and don’t link it as a submodule, the main project will ignore the contents of common/ because it’s a separate Git repository. The main project won’t track changes inside common/ unless you manually add those changes or files.
+- i created a git repo for common/ `https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git` so changes can be tracked
+
+#### TROUBLESHOOT - common/ folder location
+- NOTE: i think stephen put the common folder inside the main project folder for organizational purpose, as it is ignored by default when you initialize common/ as its own git repo inside the main repo.. (you will see the common/ folder is empty when you look at the git pushes of what gets pushed up in the main project)
+
+- note: you never reference common/ via relative path from the other services, its always via the npm package name as imports, so i dont think you need to .gitignore it
+
+- common/ will get its own git repository url so it can be outside our main project folder (physical location path on disk)
+- TODO: create git repository (get common/ git url)
+
+- if you have already created the empty repository (called `git init` inside `common/` folder), set the origin url from within `common/`
+- `git remote add origin [git-repo-url]`
+- `git remote -v` -> check that we have set the remote url
+- `git push --set-upstream origin master` set so it pushes to the origin
+
+```cmd
+git remote add origin https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git
+git remote -v 
+git push --set-upstream origin master
+```
+
+### TROUBLESHOOT - publish to organization
+- you need to be logged in
+
+```cmd
+npm login
+```
+
 ### 259. Project Setup
 ### 260. Typo in package.json "files" Field - Do Not Skip
 ### 261. An Easy Publish Command
