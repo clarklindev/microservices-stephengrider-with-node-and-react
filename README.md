@@ -8522,6 +8522,8 @@ export default SignOutPage;
 - To delete an organization: select organization name (bottom-left) -> billing -> delete organization
 
 ### 258. Publishing NPM Modules
+- NOTE: the common folder referenced in these few lessons is moved outside the main project folder
+[git repo: https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
 
 #### create project
 - creating a shared common library
@@ -8561,8 +8563,13 @@ npm init -y
 #### TROUBLESHOOT - common/ folder location
 - NOTE: i think stephen put the common folder inside the main project folder for organizational purpose, as it is ignored by default when you initialize common/ as its own git repo inside the main repo.. (you will see the common/ folder is empty when you look at the git pushes of what gets pushed up in the main project)
 
-- note: you never reference common/ via relative path from the other services, its always via the npm package name as imports, so i dont think you need to .gitignore it
-
+#### referenced repository in main project folder
+- common/ in the same folder may cause confusion as to whether main project should keep updating the reference to common/
+- even though the project is linked to the NPM package version, not the local submodule.
+- might mistakenly edit the local common/ submodule, thinking those changes will apply to the main project, but they wont unless published to NPM.
+- and also, forgetting to publish will result in outdated npm package
+- So if the common/ module is being published to NPM and used as a dependency, the submodule in the main project should be removed.
+- note: you never reference common/ via relative path from the other services, its always via the npm package name as imports, so i dont think you need to .gitignore it.
 - common/ will get its own git repository url so it can be outside our main project folder (physical location path on disk)
 - TODO: create git repository (get common/ git url)
 
