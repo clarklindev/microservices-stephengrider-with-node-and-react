@@ -8450,6 +8450,9 @@ const SignOutPage = () => {
 export default SignOutPage;
 ```
 
+### 254. React App Catchup & Checkpoint
+- nice summary of what we did this section advised to go through [lesson 254](https://www.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19266074#overview) for refresher.
+
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
