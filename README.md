@@ -8498,6 +8498,29 @@ export default SignOutPage;
 <img src="exercise_files/udemy-microservices-section12-256-code-sharing-option3-copy-and-paste.png" alt="udemy-microservices-section12-256-code-sharing-option3-copy-and-paste.png" width="600"/>
 
 ### 257. NPM Organizations
+
+<img src="exercise_files/udemy-microservices-section12-257-npmjs-publishing-npm-package.png" alt="udemy-microservices-section12-257-npmjs-publishing-npm-package.png" width="600"/>
+
+#### options for publishing as npm package (4 Options)
+  - Public Package -> (npm Public Registry): Anyone can view and install.
+  - Private Package -> (npm Private Registry): Only authorized users can install; requires a paid plan.
+  - Organization Public Registry -> Public packages under an organization's name, viewable and installable by anyone.
+  - Organization Private Registry -> Private packages under an organization's name, only accessible by invited members or teams, and requires a paid npm plan.
+
+#### Key Points
+  - Free Options: Public packages (either personal or organizational) are free.
+  - Paid Options: Private packages (personal or organizational) require a paid plan.
+  - npm Organization: If you’re managing a team or business, npm Organizations are a good way to manage private packages and team permissions.
+  - npm organizations must be unique
+
+- TODO: [npmjs.com](http://npmjs.com) 
+  - sign up for npm account (MUST BE UNIQUE)
+  - add an organization (choose public packages)
+  - create a npm package 
+  - publish to public organization we created
+
+- To delete an organization: select organization name (bottom-left) -> billing -> delete organization
+
 ### 258. Publishing NPM Modules
 ### 259. Project Setup
 ### 260. Typo in package.json "files" Field - Do Not Skip
