@@ -8805,6 +8805,11 @@ pnpm update @clarklindev/common
 - FIX: `"@types/express": "^4.17.21"` 
 
 ### 264. NPM Update Command
+
+```
+pnpm update @clarklindev/common
+
+```
 ### 265. Updating the Common Module
 
 ---
