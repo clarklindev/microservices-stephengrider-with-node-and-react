@@ -8780,6 +8780,30 @@ export * from './middlewares/validate-request';
 ```
 
 ### 263. Updating Import Statements
+- section05-11-ticketing/auth/src/routes/ 
+- TODO: fix broken imports in main project folder
+- because we moved errors/ and middlewares to common module ([repository](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git))
+- we have to update all code that referenced the errors/ or middlewares/ files by importing our common module as an npm package to the project 
+
+- from the section05-11-ticketing/auth folder:
+```
+pnpm i @clarklindev/common
+```
+
+#### TROUBLESHOOT
+- if your package is already installed you need to update to use latest version
+```
+pnpm update @clarklindev/common
+```
+
+### TROUBLESHOOT
+- ERROR: "No overload matches this call"
+- There is a types mismatch occurring because two libraries are currently not in sync with each other. You have the types installed for v5 Express, however, your Express is v4. I would recommend removing that @types/express version and replacing with the compatible version:
+
+- FIX: "@types/express": "^4.17.21",
+- package.json dependencies: "@types/express" -> ensure same version in `common/` repo and the `main project` repo
+- FIX: `"@types/express": "^4.17.21"` 
+
 ### 264. NPM Update Command
 ### 265. Updating the Common Module
 
