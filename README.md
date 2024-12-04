@@ -8697,6 +8697,7 @@ in the common repo, there is no common folder, package.json should be...
 #### 'files'
 - 'files' -> an array that specifies what we want npm to include in our package: all files in build
 
+- NOTE: this is inside the Common module repository 
 ```json
 // package.json
 "main": "./build/index.js",
@@ -8731,9 +8732,53 @@ in the common repo, there is no common folder, package.json should be...
   "pub": "git add . && git commit -m \"updates\" && pnpm version patch && pnpm run build && pnpm publish"
 },
 ```
+- pub script creates two commits:
 
+#### First commit (manual):
+- `git add . && git commit -m "updates"`
+- This stages all changes and creates a commit with the message "updates".
+
+#### Second commit (automatic):
+- `pnpm version patch`
+- This bumps the version in package.json, commits it with a message like v1.0.1 (the new version), and adds a Git tag.
+
+#### Result
+Commit 1: "updates" (manual commit).
+Commit 2: vX.Y.Z (automatic version bump commit from pnpm).
 
 ### 262. Relocating Shared Code
+- TODO: move code form auth service to common service
+  - auth/src/errors/ -> move this folder to our shared module (project/src)
+  - auth/src/middlewares/ -> move this folder to our shared module (project/src)
+
+<img src="exercise_files/udemy-microservices-section12-262-relocating-shared-code-options-for-syntax-when-import.png" alt="udemy-microservices-section12-262-relocating-shared-code-options-for-syntax-when-import.png" width="800"/>
+
+- options for import syntax:
+  - import {} from '@organization/common' 
+  - import {} from '@organization/common/errors/bad-request-error'
+
+- to do this, we use the index.ts and import all the files we use, and then export them
+- NOTE: if these files are using npm modules, we have to add them to the common package.json
+
+```cmd
+pnpm i express express-validator cookie-session jsonwebtoken @types/cookie-session @types/express @types/jsonwebtoken
+```
+
+```ts
+//common/src/index.ts
+export * from './errors/bad-request-error';
+export * from './errors/custom-error';
+export * from './errors/database-connection-error';
+export * from './errors/not-authorized-error';
+export * from './errors/not-found-error';
+export * from './errors/request-validation-error';
+
+export * from './middlewares/current-user';
+export * from './middlewares/error-handler';
+export * from './middlewares/require-auth';
+export * from './middlewares/validate-request';
+```
+
 ### 263. Updating Import Statements
 ### 264. NPM Update Command
 ### 265. Updating the Common Module
