@@ -8829,7 +8829,47 @@ kubectl get pods
 
 ## section 13 - create-read-update-destroy server setup (2hr28min)
 ### 266. Ticketing Service Overview
+
+<img src="exercise_files/udemy-microservices-section13-266-ticketing-service-overview-routes.png" alt="udemy-microservices-section13-266-ticketing-service-overview-routes.png" width="600"/>
+
+- 4 routes (create, update, view all, view one by ID)
+  - get all - GET /api/tickets
+  - get one - GET /api/tickets/:id
+  - create - POST /api/tickets
+  - update - PUT /api/tickets
+
+- NOTE: (create/update) price is string
+- ticket collection ({title, price, userId (owner)}) -> ticket service -> will have own copy of mongodb
+
+<img src="exercise_files/udemy-microservices-section13-266-ticketing-collection.png" alt="udemy-microservices-section13-266-ticketing-collection.png" width="600" />
+
+- steps to create the ticketing service
+
+<img src="exercise_files/udemy-microservices-section13-266-ticketing-service-creation.png" alt="udemy-microservices-section13-266-ticketing-service-creation.png" width="600" />
+
 ### 267. Project Setup
+
+#### copy + paste from auth/ to tickets/
+- section05-13-ticketing/tickets
+- from section05-13-ticketing/auth/ copy all files in root of `auth/` folder and paste in tickets/
+- from section05-13-ticketing/auth/src/ copy `index.ts`, `app.ts`, `test/`
+
+<img src="exercise_files/udemy-microservices-section13-267-copy-from-auth-into-tickets.png" alt="udemy-microservices-section13-267-copy-from-auth-into-tickets.png" width="400" />
+
+#### replace 'auth' references with 'tickets'
+- update: tickets/package.json -> "name": "tickets"
+- tickets/src/index.ts -> there is a reference to mongodb connection to connect to `auth-mongo-srv` change to `tickets-mongo-srv`
+- tickets/src/app.ts -> remove reference to routes that are not for tickets/
+- tickets/src/test/setup.ts -> theres a reference to global.signin (leave for now)
+
+#### install dependencies
+- tickets/ -> `pnpm i`
+
+#### build image + pushing to dockerhub
+- NOTE: Docker desktop is open, Docker / kubernetes is running
+- this step is NOT required if running skaffold and pushing to gcloud -> tickets/ `docker build -t clarklindev/tickets .` 
+- if using docker locally, skaffold will need this docker image later..
+
 ### 268. Running the Ticket Service
 ### 269. Mongo Connection URI
 ### 270. Quick Auth Update
