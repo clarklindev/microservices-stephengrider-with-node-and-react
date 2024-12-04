@@ -8805,12 +8805,25 @@ pnpm update @clarklindev/common
 - FIX: `"@types/express": "^4.17.21"` 
 
 ### 264. NPM Update Command
-
+- main project folder:
 ```
 pnpm update @clarklindev/common
 
 ```
 ### 265. Updating the Common Module
+
+#### verify correct version of common repo
+- you can verify that skaffold is using the correct version of the common/ repo by inspecting pods
+
+<img src="exercise_files/udemy-microservices-section12-265-validating-correct-updated-common-repo-version.png" alt="udemy-microservices-section12-265-validating-correct-updated-common-repo-version.png" width="800"/>
+
+
+```
+kubectl get pods
+```
+- then open a shell inside of the pod to look at the files to make sure we using the latest version of `common/` project
+
+<img src="exercise_files/udemy-microservices-section12-265-validating-correct-updated-common-repo-version_2.png" alt="udemy-microservices-section12-265-validating-correct-updated-common-repo-version.png_2" width="800"/>
 
 ---
 
