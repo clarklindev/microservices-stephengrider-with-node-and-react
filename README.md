@@ -8728,7 +8728,7 @@ in the common repo, there is no common folder, package.json should be...
 "scripts": {
   "clean": "rimraf ./build",
   "build": "pnpm run clean && tsc",
-  "pub": "git add . && git commit -m \"updates\" && version patch && npm run build && npm publish"
+  "pub": "git add . && git commit -m \"updates\" && pnpm version patch && pnpm run build && pnpm publish"
 },
 ```
 
