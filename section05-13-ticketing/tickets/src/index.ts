@@ -7,7 +7,7 @@ const start = async () => {
   }
 
   try {
-    await mongoose.connect('mongodb://auth-mongo-srv:27017/auth'); //connecting to mongodb on cluster ip service
+    await mongoose.connect('mongodb://tickets-mongo-srv:27017/tickets'); //connecting to mongodb on cluster ip service
     console.log('connected to mongodb');
   } catch (err) {
     console.error(err);

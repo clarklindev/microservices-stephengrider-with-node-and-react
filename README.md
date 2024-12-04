@@ -8871,6 +8871,48 @@ kubectl get pods
 - if using docker locally, skaffold will need this docker image later..
 
 ### 268. Running the Ticket Service
+#### writing k8s file for deployment + service
+- infra/k8s/tickets-depl.yaml 
+- copy contents from infra/k8s/auth-depl.yaml
+- search and replace all 'auth' with 'tickets' and 'Auth' with 'Tickets'
+- NOTE: the tickets service will try handle authentication by itself, so will also need the JWT_KEY reference 
+- need JWT_KEY to validate requests and ensure the token is valid
+
+### update skaffold.yaml for file sync
+- skaffold.yaml ensure files sync
+- copy the artifacts entry for auth and paste, replace `auth` with `tickets`
+
+- skaffold.yaml add entry for tickets
+
+```yaml
+
+  artifacts:
+    - image: asia.gcr.io/golden-index-441407-u9/tickets
+          context: tickets
+          docker:
+            dockerfile: Dockerfile
+          sync:
+            manual:
+              - src: 'src/**/*.ts'
+                dest: .
+```
+
+### k8s file for mongodb depl/service
+- create `infra/k8s/tickets-mongo-depl.yaml`
+- copy contents of `infra/k8s/auth-mongo-depl.yaml` and paste in `infra/k8s/tickets-mongo-depl.yaml`
+- replace all reference to 'auth' with 'tickets'
+
+### run skaffold
+- close skaffold if already running
+- `kubectl get pods` ensure all pods are/have shutdown
+- from main project folder: `skaffold dev`
+
+#### TROUBLESHOOT 
+- if theres an error: manually create docker image again -> stop skaffold
+- `docker build -t clarklindev/tickets .` 
+- `docker push clarklindev/tickets`
+- then from main project folder: start `skaffold dev`
+
 ### 269. Mongo Connection URI
 ### 270. Quick Auth Update
 ### 271. Test-First Approach
