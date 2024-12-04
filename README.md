@@ -8707,6 +8707,31 @@ in the common repo, there is no common folder, package.json should be...
 - add .gitignore 
 - ignore the 'build' folder and 'node_modules'
 
+### steps to updating
+1. update the common/ shared repo (add / commit)
+
+2. update the version (after commit)
+- always have to update the version number when we publish our package
+- look at semmantic versioning
+- MANUALLY update the 'version' property of our package: `package.json`
+- AUTO-INCREMENT: `npm version patch`
+
+3. npm run build
+
+4. npm publish
+
+#### pub script
+- can add to package.json "pub" script 
+- NOT FOR PRODUCTION -> AS ALL CHANGES ARE ADDED TO COMMIT AT ONCE, ITS TOO GENERIC, VERSIONING NOT SPECIFIC
+
+```js
+"scripts": {
+  "clean": "rimraf ./build",
+  "build": "pnpm run clean && tsc",
+  "pub": "git add . && git commit -m \"updates\" && version patch && npm run build && npm publish"
+},
+```
+
 
 ### 262. Relocating Shared Code
 ### 263. Updating Import Statements
