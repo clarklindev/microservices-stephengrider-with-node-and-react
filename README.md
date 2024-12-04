@@ -8592,8 +8592,122 @@ npm login
 ```
 
 ### 259. Project Setup
+- our common/ library will be written as typescript
+- before publishing code, it will be transpiled to javascript 
+
+### Steps to Set Up the Global Bin Directory
+- note: setup global bin directory (used for pnpm)
+- Choose a Directory for Global Binaries: You can choose a directory like `~/.pnpm-global/bin` (userfolder/pnpm-global)to store global binaries. 
+  - You can replace `~/.pnpm-global` with another path if you prefer a different location.  
+#### MAC
+- run: `pnpm config set global-bin-dir ~/.pnpm-global/bin`
+- NOTE: . in front of a directory on mac means hidden (Hidden files or directories are usually meant for configuration or system-related files)
+- NOTE: on mac ~ means user directory
+#### WINDOWS
+##### CONFIGURE PATH
+- run (powershell style command): `pnpm config set global-bin-dir "$env:USERPROFILE\pnpm-global\bin"` 
+##### ADD TO PATH
+- NOTE: windows you can reference the user directory like: `%USERPROFILE%`
+- add to windows environment variables -> path -> add full path to user folder pnpm-global: `C:\Users\admin\pnpm-global\bin`
+
+#### inside the Common module repository 
+- THESE ARE INSTRUCTIONS FOR THE COMMON MODULE (REPOPOSITORY)
+- from that projects folder: [microservices-stephengrider-with-node-and-react-common/](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git) repository folder (this is the common shared module folder we moved to its own repository).
+- first install typescript globally to get access to tsc: `pnpm add -g typescript` (might need to Set Up the Global Bin Directory (see below))
+- install typescript to project as dev-dependency: `pnpm i -D typescript`
+- install `rimraf` as dev-dependency: `pnpm i -D rimraf` -> allows deleting or if doesnt exist, doesnt throw error.
+- we will create a types file via `pnpm tsc --init` -> creates a `tsconfig.json` 
+- `"declaration": true` adds a type definition file for the ts
+- `"outdir": './build'` -> after compile, put output in /build
+
+- edit tsconfig
+```json
+//tsconfig.json
+//...
+"declaration": true //Generate .d.ts files from TypeScript and JavaScript files in your project. 
+"outdir": './build'
+//...
+```
+
+- package.json
+- pnpm run clean clears the build folder
+- 'tsc' builds the project and outputs js specified in 'output' directory we setup in tsconfig.json
+```json
+"scripts": {
+  "clean" : "rimraf ./build",
+  "build": "pnpm run clean && tsc"
+}
+```
+#### running the app
+- running build: `pnpm run build`
+
+#### tsconfig.json
+- "declaration": true -> Generate .d.ts files from TypeScript and JavaScript files in your project. 
+- "outdir": './build'
+
+#### package.json
+- below commented out as we use 'rimraf' package
+<!-- - we installed the `del-cli` npm module
+- del command used in the script is not valid for your operating system 
+  - FIX: we install `cross-env` so `del-cli`  -->
+- install `rimraf` as dev-dependency -> it can delete the directory itself without error if it doesn't exist
+```json
+//package.json
+"scripts": {
+  "clean": "rimraf ./build",
+  "build": "pnpm run clean && tsc"
+}
+```
+
+- `pnpm run build`
+
 ### 260. Typo in package.json "files" Field - Do Not Skip
+- https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git 
+- the project is in a folder called `common` in the tutorials,
+in the common repo, there is no common folder, package.json should be...
+
+```json
+//package.json
+
+//NOT THIS...
+// "files": [
+//   "./build/**/*"
+// ],
+
+//UPDATE
+"files": [
+  "build/**/*"
+]
+```
+
 ### 261. An Easy Publish Command
+- building the project will compile the typescript and output the javascript, where it is output is specified in tsconfig - "outdir": './build'
+
+#### 'name'
+- this is value they will use for importing when working with this module
+- eg. `import {} from '@organization/common'`
+
+#### 'main'
+- package.json `main` property ->  when we are importing this module, what are they importing? we want it to reference the ./build/index.js
+- ie. when using this package, and you reference the module via an import: `import {} from '@organization/common'`, where does this import point to...
+
+#### 'types'
+- types is the reference to the types file generated when calling tsc compile.
+
+#### 'files'
+- 'files' -> an array that specifies what we want npm to include in our package: all files in build
+
+```json
+// package.json
+"main": "./build/index.js",
+"types": "./build/index.d.ts",
+"files": ["build/**/*"] 
+```
+#### .gitignore
+- add .gitignore 
+- ignore the 'build' folder and 'node_modules'
+
+
 ### 262. Relocating Shared Code
 ### 263. Updating Import Statements
 ### 264. NPM Update Command
