@@ -9010,6 +9010,18 @@ try {
 ```
 
 ### 271. Test-First Approach
+- TODO: create tests around `create` ticket route handler: POST `/api/tickets`
+- `tickets/src/routes/__test__/`
+
+- what do we test?
+  - test route is present
+  - test to validate incoming request body (has: title, price and correct type)
+  - test user must be authenticated to access route
+  - test we are able to create a ticket
+
+- /new.test.ts
+- test -> from tickets/ folder: `pnpm run test`
+
 ### 272. Creating the Router
 ### 273. Adding Auth Protection
 ### 274. Faking Authentication During Tests
