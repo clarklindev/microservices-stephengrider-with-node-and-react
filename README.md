@@ -9023,6 +9023,49 @@ try {
 - test -> from tickets/ folder: `pnpm run test`
 
 ### 272. Creating the Router
+- TODO: test to ensure the request does NOT return a 404 
+- NOTE: app.ts throws NotFoundError as catch-all route when accessing an invalid url
+
+#### 1. create route
+- create src/routes/new.ts -> responsible for creating a ticket
+```ts
+//src/routes/new.ts
+import express, { Request, Response } from 'express';
+const router = express.Router();
+
+router.post('/api/tickets', (req: Request, res: Response) => { 
+  res.sendStatus(200);
+});
+
+export {router as createTicketRouter }
+```
+
+#### 2. import router
+- import route to app.ts
+- then test from tickets/ folder: `pnpm run test`
+
+```ts
+//tickets/src/app.ts
+import { createTicketRouter } from './routes/new';
+
+//...
+app.use(
+  cookieSession({
+    signed: false,
+    secure: process.env.NODE_ENV !== 'test',
+  })
+);
+
+app.use(createTicketRouter);
+
+//testing not found error
+app.all('*', async (req, res, next) => {
+  throw new NotFoundError();
+});
+
+//...
+```
+
 ### 273. Adding Auth Protection
 ### 274. Faking Authentication During Tests
 ### 275. A Required Session Fix and a Global Signin Reminder

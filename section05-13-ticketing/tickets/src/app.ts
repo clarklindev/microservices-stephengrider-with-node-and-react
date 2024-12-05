@@ -6,6 +6,7 @@ import cookieSession from 'cookie-session';
 
 import { errorHandler, NotFoundError } from '@clarklindev/common';
 
+import { createTicketRouter } from './routes/new';
 
 const app = express();
 app.set('trust proxy', true);
@@ -18,11 +19,14 @@ app.use(
   })
 );
 
+app.use(createTicketRouter);
+
 //testing not found error
-// app.all('*', async (req, res, next) => {
-//   throw new NotFoundError();
-// });
+app.all('*', async (req, res, next) => {
+  throw new NotFoundError();
+});
 
 app.use(errorHandler);
+
 
 export {app};
