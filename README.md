@@ -9224,6 +9224,76 @@ it('returns a status other than 401 if the user is signed in', async () => {
 ```
 
 ### 274. Faking Authentication During Tests
+- TODO: in tickets/src/tests/setup.ts there is `global.signin = async ()=>{}` helper (from auth) 
+- this helper was used for tests to fake sign-in during testing and return a cookie
+- NOTE: this helper WONT WORK for tickets/ because it doesnt have access to a route `/api/users/signup` to fake test signup
+- AND there should NOT be interdependency on services while running tests, eg. `tickets/` reaching out to `auth/`
+
+#### fake signed in
+- the purpose of the .signin function was to return a cookie with a JWT
+- looking at the cookie after authenticating (sign-in) 
+
+<img src="exercise_files/udemy-microservices-section13-274-faking-authentication-during-testing-sign-in-cookie.png" alt="udemy-microservices-section13-274-faking-authentication-during-testing-sign-in-cookie.png" width="800" />
+
+#### get the cookie
+- if we take this cookie, and send it along with requests, we will be authenticated
+- TODO: build our own cookie `tickets/src/tests/setup.ts` -> `global.signin = async ()=>{}`
+
+- from browser tools -> network -> XHR -> headers -> request headers -> cookie  (everything after `cookie: express:sess=`)
+
+```req header
+//...
+
+cookie: express:sess=
+
+//...
+```
+
+- OR from browser tools -> application -> storage -> cookies -> select the domain (ticketing.dev) -> copy cookie value
+
+#### decode the cookie
+- paste the cookie in [base64decode.org](http://base64decode.org)
+
+<img src="exercise_files/udemy-microservices-section13-274-faking-authentication-during-testing-decode-cookie.png" alt="udemy-microservices-section13-274-faking-authentication-during-testing-decode-cookie.png" width="800"/>
+
+- returns a json object with 'jwt' key and value with 3 parts separated by '.'
+- the global `.signin()` will do the following:
+  1. build a jwt payload {id, email}
+  2. create the jwt (need process.env.JWT_KEY)
+  3. build sesion object {jwt: MY_JWT}
+  4. turn session into JSON
+  5. take JSON and encode it as base64
+  6. return a string with cookie: express:sess=cookie 
+
+```ts
+//tickets/src/tests/setup.ts
+
+beforeAll(async ()=>{
+  process.env.JWT_KEY = 'adsopsdfisd';
+  //OLD WAY
+  // const mongo = new MongoMemoryServer();
+  // const mongoUri = await mongo.getUri();
+  mongo = await MongoMemoryServer.create();
+  const mongoUri = mongo.getUri();
+
+// await mongoose.connect(mongoUri, {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// });
+  await mongoose.connect(mongoUri, {});
+});
+
+//...
+
+global.signin = async ()=>{
+  //1. build a jwt payload {id, email}
+  //2. create the jwt (need process.env.JWT_KEY)
+  //3. build sesion object {jwt: MY_JWT}
+  //4. turn session into JSON
+  //5. take JSON and encode it as 
+  //6. return a string with cookie: express:sess=cookie 
+}
+```
 
 
 ### 275. A Required Session Fix and a Global Signin Reminder
