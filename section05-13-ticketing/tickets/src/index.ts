@@ -6,8 +6,18 @@ const start = async () => {
     throw new Error('JWT_KEY must be defined');
   }
 
+  if (!process.env.MONGO_URI) {
+    throw new Error('MONGO_URI must be defined');
+  }  
+
   try {
-    await mongoose.connect('mongodb://tickets-mongo-srv:27017/tickets'); //connecting to mongodb on cluster ip service
+    await mongoose.connect(
+      process.env.MONGO_URI, {
+        // useNewUrlParser: true,
+        // useUnifiedTopology: true,
+        // useCreateIndex: true
+      }
+    ); //connecting to mongodb on cluster ip service
     console.log('connected to mongodb');
   } catch (err) {
     console.error(err);

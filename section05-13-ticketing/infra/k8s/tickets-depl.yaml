@@ -16,7 +16,9 @@ spec:
         - name: tickets
           # image: clarklindev/tickets:latest/tickets
           image: asia.gcr.io/golden-index-441407-u9/tickets:latest
-          env:
+          env: 
+            - name: MONGO_URI
+              value: 'mongodb://tickets-mongo-srv:27017/tickets'
             - name: JWT_KEY
               valueFrom:
                 secretKeyRef:

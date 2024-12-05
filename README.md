@@ -8914,7 +8914,101 @@ kubectl get pods
 - then from main project folder: start `skaffold dev`
 
 ### 269. Mongo Connection URI
+- connection to tickets/ for mongodb is hardcoded: `mongoose.connect('mongodb://tickets-mongo-srv:27017/tickets');`
+- TODO: update so its env variable set via deployment yaml
+- do this for both auth and tickets
+
+#### 1. CREATE ENV VARIABLE IN DEPLOYMENT.YAML
+- mongodb database set via environment variable in `infra/k8s/tickets-depl.yaml`
+- general good idea is to make the connection string an environment variable 
+- the db is set via env in `[x]-depl.yaml file`
+- update `infra/k8s/tickets-depl.yaml` env -> by adding env entry for mongo uri.
+- `tickets/src/index.ts` already had the mongodb connection so cut from there
+- but the connection value you can get from `tickets-mongo-depl.yaml` -> service name `tickets-mongo-srv` (what we trying to connect to)
+- NOTE: the environment variable set in the `infra/k8s/*-depl.yaml` 
+  - ie. auth/src/index.ts using `process.env.MONGO_URI` but the variable is specific to that `auth` containers' deployment
+  - ie. tickets/src/index.ts using `process.env.MONGO_URI` but the variable is specific to that `tickets` containers' deployment
+
+```yaml
+//infra/k8s/tickets-depl.yaml
+    spec:
+      containers:
+        - name: tickets
+          # image: clarklindev/tickets:latest/tickets
+          image: asia.gcr.io/golden-index-441407-u9/tickets:latest
+          env: 
+            - name: MONGO_URI
+              value: 'mongodb://tickets-mongo-srv:27017/tickets'
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+```
+
+#### 2. USE ENV VARIABLE 
+- use the ticket env in `tickets/src/index.ts`
+- we should do check that MONGO_URI env is defined
+
+```ts
+//tickets/src/index.ts
+const start = async () => {
+  //...
+
+  if (!process.env.MONGO_URI) {
+    throw new Error('MONGO_URI must be defined');
+  }  
+
+  try {
+    await mongoose.connect(
+      process.env.MONGO_URI, 
+      {
+        // useNewUrlParser: true,
+        // useUnifiedTopology: true,
+        // useCreateIndex: true
+      }
+    ); //connecting to mongodb on cluster ip service
+    console.log('connected to mongodb');
+  } catch (err) {
+    console.error(err);
+  }
+
+  //...
+}
+```
+
 ### 270. Quick Auth Update
+- infra/k8s/auth-depl.yaml
+
+```yaml
+# infra/k8s/auth-depl.yaml
+  env:
+    - name: MONGO_URI
+      value: 'mongodb://auth-mongo-srv:27017/auth'
+#...
+```
+
+- auth/src/index.ts
+
+```ts
+//auth/src/index.ts
+
+//...
+
+if (!process.env.MONGO_URI) {
+  throw new Error('MONGO_URI must be defined');
+}
+
+try {
+  await mongoose.connect(process.env.MONGO_URI, {}); //connecting to mongodb on cluster ip service
+  console.log('connected to mongodb');
+} catch (err) {
+  console.error(err);
+}
+
+//..
+```
+
 ### 271. Test-First Approach
 ### 272. Creating the Router
 ### 273. Adding Auth Protection
