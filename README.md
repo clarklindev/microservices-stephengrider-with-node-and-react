@@ -9300,7 +9300,8 @@ global.signin = async ()=>{
 - tickets/src/test/setup.ts
 - UPDATE: global signin declaration
 - UPDATE: the return of the global.signin -> fix is required to return the cookie to prevent our tests from failing
-  
+- UPDATE: remove async: `signin = () => {}`
+
 - update: 
 ```ts
 //tickets/src/test/setup.ts
@@ -9310,7 +9311,7 @@ declare global {
   var signin: () => string[];
 }
 
-global.signin = async ()=>{
+global.signin = ()=>{
 //...
 
 //return [`express:sess=${base64}`];
@@ -9320,6 +9321,73 @@ global.signin = async ()=>{
 ```
 
 ### 276. Building a Session
+- tickets/src/test/setup.ts
+- `import jwt from 'jsonwebtoken';`
+- NOTE: typescript marks the `process.env.JWT_TOKEN` as possibly undefined, FIX: add exclaimation at end `process.env.JWT_TOKEN!`
+- jwt has a sign() and we have to provide a jwt key (process.env.JWT_KEY) -> returns a token
+- build session object `const session = {jwt: token};`
+- turn the session to json `const sessionJSON = JSON.stringify(session);`
+- then turn sessionJSON into base64 `const base64 = Buffer.from(sessionJSON).toString('base64');`
+- return [`session=${base64}`];
+- NOTE: the global declaration... we update it as it used to return promise 
+- NOTE: with supatest, cookies should be returned in an array
+- NOTE: UPDATE: `tickets/src/test/setup.ts` remove async: `signin = () => {}`
+
+```ts
+declare global {
+  var signin: () => string[];
+} 
+
+```
+```ts
+//tickets/src/test/setup.ts
+import jwt from 'jsonwebtoken';
+
+global.signin = () => {
+
+  //1. build a jwt payload {id, email}
+  const payload = {
+    id: '23432456565r6',
+    email: 'test@test.com'
+  }
+
+  //2. create the jwt (need process.env.JWT_KEY)
+  const token = jwt.sign(payload, process.env.JWT_KEY!);
+  
+  //3. build sesion object {jwt: MY_JWT}
+  const session = {jwt: token};
+
+  //4. turn session into JSON
+  const sessionJSON = JSON.stringify(session);
+
+  //5. take JSON and encode it as base64
+  const base64 = Buffer.from(sessionJSON).toString('base64');
+
+  //6. return a string with cookie: 
+  //return [`express:sess=${base64}`];
+
+  //UPDATE
+  return [`session=${base64}`];
+}
+
+```
+
+#### attach cookie to test in src/routes/__test__/new.test.ts
+- `src/routes/__test__/new.test.ts`
+- add a cookie to the test by calling .set('Cookie', global.signin()) - `const response = await request(app).post('/api/tickets').set('Cookie', global.signin()).send({});`
+
+```ts
+it('returns a status other than 401 if the user is signed in', async () => {
+  const response = await request(app)
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({});
+
+  expect(response.status).not.toEqual(401);
+});
+
+```
+
 ### 277. Testing Request Validation
 ### 278. Validating Title and Price
 ### 279. Reminder on Mongoose with TypeScript

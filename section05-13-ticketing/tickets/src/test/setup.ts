@@ -1,9 +1,18 @@
-import request from 'supertest';
 import {MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
-import {app} from '../app';
+import jwt from 'jsonwebtoken';
 
-//OLD
+//UPDATE
+declare global {
+  var signin: () => string[];
+}
+
+//OLDER
+// declare global {
+//   var signin: () => Promise<string[]>;
+// }
+
+//OLDEST
 // declare global {
 //   namespace NodeJS {
 //     export interface Global {
@@ -11,11 +20,6 @@ import {app} from '../app';
 //     }
 //   }
 // }
-
-//UPDATE
-declare global {
-  var signin: () => Promise<string[]>;
-}
 
 let mongo:any;
 
@@ -53,20 +57,25 @@ afterAll(async () => {
 });
 
 //get cookie
-global.signin = async ()=>{
-  const email = 'test@test.com';
-  const password = 'password';
-
-  const response = await request(app)
-    .post('/api/users/signup')
-    .send({
-      email, password
-    })
-    .expect(201);
-
-  const cookie = response.get('Set-Cookie');
-  if (!cookie) {
-    throw new Error("Failed to get cookie from response");
+global.signin = ()=> {
+  //1. build a jwt payload {id, email}
+  const payload = {
+    id: '23432456565r6',
+    email: 'test@test.com'
   }
-  return cookie;
+  //2. create the jwt (need process.env.JWT_KEY)
+  const token = jwt.sign(payload, process.env.JWT_KEY!);
+
+   //3. build sesion object {jwt: MY_JWT}
+   const session = {jwt: token};
+
+   //4. turn session into JSON
+   const sessionJSON = JSON.stringify(session);
+ 
+   //5. take JSON and encode it as base64
+   const base64 = Buffer.from(sessionJSON).toString('base64');
+ 
+   //6. return a string with cookie: express:sess=cookie 
+   return [`session=${base64}`];
+
 }
