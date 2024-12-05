@@ -9295,8 +9295,30 @@ global.signin = async ()=>{
 }
 ```
 
-
 ### 275. A Required Session Fix and a Global Signin Reminder
+- NOTE: this is for lesson 276
+- tickets/src/test/setup.ts
+- UPDATE: global signin declaration
+- UPDATE: the return of the global.signin -> fix is required to return the cookie to prevent our tests from failing
+  
+- update: 
+```ts
+//tickets/src/test/setup.ts
+
+// global signin declaration should look like this after the refactor
+declare global {
+  var signin: () => string[];
+}
+
+global.signin = async ()=>{
+//...
+
+//return [`express:sess=${base64}`];
+  //UPDATE
+  return [`session=${base64}`];
+}
+```
+
 ### 276. Building a Session
 ### 277. Testing Request Validation
 ### 278. Validating Title and Price
