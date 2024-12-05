@@ -9019,15 +9019,13 @@ try {
   - test user must be authenticated to access route
   - test we are able to create a ticket
 
-- /new.test.ts
-- test -> from tickets/ folder: `pnpm run test`
-
-### 272. Creating the Router
-- TODO: test to ensure the request does NOT return a 404 
-- NOTE: app.ts throws NotFoundError as catch-all route when accessing an invalid url
+### 272. Creating the tickets router
+- TODO: test to ensure the request route does NOT return a 404 
+- NOTE: `tickets/src/app.ts` throws NotFoundError status code 404 as catch-all route when accessing an invalid url
 
 #### 1. create route
-- create src/routes/new.ts -> responsible for creating a ticket
+- create src/routes/new.ts -> route `/api/tickets` responsible for creating a ticket
+
 ```ts
 //src/routes/new.ts
 import express, { Request, Response } from 'express';
@@ -9066,7 +9064,90 @@ app.all('*', async (req, res, next) => {
 //...
 ```
 
+### TESTING
+- `tickets/src/routes/__test__/new.test.ts`
+
+```ts
+//tickets/src/routes/__test__/new.test.ts
+import { app } from "../../app";
+import request from "supertest";
+
+//TODO: test to ensure the request does NOT return a 404 (app.ts throws NotFoundError as catchall route when invalid url)
+it('has a route handler to handle listening to /api/tickets for post requests', async () => {
+  const response = await request(app).post('/api/tickets').send({});
+  expect(response.status).not.toEqual(404);
+});
+```
+- test -> from tickets/ folder: `pnpm run test`
+
 ### 273. Adding Auth Protection
+- test: make an unauthenticated request
+- common/ library has the errors -> `src/errors/not-authorized-error.ts` 
+- `NotAuthorizedError` returns status code `401` when user is not authorized to visit a route
+- REPO: `microservices-stephengrider-with-node-and-react-common` -> /src/errors/ NotAuthorizedError
+
+#### CHECK1 - currentUser -> if there is token, decoded token -> add to req.currentUser 
+- NOTE: this middleware has to be added after cookieSession -> because cookieSession can then look at cookie and set `req.session` 
+- folder: `tickets/src/app.ts`
+- RECALL in `common/src/middlewares/current-user` there is a check to see if request has session and session includes jwt
+  - NO token, call `next()`
+  - YES there is a token, decode token and set on `req.currentUser`
+- TODO: to ensure tickets/ has authentication, just need to add in tickets/src/app.ts/ `current-user` middleware from common/ 
+
+```ts
+//tickets/src/app.ts
+import { currentUser, errorHandler, NotFoundError } from '@clarklindev/common';
+import { createTicketRouter } from './routes/new';
+
+//...
+app.use(
+  cookieSession({
+    signed: false,
+    secure: process.env.NODE_ENV !== 'test',
+  })
+);
+app.use(currentUser); //decoded token is added to req.currentUser if token valid
+app.use(createTicketRouter);
+
+```
+
+#### CHECK2 - requireAuth -> if NOT req.currentUser throw error 
+- RECALL in `common/src/middlewares/require-auth` there is a check to see if request has req.currentUser
+- if requireAuth fails, ie if req.currentUser not defined, throw `NotAuthorizedError()`
+- folder: `src/routes/new.ts`
+- add `require-auth` middleware to some routes (create, update)
+- TEST: with the middleware added -> tests should pass
+
+```ts
+//src/routes/new.ts
+import { requireAuth } from '@clarklindev/common';
+import express, { Request, Response } from 'express';
+const router = express.Router();
+
+router.post('/api/tickets', requireAuth, (req: Request, res: Response) => { 
+  res.sendStatus(200);
+});
+
+export {router as createTicketRouter }
+```
+
+### TESTING
+- `tickets/src/routes/__test__/new.test.ts`
+
+```ts
+//tickets/src/routes/__test__/new.test.ts
+import { app } from "../../app";
+import request from "supertest";
+
+//microservices-stephengrider-with-node-and-react-common/src/errors/ NotAuthorizedError -> throws 401
+//BEFORE: test fails -> our test is expecting a 401, but it is passing and returning 200 -> there is no authentication tied to tickets/ route handler, 
+//FIX: add middleware
+it('can only be accessed if user is signed in', async () => {
+  await request(app).post('/api/tickets').send({}).expect(401);
+});
+```
+- test -> from tickets/ folder: `pnpm run test`
+
 ### 274. Faking Authentication During Tests
 ### 275. A Required Session Fix and a Global Signin Reminder
 ### 276. Building a Session
