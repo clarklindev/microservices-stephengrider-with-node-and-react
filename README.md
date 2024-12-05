@@ -8867,26 +8867,30 @@ kubectl get pods
 
 #### build image + pushing to dockerhub
 - NOTE: Docker desktop is open, Docker / kubernetes is running
-- this step is NOT required if running skaffold and pushing to gcloud -> tickets/ `docker build -t clarklindev/tickets .` 
+- this step is NOT required for skaffold if running docker/kubernetes on gcloud 
+  - from tickets/ `docker build -t clarklindev/tickets .` 
 - if using docker locally, skaffold will need this docker image later..
 
 ### 268. Running the Ticket Service
 #### writing k8s file for deployment + service
-- infra/k8s/tickets-depl.yaml 
+- `infra/k8s/tickets-depl.yaml`
 - copy contents from infra/k8s/auth-depl.yaml
 - search and replace all 'auth' with 'tickets' and 'Auth' with 'Tickets'
 - NOTE: the tickets service will try handle authentication by itself, so will also need the JWT_KEY reference 
 - need JWT_KEY to validate requests and ensure the token is valid
 
-### update skaffold.yaml for file sync
-- skaffold.yaml ensure files sync
+### update skaffold.yaml (for file sync)
+- `section05-13-ticketing/skaffold.yaml` ensure files sync
 - copy the artifacts entry for auth and paste, replace `auth` with `tickets`
 
-- skaffold.yaml add entry for tickets
+- skaffold.yaml add entry to artifacts for tickets
 
 ```yaml
 
   artifacts:
+    
+    #...
+
     - image: asia.gcr.io/golden-index-441407-u9/tickets
           context: tickets
           docker:
@@ -8909,7 +8913,7 @@ kubectl get pods
 
 #### TROUBLESHOOT 
 - if theres an error: manually create docker image again -> stop skaffold
-- `docker build -t clarklindev/tickets .` 
+- from tickets/ `docker build -t clarklindev/tickets .` 
 - `docker push clarklindev/tickets`
 - then from main project folder: start `skaffold dev`
 
@@ -8918,16 +8922,18 @@ kubectl get pods
 - TODO: update so its env variable set via deployment yaml
 - do this for both auth and tickets
 
-#### 1. CREATE ENV VARIABLE IN DEPLOYMENT.YAML
-- mongodb database set via environment variable in `infra/k8s/tickets-depl.yaml`
+#### 1. CREATE ENV VARIABLE IN infra/k8s/tickets-depl.yaml
+- the db connection url should be set via env in `infra/k8s/[x]-depl.yaml file`
+- TODO: mongodb database url set via environment variable in `infra/k8s/tickets-depl.yaml`
 - general good idea is to make the connection string an environment variable 
-- the db is set via env in `[x]-depl.yaml file`
 - update `infra/k8s/tickets-depl.yaml` env -> by adding env entry for mongo uri.
 - `tickets/src/index.ts` already had the mongodb connection so cut from there
-- but the connection value you can get from `tickets-mongo-depl.yaml` -> service name `tickets-mongo-srv` (what we trying to connect to)
-- NOTE: the environment variable set in the `infra/k8s/*-depl.yaml` 
-  - ie. auth/src/index.ts using `process.env.MONGO_URI` but the variable is specific to that `auth` containers' deployment
+- but the connection value you can get from `infra/k8s/tickets-mongo-depl.yaml` -> service name `tickets-mongo-srv` (what we trying to connect to)
+- NOTE: the environment variable set in the deployment yaml: `infra/k8s/*-depl.yaml` 
+  - ie. auth/src/index.ts using `process.env.MONGO_URI` but the variable is specific to that `auth` containers' deployment (auth-depl.yaml)
+
   - ie. tickets/src/index.ts using `process.env.MONGO_URI` but the variable is specific to that `tickets` containers' deployment
+  (tickets-depl.yaml)
 
 ```yaml
 //infra/k8s/tickets-depl.yaml
@@ -8978,6 +8984,8 @@ const start = async () => {
 ```
 
 ### 270. Quick Auth Update
+- move the mongodb connection string from `auth/src/index.ts` to deployment yaml `infra/k8s/auth-depl.yaml`
+- update auth/src/index.ts to use environment variable.
 - infra/k8s/auth-depl.yaml
 
 ```yaml
@@ -9010,8 +9018,32 @@ try {
 ```
 
 ### 271. Test-First Approach
-- TODO: create tests around `create` ticket route handler: POST `/api/tickets`
-- `tickets/src/routes/__test__/`
+
+- routes we will build:
+
+<img src="exercise_files/udemy-microservices-section13-266-ticketing-service-overview-routes.png" alt="udemy-microservices-section13-266-ticketing-service-overview-routes.png" width="600"/>
+
+- TODO: `create` ticket route handler and create tests: POST `/api/tickets`
+- create folder: `tickets/src/routes/__test__/`
+- create test file `tickets/src/routes/__test__/new.test.ts`
+
+### TESTING
+- `tickets/src/routes/__test__/new.test.ts`
+
+```ts
+//tickets/src/routes/__test__/new.test.ts
+import { app } from "../../app";
+import request from "supertest";
+
+it('has a route handler to handle listening to /api/tickets for post requests', async () => {});
+it('can only be accessed if user is signed in', async () => {});
+it('returns a status other than 401 if the user is signed in', async () => {});
+it('returns an error if invalid title is provided', async () => {});
+it('returns an error if invalid price is provided', async () => {});
+it('creates a ticket given valid inputs', async () => {});
+```
+
+- test -> from tickets/ folder: `pnpm run test`
 
 - what do we test?
   - test route is present
@@ -9021,7 +9053,41 @@ try {
 
 ### 272. Creating the tickets router
 - TODO: test to ensure the request route does NOT return a 404 
-- NOTE: `tickets/src/app.ts` throws NotFoundError status code 404 as catch-all route when accessing an invalid url
+- test: `it('has a route handler to handle listening to /api/tickets for post requests', async () => {});`
+- NOTE: `tickets/src/app.ts` has catch-all route for invalid url's
+- throws NotFoundError status code 404 
+
+```ts
+//tickets/src/app.ts
+
+//testing not found error
+app.all('*', async (req, res, next) => {
+  throw new NotFoundError();
+});
+
+```
+
+
+### TESTING
+- `tickets/src/routes/__test__/new.test.ts`
+
+```ts
+//tickets/src/routes/__test__/new.test.ts
+import { app } from "../../app";
+import request from "supertest";
+
+//TODO: test to ensure the request does NOT return a 404 (app.ts throws NotFoundError as catchall route when invalid url)
+it('has a route handler to handle listening to /api/tickets for post requests', async () => {
+  const response = await request(app).post('/api/tickets').send({});
+  expect(response.status).not.toEqual(404);
+});
+
+// it('can only be accessed if user is signed in', async () => {});
+// it('returns a status other than 401 if the user is signed in', async () => {});
+// it('returns an error if invalid title is provided', async () => {});
+// it('returns an error if invalid price is provided', async () => {});
+// it('creates a ticket given valid inputs', async () => {});
+```
 
 #### 1. create route
 - create src/routes/new.ts -> route `/api/tickets` responsible for creating a ticket
@@ -9064,6 +9130,14 @@ app.all('*', async (req, res, next) => {
 //...
 ```
 
+### 273. Adding Auth Protection
+- test: make an unauthenticated request
+- test: `it('can only be accessed if user is signed in', async () => {});`
+  - simulate not signed-in by sending request without jwt/cookie in request header
+- NOTE: common/ repository library has the errors -> `src/errors/not-authorized-error.ts` 
+- `NotAuthorizedError` returns status code `401` when user is not authorized to visit a route
+- REPO: `microservices-stephengrider-with-node-and-react-common` -> /src/errors/ NotAuthorizedError
+
 ### TESTING
 - `tickets/src/routes/__test__/new.test.ts`
 
@@ -9072,21 +9146,23 @@ app.all('*', async (req, res, next) => {
 import { app } from "../../app";
 import request from "supertest";
 
-//TODO: test to ensure the request does NOT return a 404 (app.ts throws NotFoundError as catchall route when invalid url)
-it('has a route handler to handle listening to /api/tickets for post requests', async () => {
-  const response = await request(app).post('/api/tickets').send({});
-  expect(response.status).not.toEqual(404);
+//simulate not signed-in by sending request without jwt/cookie in request header
+//microservices-stephengrider-with-node-and-react-common/src/errors/ NotAuthorizedError -> throws 401
+
+//BEFORE: test fails -> our test is expecting a 401, 
+//it is passing and returning 200 as there is no authentication tied to tickets/ route handler and therefore no NotAuthorizedError thrown.
+//FIX: ensure that authentication is required to access route -> add middleware
+
+it('can only be accessed if user is signed in', async () => {
+  await request(app)
+    .post('/api/tickets')
+    .send({})
+    .expect(401);
 });
 ```
 - test -> from tickets/ folder: `pnpm run test`
 
-### 273. Adding Auth Protection
-- test: make an unauthenticated request
-- common/ library has the errors -> `src/errors/not-authorized-error.ts` 
-- `NotAuthorizedError` returns status code `401` when user is not authorized to visit a route
-- REPO: `microservices-stephengrider-with-node-and-react-common` -> /src/errors/ NotAuthorizedError
-
-#### CHECK1 - currentUser -> if there is token, decoded token -> add to req.currentUser 
+#### CHECK1 - middleware currentUser -> if there is token, decoded token and add to req.currentUser 
 - NOTE: this middleware has to be added after cookieSession -> because cookieSession can then look at cookie and set `req.session` 
 - folder: `tickets/src/app.ts`
 - RECALL in `common/src/middlewares/current-user` there is a check to see if request has session and session includes jwt
@@ -9111,7 +9187,7 @@ app.use(createTicketRouter);
 
 ```
 
-#### CHECK2 - requireAuth -> if NOT req.currentUser throw error 
+#### CHECK2 - middleware requireAuth -> if NOT req.currentUser throw error 
 - RECALL in `common/src/middlewares/require-auth` there is a check to see if request has req.currentUser
 - if requireAuth fails, ie if req.currentUser not defined, throw `NotAuthorizedError()`
 - folder: `src/routes/new.ts`
@@ -9130,25 +9206,26 @@ router.post('/api/tickets', requireAuth, (req: Request, res: Response) => {
 
 export {router as createTicketRouter }
 ```
-
 ### TESTING
-- `tickets/src/routes/__test__/new.test.ts`
+- test that if we are authenticated, then it should NOT return 401 status code (opposite of prev test)
+- TODO: in tickets/src/tests/setup.ts there is `global.signin = async ()=>{}` helper (from auth) 
 
 ```ts
 //tickets/src/routes/__test__/new.test.ts
 import { app } from "../../app";
 import request from "supertest";
 
-//microservices-stephengrider-with-node-and-react-common/src/errors/ NotAuthorizedError -> throws 401
-//BEFORE: test fails -> our test is expecting a 401, but it is passing and returning 200 -> there is no authentication tied to tickets/ route handler, 
-//FIX: add middleware
-it('can only be accessed if user is signed in', async () => {
-  await request(app).post('/api/tickets').send({}).expect(401);
+//...
+
+it('returns a status other than 401 if the user is signed in', async () => {
+  const response = await request(app).post('/api/tickets').send({});
+  expect(response.status).not.toEqual(401);
 });
 ```
-- test -> from tickets/ folder: `pnpm run test`
 
 ### 274. Faking Authentication During Tests
+
+
 ### 275. A Required Session Fix and a Global Signin Reminder
 ### 276. Building a Session
 ### 277. Testing Request Validation
