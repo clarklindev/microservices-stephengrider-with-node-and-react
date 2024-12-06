@@ -9389,7 +9389,65 @@ it('returns a status other than 401 if the user is signed in', async () => {
 ```
 
 ### 277. Testing Request Validation
+- TODO: ensure title and price are provided with request
+  - if not return an error
+
+```ts
+
+it('returns an error if invalid title is provided', async () => {
+  await request(app)
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({
+      title: '',
+      price: 10
+    })
+    .expect(400);
+  
+  await request(app)
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({
+      price: 10
+    })
+    .expect(400);
+
+});
+
+it('returns an error if invalid price is provided', async () => {
+  await request(app)
+  .post('/api/tickets')
+  .set('Cookie', global.signin())
+  .send({
+    title: 'sdfsdfsfd',
+    price: -10
+  })
+  .expect(400);
+
+  await request(app)
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({
+      title: 'sdfsdfsfd',
+    })
+    .expect(400);
+});
+```
+
 ### 278. Validating Title and Price
+- src/test/setup.ts
+```ts
+import { requireAuth } from '@clarklindev/common';
+import express, { Request, Response } from 'express';
+const router = express.Router();
+
+router.post('/api/tickets', requireAuth, (req: Request, res: Response) => { 
+  res.sendStatus(200);
+});
+
+export {router as createTicketRouter }
+```
+
 ### 279. Reminder on Mongoose with TypeScript
 ### 280. Defining the Ticket Model
 ### 281. Creation via Route Handler
