@@ -9562,6 +9562,63 @@ interface TicketModel extends mongoose.Model<TicketDoc>{
 ```
 
 ### 280. Defining the Ticket Model
+- creating the ticket schema
+
+#### schema type vs interface type
+- NOTE: when creating the schema, list out all the properties the schema should have
+  - NB!!!! these properties are reference to global `String` Constructor references 
+  - NB!!!! the interface refers to a `string` type (typescript concept)
+  - therefore we use Capitals for the type
+  - the second property to the schema is an object where we put the toJSON function
+    - transform() function has `doc` and `ret` 
+    - `ret` is the object that will turn into JSON (make direct changes on ret)
+  - statics.build() is the method we use to create new objects (because it has type support)
+- create the model: `const Ticket = mongoose.model<TicketDoc, TicketModel>('Ticket', ticketSchema)`
+  - first argument we provide a name for the collection: `Ticket`
+  - second is the schema to use: `ticketSchema`
+  
+- OUTCOME: After creating the model, we can use mongoose to save/retrieve data from mongodb
+
+```ts
+//section05-13-ticketing/tickets/src/models/ticket.ts
+import mongoose from 'mongoose';
+
+//...
+const ticketSchema = new mongoose.Schema({
+  title:{
+    type:String,
+    required: true
+  },
+  price:{
+    type:Number,
+    required:true
+  },
+  userId:{
+    type:String,
+    required:true
+  }
+}, 
+
+{
+  toJSON:{
+    transform(doc, ret){
+      ret.id = ret._id;
+      delete ret._id;
+    }
+  }
+}
+);
+
+ticketSchema.statics.build = (attrs:TicketAttrs) => {
+  return new Ticket(attrs);
+}
+
+const Ticket = mongoose.model<TicketDoc, TicketModel>('Ticket', ticketSchema);
+
+export {Ticket}
+
+```
+
 ### 281. Creation via Route Handler
 ### 282. Testing Show Routes
 ### 283. Unexpected Failure!
