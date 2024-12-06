@@ -9436,14 +9436,46 @@ it('returns an error if invalid price is provided', async () => {
 
 ### 278. Validating Title and Price
 - src/test/setup.ts
+- put the body validation logic after `requireAuth` middleware
+- `import {body} from 'express-validator';`
+- add middleware: `[body('title').not().isEmpty().withMessage('Title is required')]`
+- this only sets an error on incoming request
+- no errors are thrown or response sent back.
+- `import {validateRequest} from '@clarklindev/common'`
+- add `validateRequest` after the validation check
+- validation for title  
+  - `.not().isEmpty()` will check for title not provided OR title is an empty string
+- validation for price
+  - accept $ and decimal value for cents
+  - price not negative (`.isFloat({ gt: 0})`)
+- TEST: tickets/ `pnpm run test`
+
 ```ts
-import { requireAuth } from '@clarklindev/common';
+import { requireAuth, validateRequest } from '@clarklindev/common';
 import express, { Request, Response } from 'express';
+import {body} from 'express-validator';
+
 const router = express.Router();
 
-router.post('/api/tickets', requireAuth, (req: Request, res: Response) => { 
-  res.sendStatus(200);
-});
+router.post('/api/tickets', 
+  requireAuth, 
+  [
+    body('title')
+      .not()
+      .isEmpty()
+      .withMessage('Title is required'),
+    
+    body('price')
+      .isFloat({ gt: 0})
+      .withMessage('Price must be greater than 0')
+  ],
+
+  validateRequest,
+
+  (req: Request, res: Response) => { 
+    res.sendStatus(200)
+  }
+);
 
 export {router as createTicketRouter }
 ```
