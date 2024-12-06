@@ -9576,7 +9576,7 @@ interface TicketModel extends mongoose.Model<TicketDoc>{
 - create the model: `const Ticket = mongoose.model<TicketDoc, TicketModel>('Ticket', ticketSchema)`
   - first argument we provide a name for the collection: `Ticket`
   - second is the schema to use: `ticketSchema`
-  
+
 - OUTCOME: After creating the model, we can use mongoose to save/retrieve data from mongodb
 
 ```ts
@@ -9620,6 +9620,117 @@ export {Ticket}
 ```
 
 ### 281. Creation via Route Handler
+
+<img src="exercise_files/udemy-microservices-section13-281-ticketing-service-overview-routes-CREATE.png" alt="udemy-microservices-section13-281-ticketing-service-overview-routes-CREATE.png" width="800"/>
+
+- TODO: create a ticket
+- POST /api/tickets
+
+- TODO: add in check to make sure ticket was saved
+- import our Ticket model to the test `import { Ticket } from "../../models/ticket";`
+
+  1. we will first check the amount of records inside the ticket collection
+    - get all tickets -> `let tickets = await Tickets.find({});`
+    - the initial call we expect nothing to be inside the mongodb because in test setup (`src/test/setup.ts`) beforeEach() we empty the db collections
+
+  2. then we will make the request to create a ticket and save to database
+    - NOTE: we have to be logged in: `.set('Cookie', global.signin())`
+    - in the test -> expect the return statusCode 201 (created) 
+    - we update the code: `tickets/src/routes/new.ts` -> (req: Request, res: Response) => {}
+    - import Ticket 
+
+  3. then we will ensure the number of records increased
+    - get tickets in db 
+    - `expect(tickets.length).toEqual(1);`
+
+  4. cd section05-13-ticketing/tickets/ `pnpm run test`
+
+```ts
+//src/routes/__test__/new.test.ts
+import { Ticket } from "../../models/ticket";
+
+it('creates a ticket given valid inputs', async () => {
+  let tickets = await Tickets.find({});
+
+  expect(tickets.length).toEqual(0);
+  const title = "adsfjsdfdslf";
+  const price = 20;
+
+  await request(app)
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({
+      title,
+      price
+    })
+    .expect(201);
+
+  tickets = await Ticket.find({});
+  expect(tickets.length).toEqual(1);
+
+  expect(tickets[0].title).toEqual(title);
+  expect(tickets[0].price).toEqual(price);
+});
+```
+
+- in tickets/src/routes/new.ts
+- get title, price off request
+- create the ticket calling: `const ticket = Ticket.build({title, price, id: req.currentUser.id})`
+- NOTE: TypeScript, the `!` symbol is called the non-null assertion operator. 
+  - It tells the TypeScript compiler that you are certain a value is not null or undefined
+- NOTE: typescript warns that id (req.currentUser.id) might not exist, but we have `requireAuth` middleware which makes sure req.currentUser.id exists.
+- TODO: add exclaimation AFTER currentUser so typescript ignores it `id: req.currentUser!.id`
+- TODO: make function async and save ticket: `await ticket.save();`
+- TODO: return statusCode: 201 and ticket: `res.status(201).send(ticket);`
+- TODO: tickets/ `pnpm run test`
+
+```ts
+import express, { Request, Response } from 'express';
+import {body} from 'express-validator';
+
+import { requireAuth, validateRequest} from '@clarklindev/common';
+import { Ticket } from '../models/ticket';
+
+const router = express.Router();
+
+router.post('/api/tickets',
+
+  requireAuth,
+
+  [
+    body('title')
+      .not()
+      .isEmpty()
+      .withMessage('Title is required'),
+    
+    body('price')
+      .isFloat({ gt: 0})
+      .withMessage('Price must be greater than 0')
+  ],
+
+  validateRequest,
+
+  (req: Request, res: Response) => { 
+    
+    const { title, price } = req.body;
+    
+    const ticket = Ticket.build({
+      title, 
+      price, 
+      id: req.currentUser!.id
+    });
+
+    await ticket.save();
+
+    res.status(201).send(ticket);
+
+  }
+);
+
+export {router as createTicketRouter };
+
+```
+
 ### 282. Testing Show Routes
 ### 283. Unexpected Failure!
 ### 284. What's that Error?!

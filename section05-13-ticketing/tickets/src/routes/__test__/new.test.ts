@@ -1,5 +1,6 @@
 import { app } from "../../app";
 import request from "supertest";
+import { Ticket } from "../../models/ticket";
 
 //TODO: test to ensure the request does NOT return a 404 (app.ts throws NotFoundError as catchall route when invalid url)
 it('has a route handler to handle listening to /api/tickets for post requests', async () => {
@@ -64,13 +65,26 @@ it('returns an error if invalid price is provided', async () => {
 });
 
 it('creates a ticket given valid inputs', async () => {
-  //add in check to make sure ticket was saved
-  
+  let tickets = await Ticket.find({});
+
+  expect(tickets.length).toEqual(0);
+  const title = "adsfjsdfdslf";
+  const price = 20;
+
   await request(app)
     .post('/api/tickets')
+    .set('Cookie', global.signin())
     .send({
-      title: 'asldkfj',
-      price: 20
+      title,
+      price
     })
     .expect(201);
+
+  tickets = await Ticket.find({});
+  expect(tickets.length).toEqual(1);
+
+  expect(tickets[0].title).toEqual(title);
+  expect(tickets[0].price).toEqual(price);
+
+
 });
