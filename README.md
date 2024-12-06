@@ -4845,7 +4845,7 @@ User.build({
 - FIX: add this interface to tell typescript `const User = mongoose.model<any, UserModel>('User', userSchema);`
 
 ```ts
-//src/models/user.ts
+//section05-13-ticketing/src/models/user.ts
 
 //...
 //USER MODEL - methods associated with User model -> an interface that describes the properties that a User model has
@@ -9481,6 +9481,86 @@ export {router as createTicketRouter }
 ```
 
 ### 279. Reminder on Mongoose with TypeScript
+- refresher lesson (should watch it) - reminder on working with mongoose 
+- for mongoose to work with mongodb, have to create a model.
+- what we save to database is a Ticket Model (mongoose)
+- the model represents the collection of records inside mongodb
+
+- ticket model:
+
+<img src="exercise_files/udemy-microservices-section13-279-ticket-model.png" alt="udemy-microservices-section13-279-ticket-model.png" width="800" />
+
+- TicketAttrs - title:string, price:number, userId:string
+  - properties required to build a new Ticket
+
+- TicketDoc - title:string, price:number, userId:string, createAt:string
+  - properties that a Ticket has
+
+- TicketModel - build:(attrs) => Doc
+  - Properties tied to the model 
+  - build() takes in some attributes and returns a document
+
+#### NOTE: TicketAttrs vs TicketDoc 
+  - TicketAttrs is properties to build a record (single entry)
+  - TicketDoc - this is for after the record is created and saved (becomes a mongoose document), there can be extra properties put on by mongoose
+
+#### Mongoose model
+- TicketAttrs -> interface that describes properties to create a new Ticket
+
+- TicketDoc -> interface that describes the properties a saved record has 
+  - single record.
+
+- TicketModel -> all different properties that will be assigned to the model itself. 
+  - the entire collection of data.
+
+- Schema -> listing all the properties we want AND has toJSON manipulates the json representation of the data.
+  - in toJSON convert mongodb id's (has _id) to `id`
+
+- REMINDER using the User example: `userSchema.statics.build = (attrs:UserAttrs) => {return new User(attrs); };` -> there is no type checking when we create new User() so we created a static function build() which knows the received attributes type (attrs:UserAttrs)
+
+TODO: esure if send in valid values and authenticated, ticket gets created
+
+```ts
+it('creates a ticket given valid inputs', async () => {
+  //add in check to make sure ticket was saved
+
+  await request(app)
+    .post('api/tickets')
+    .send({
+      title:'asdasdas',
+      price: 20
+    })
+    .expect(201);
+
+});
+```
+
+#### create a new Ticket model 
+- tickets/src/models/ticket.ts
+- creating the mongoose model interfaces
+
+```ts
+//section05-13-ticketing/tickets/src/models/ticket.ts
+import mongoose from 'mongoose';
+
+interface TicketAttrs{
+  title: string;
+  price: number;
+  userId: string;
+}
+
+interface TicketDoc extends mongoose.Document{
+  title: string;
+  price: number;
+  userId: string;
+}
+
+interface TicketModel extends mongoose.Model<TicketDoc>{
+  build(attrs: TicketAttrs): TicketDoc;
+}
+
+```
+
 ### 280. Defining the Ticket Model
 ### 281. Creation via Route Handler
 ### 282. Testing Show Routes
