@@ -9807,6 +9807,54 @@ it('returns the ticket if the ticket is found', async () => {
 ```
 
 ### 283. Unexpected Failure!
+- NOTE: near end of lesson, the tests for ticket not found -> fails
+  - we are checking for a 404... but get 400 (bad request)
+  - in next lesson, stephen explains why but long story short, its because the ticket id is not a valid mongoose id.
+
+- NOTE: near end of lesson, the test for ticket found passes
+
+- GET `/api/tickets/:id`
+- `tickets/src/routes/__test__/show.test.ts`
+- building `tickets/src/show.ts`
+
+- TODO: if it cant find the ticket -> return a 404
+  - use Ticket model to find by id
+
+- TODO: return ticket if ticket is found
+  - if you leave off the status code, default is 200;
+
+#### use showTicketRouter
+```ts
+//tickets/src/app.ts
+//...
+import { showTicketRouter } from './routes/show';
+//...
+app.use(showTicketRouter);
+
+```
+
+```ts
+//tickets/src/show.ts
+import express, { Request, Response } from 'express';
+import { Ticket } from '../models/ticket';
+import {NotFoundError} from '@clarklindev/common';
+
+const router = express.Router();
+router.get('/api/tickets/:id', async (req:Request, res:Response) => {
+  const ticket = await Ticket.findById(req.params.id);
+
+  if(!ticket){
+    throw NotFoundError();
+  }
+
+  res.send(ticket); //no status code... default to 200
+});
+
+export { router as showTicketRouter}
+```
+
+
+
 ### 284. What's that Error?!
 ### 285. Better Error Logging
 ### 286. Complete Index Route Implementation
