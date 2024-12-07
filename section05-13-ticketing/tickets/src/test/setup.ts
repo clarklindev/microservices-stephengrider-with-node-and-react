@@ -1,5 +1,6 @@
 import {MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
+
 import jwt from 'jsonwebtoken';
 
 //UPDATE
@@ -60,7 +61,7 @@ afterAll(async () => {
 global.signin = ()=> {
   //1. build a jwt payload {id, email}
   const payload = {
-    id: '23432456565r6',
+    id: new mongoose.Types.ObjectId().toHexString(),
     email: 'test@test.com'
   }
   //2. create the jwt (need process.env.JWT_KEY)
