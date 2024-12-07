@@ -8,6 +8,7 @@ import { currentUser, errorHandler, NotFoundError } from '@clarklindev/common';
 
 import { createTicketRouter } from './routes/new';
 import { showTicketRouter } from './routes/show';
+import { updateTicketRouter } from './routes/update';
 
 const app = express();
 app.set('trust proxy', true);
@@ -24,6 +25,7 @@ app.use(currentUser);
 
 app.use(createTicketRouter);
 app.use(showTicketRouter);
+app.use(updateTicketRouter);
 
 //testing not found error
 app.all('*', async (req, res, next) => {

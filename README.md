@@ -10097,6 +10097,57 @@ it('updates the ticket if provided valid inputs - happy test', async () => {
 ```
 
 ### 288. Handling Updates
+- implementing the update route
+- tickets/src/routes/update.ts
+
+#### testing
+- TODO: if `id` does not exist it should return 404
+- TODO: if user `not authenticated` return 401
+  - add the middleware: `requireAuth` to route, it will through the NotAuthorizedError
+
+
+```ts
+//tickets/src/routes/update.ts
+
+import express, { Request, Response } from 'express';
+import { body } from 'express-validator';
+
+import {
+  validateRequest,
+  NotFoundError,
+  requireAuth,
+  NotAuthorizedError
+} from '@clarklindev/common';
+
+import { Ticket } from '../models/ticket';
+
+const router = express.Router();
+
+router.put('/api/tickets/:id', requireAuth, async (req: Request, res: Response) => {
+  const ticket = await Ticket.findById(req.params.id);
+
+  if(!ticket){
+    throw new NotFoundError();
+  }
+
+  res.send(ticket);
+
+});
+
+export {router as updateTicketRouter}
+
+```
+
+- wire up to tickets/src/app.ts
+
+```ts
+//...
+import {updateTicketRouter} from './routes/update';
+//...
+app.use(updateTicketRouter);
+
+```
+
 ### 289. Permission Checking
 ### 290. Final Update Changes
 ### 291. Manual Testing
