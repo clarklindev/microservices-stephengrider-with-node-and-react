@@ -10149,7 +10149,122 @@ app.use(updateTicketRouter);
 ```
 
 ### 289. Permission Checking
+- TODO: `tickets/src/routes/__test__/update.test.ts`
+- create a ticket and then try update with a different user -> return statusCode: 401
+
+#### create a ticket
+- this creates a ticket -> BUT... the ticket will have `user id` that is the same userId as signin (from cookie)
+- any follow up request to try edit a ticket will use the same cookie (with same user id) ie. we currently only have one user 
+- FIX: fix in test/setup.ts (see below...)
+
+- AFTER UPDATE (tickets/src/test/setup.ts)
+- with the request, it calls `global.signin()` which returns a cookie with a new user id 
+- REQUIRED: capture the `response` -> to save this cookie or its id
+- pretend you're a different user by calling setCookie on follow up request, and calling `global.sigin()` again (produces new id)
+  - .expect(401)
+
+- OPTIONAL - do a follow up and check on the ticket and ensure its details did not update (because different user was used)
+
+```ts
+//tickets/src/routes/__test__/update.test.ts
+it('returns a 401 if user does not own the ticket', async () => {
+
+//create a ticket REQUEST
+const response = await request(app)
+  .post(`/api/tickets`)
+  .set('Cookie', global.signin())
+  .send({
+    title: 'sfddsfsd',
+    price: 20
+  });
+
+//...edit a ticket REQUEST
+//currently it will use the same cookie
+//AFTER UPDATE (tickets/src/test/setup.ts)
+await request(app)
+  .put(`/api/tickets/${response.body.id}`)
+  .set('Cookie', global.signin())
+  .send({
+    title: 'asddasd',
+    price: 20
+  })
+  .expect(401);
+});
+
+```
+#### test setup -> setting the id
+
+- tickets/src/test/setup.ts
+- we set the cookie id up with the payload in the global `signin()` function
+- FIX: instead of hardcoding the id, everytime signin() is called should generate a different id.
+  - `new mongoose.Types.ObjectId().toHexString()`
+
+```ts
+//tickets/src/test/setup.ts
+import mongoose from 'mongoose';
+
+//...
+
+//get cookie
+global.signin = ()=> {
+  //1. build a jwt payload {id, email}
+  const payload = {
+    // id: '23432456565r6', 
+    id: new mongoose.Types.ObjectId().toHexString(),
+    email: 'test@test.com'
+  }
+  //2. create the jwt (need process.env.JWT_KEY)
+  const token = jwt.sign(payload, process.env.JWT_KEY!);
+
+   //3. build sesion object {jwt: MY_JWT}
+   const session = {jwt: token};
+
+   //4. turn session into JSON
+   const sessionJSON = JSON.stringify(session);
+ 
+   //5. take JSON and encode it as base64
+   const base64 = Buffer.from(sessionJSON).toString('base64');
+ 
+   //6. return a string with cookie: express:sess=cookie 
+   return [`session=${base64}`];
+
+}
+```
+
+#### update the update route
+- tickets/src/routes/update.ts
+- ensure whoever making request (current logged in user) is same user id as that on ticket
+  - `if(!ticket.userId !== req.currentUser!.id){}`
+  - throw NotAuthorizedError()
+
+```ts
+//tickets/src/routes/update.ts
+
+//...
+
+router.put('/api/tickets/:id', requireAuth, async (req: Request, res: Response) => {
+  const ticket = await Ticket.findById(req.params.id);
+
+  if(!ticket){
+    throw new NotFoundError();
+  }
+
+  if(!ticket.userId !== req.currentUser!.id){
+    throw new NotAuthorizedError();
+  }
+
+  res.send(ticket);
+
+});
+```
+
 ### 290. Final Update Changes
+```ts
+//
+it('returns a 400 if the user provides an invalid title or price', async () => {});
+it('updates the ticket if provided valid inputs - happy test', async () => {});
+```
+
 ### 291. Manual Testing
 ---
 

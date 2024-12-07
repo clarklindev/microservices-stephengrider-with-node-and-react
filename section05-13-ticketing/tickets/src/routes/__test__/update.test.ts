@@ -30,7 +30,26 @@ it('returns a 401 (not allowed) if user not authenticated', async () => {
 });
 
 it('returns a 401 if user does not own the ticket', async () => {
-    
+
+  const response = await request(app)
+    .post(`/api/tickets`)
+    .set('Cookie', global.signin())
+    .send({
+      title: 'sfddsfsd',
+      price: 20
+    });
+
+  //...edit a ticket 
+  //currently it will use the same cookie
+  //AFTER UPDATE (tickets/src/test/setup.ts)
+  await request(app)
+    .put(`/api/tickets/${response.body.id}`)
+    .set('Cookie', global.signin())
+    .send({
+      title: 'asddasd',
+      price: 20
+    })
+    .expect(401);
 });
 
 it('returns a 400 if the user provides an invalid title or price', async () => {
