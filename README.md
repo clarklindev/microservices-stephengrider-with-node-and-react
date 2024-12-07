@@ -9853,13 +9853,127 @@ router.get('/api/tickets/:id', async (req:Request, res:Response) => {
 export { router as showTicketRouter}
 ```
 
-
-
 ### 284. What's that Error?!
+- our error is currently handled in [common/ module](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
+  - `src/middlewares/error-handler.ts` by errorHandler
+- the general error handler is called when there is no custom error handler: `res.status(400).send({ errors: [{ message: 'something went wrong' }] });`
+- NOTE: we are checking for a 404... but get 400 (bad request) which means the general error was called (not the CustomError)
+- try console.log(response.body) after the request (this means error wasnt caught by custom error)
+
+<img src="exercise_files/udemy-microservices-section13-284-logging-the-error.png" alt="udemy-microservices-section13-284-logging-the-error.png" width="800">
+
+- the test wont work because .expect() is an expectation which throws an error if the expectation is not satisfied, therefore exits the error function.
+- FIX: remove .expect(404) temporarily to see the error in line after...
+  - this will make the test pass, and you will see now be able to see the console.log(response.body)
+
+```ts
+//show.test.ts
+// get a ticket by id that does not exist
+it('returns a 404 if the ticket is not found', async () => { 
+  await request(app)
+    .get('/api/tickets/sfjlsdfjdslfdsf')
+    .send()
+    // .expect(404);
+
+  console.log(response.body) //wont log unless .expect(404) is removed temporarily
+
+});
+
+```
+
+### debugging src/middlewares/error-handler.ts
+- NOTE: THIS IS A QUICK HACK FOR DEBUGGING
+- you can add a console.log(err) to errorHandler BUT will result in rebuild, set new version, redeploy, then in Tickets/ install the updated @clarklindev/common
+- Quick hack (NOT RECOMMENDED) -> because we import the @clarklindev/common/ library -> look inside node_modules/ navigate to middlewares/error-handler.js (NOTE: EDIT JS (THE BUILT VERSION OF TYPESCRIPT CODE))
+  - add a console log to errorHandler() function
+
+//NOTE: to see the error, the hack is to temporarily add a console log inside `node_modules/` js (the compiled version of typescript files)
+
+- logging the actual error:
+
+```js
+//src/middlewares/error-handler.js
+import { Request, Response, NextFunction } from 'express';
+import { CustomError } from '../errors/custom-error';
+
+export const errorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (err instanceof CustomError) {
+    return res.status(err.statusCode).json({ errors: err.serializeErrors() });
+  }
+
+  console.error(err); //temporarily add this to the nodemodules/ .js (NOT RECOMMENDED HACK)
+
+  res.status(400).send({
+    errors: [{ message: 'something went wrong' }],
+  });
+
+  next();
+};
+```
+
+<img src="exercise_files/udemy-microservices-section13-284-console-log-the-actual-error.png" alt="udemy-microservices-section13-284-console-log-the-actual-error.png" width="800"/>
+
+- shows the error is we are trying the use an invalid value for mongodb "_id"
+- it is saying our api `/api/tickets/:id`, id needs to receive a valid mongodb id and our request is `/api/tickets/sdfhjsdiuhfsdfs` (invalid)
+- FIX: in the tests, change to a valid id
+
+```ts
+//tickets/src/show.ts
+import express, { Request, Response } from 'express';
+import { Ticket } from '../models/ticket';
+import {NotFoundError} from '@clarklindev/common';
+
+const router = express.Router();
+router.get('/api/tickets/:id', async (req:Request, res:Response) => {
+  const ticket = await Ticket.findById(req.params.id);
+  //...
+});
+```
+
 ### 285. Better Error Logging
+
+####  updating middleware errorHandler
+- TODO: update by adding `console.error` inside errorHandler (common/), this will give us more information when error not handled by our custom errors.
+- make the change in common/ and publish `pnpm run pub`
+- update the version in tickets/ `pnpm update @clarklindev/common --latest`
+
+#### generating the mongodb id
+- show.test.ts -> generate the mongodb id: `import mongoose from 'mongoose'`
+- `const id = new mongoose.Types.ObjectId().toHexString();`
+
+```ts
+//show.test.ts
+import mongoose from 'mongoose';
+
+//...
+
+// get a ticket by id that does not exist
+it('returns a 404 if the ticket is not found', async () => { 
+  const id = new mongoose.Types.ObjectId().toHexString();
+
+  await request(app)
+    .get(`/api/tickets/${id}`)
+    .send()
+    .expect(404);
+
+  console.log(response.body) //wont log unless .expect(404) is removed temporarily
+
+});
+
+```
+
 ### 286. Complete Index Route Implementation
 
 <img src="exercise_files/udemy-microservices-section13-286-ticketing-service-overview-routes-GET-ALL.png" alt="udemy-microservices-section13-286-ticketing-service-overview-routes-GET-ALL.png" width="800"/>
+
+- GET /api/tickets
+- view all entries in collection
+
 
 ### 287. Ticket Updating
 
