@@ -9625,6 +9625,7 @@ export {Ticket}
 
 - TODO: create a ticket
 - POST /api/tickets
+- requires to be authenticated -> YES
 
 - TODO: add in check to make sure ticket was saved
 - import our Ticket model to the test `import { Ticket } from "../../models/ticket";`
@@ -9732,11 +9733,90 @@ export {router as createTicketRouter };
 ```
 
 ### 282. Testing Show Routes
+
+<img src="exercise_files/udemy-microservices-section13-282-ticketing-service-overview-routes-GET-ONE.png" alt="udemy-microservices-section13-282-ticketing-service-overview-routes-GET-ONE.png" width="800"/>
+
+- TODO: showing a specific ticket by id
+- GET /api/tickets/:id
+- requires to be authenticated -> NO
+
+- does NOT require auth
+- gets a ticket from db with a specific ID
+- if it cant find ticket, throw 404 error
+- folder path AND create file: `tickets/src/routes/__test__/show.test.ts`
+
+### TEST 1 - Ticket NOT FOUND
+
+```ts
+//tickets/src/routes/__test__/show.test.ts
+import request from 'supertest';
+import { app } from '../../app';
+
+// get a ticket by id that does not exist
+it('returns a 404 if the ticket is not found', async () => { 
+  await request(app)
+    .get('/api/tickets/sfjlsdfjdslfdsf')
+    .send()
+    .expect(404);
+});
+
+```
+
+### TEST 2 - Ticket FOUND
+- REQUIRED: we have a ticket that we can find from GET
+1. TODO: first simulate create a ticket (lesson 281) 
+  - POST request
+  - requires authentication (cookie)
+  - the response from creating the cookie is the ticket (we need its id) 
+  - ticket id -> `response.body.id`
+  - expect status code: 201 (created)
+
+2. TODO: get the ticket by id
+  - GET request
+  - does NOT require authentication
+  - expect status code: 200
+
+```ts
+//tickets/src/routes/__test__/show.test.ts
+//...
+it('returns the ticket if the ticket is found', async () => {
+  const title = "concert";
+  const price = 20;
+
+  //create the ticket first
+  const response = await request(app)
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({
+      title,
+      price
+    })
+    .expect(201);
+
+  //then get the ticket by its id
+  const ticketResponse = await request(app)
+    .get(`/api/tickets/${response.body.id}`)
+    .send()
+    .expect(200);
+
+  expect(ticketResponse.body.title).toEqual(title);
+  expect(ticketResponse.body.price).toEqual(price);
+
+});
+
+```
+
 ### 283. Unexpected Failure!
 ### 284. What's that Error?!
 ### 285. Better Error Logging
 ### 286. Complete Index Route Implementation
+
+<img src="exercise_files/udemy-microservices-section13-286-ticketing-service-overview-routes-GET-ALL.png" alt="udemy-microservices-section13-286-ticketing-service-overview-routes-GET-ALL.png" width="800"/>
+
 ### 287. Ticket Updating
+
+<img src="exercise_files/udemy-microservices-section13-287-ticketing-service-overview-routes-UPDATE.png" alt="udemy-microservices-section13-287-ticketing-service-overview-routes-UPDATE.png" width="800"/>
+
 ### 288. Handling Updates
 ### 289. Permission Checking
 ### 290. Final Update Changes
