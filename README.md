@@ -10449,6 +10449,48 @@ paths:
 #...
 ```
 
+#### manual testing with postman
+
+##### sign in/sign up
+- first signin or signup (to be authenticated)
+  - the email/password must already exist on auth service (signin) or signup (new credentials)
+
+- POSTMAN POST https://ticketing.dev/api/users/signin
+  - body -> raw -> JSON -> {"email": "test@test.com", "password": "password"}
+
+##### ensure user logged in
+- POSTMAN GET https://ticketing.dev/api/users/currentuser
+- if signedin/signedup -> expect authentication response 
+
+```ts
+  "currentUser":{
+    "id": "sdfsdfsdfsfsd3424234",
+    "email": "test@test.com",
+    "password": "password"
+  }
+```
+
+#### create a ticket
+- POSTMAN POST https://ticketing.dev/api/tickets
+  - body -> raw -> JSON -> {"title": "new ticket", "price": 20}
+- EXPECT RESPONSE status 200
+- returns a ticket with (id) property eg. ABCDEFG
+
+#### get ticket (single) -> use ticket id (from create a ticket)  
+- POSTMAN GET https://ticketing.dev/api/tickets/54hhh4545636346346
+- EXPECT RESPONSE status 200 with details about ticket
+
+#### get all tickets
+- POSTMAN GET https://ticketing.dev/api/tickets/
+- EXPECT RESPONSE array of tickets
+
+#### update the ticket
+- NOTE: you need to use the same ticket id (from create a ticket)
+- POSTMAN PUT https://ticketing.dev/api/tickets/ABCDEFG
+  - body -> raw -> JSON -> {"title": "updated ticket", "price": 10}
+- EXPECT RESPONSE with updated data
+- can check the updated ticket with a request `GET ticket (single)`
+
 ---
 
 ## section 14 - NATS streaming server - an event bus implementation (2hr57min)
