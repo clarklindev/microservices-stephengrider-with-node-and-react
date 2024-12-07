@@ -10234,7 +10234,7 @@ global.signin = ()=> {
 #### update the update route
 - tickets/src/routes/update.ts
 - ensure whoever making request (current logged in user) is same user id as that on ticket
-  - `if(!ticket.userId !== req.currentUser!.id){}`
+  - `if(ticket.userId !== req.currentUser!.id){}`
   - throw NotAuthorizedError()
 
 ```ts
@@ -10249,7 +10249,7 @@ router.put('/api/tickets/:id', requireAuth, async (req: Request, res: Response) 
     throw new NotFoundError();
   }
 
-  if(!ticket.userId !== req.currentUser!.id){
+  if(ticket.userId !== req.currentUser!.id){
     throw new NotAuthorizedError();
   }
 
@@ -10259,13 +10259,196 @@ router.put('/api/tickets/:id', requireAuth, async (req: Request, res: Response) 
 ```
 
 ### 290. Final Update Changes
+- `tickets/src/routes/__test__/update.test.ts` ...contined
+- test with invalid title or price 
+  - create a ticket
+  - make a request to update - invalid title
+  - make a request to update - invalid price
+
+- happy test 
+  - create ticket (request)
+  - make an update (another request)
+  - ensure same cookie as when calling create ticket
+  - expect status code: 200
+  - make a follow up request after update
 ```ts
-//
-it('returns a 400 if the user provides an invalid title or price', async () => {});
-it('updates the ticket if provided valid inputs - happy test', async () => {});
+//tickets/src/routes/__test__/update.test.ts
+
+it('returns a 400 if the user provides an invalid title or price', async () => {
+
+  const cookie = global.signin();
+
+  //create a ticket
+  const response = await request(app)
+  .post(`/api/tickets`)
+  .set('Cookie', cookie)
+  .send({
+    title: 'sfddsfsd',
+    price: 20
+  });
+
+  //make a request to update - invalid title
+  await request(app)
+    .put(`/api/tickets/${response.body.id}`)
+    .set('Cookie', cookie)
+    .send({
+      title: '',
+      price: 20
+    })
+    .expect(400);
+  
+  //make a request to update - invalid price
+  await request(app)
+    .put(`/api/tickets/${response.body.id}`)
+    .set('Cookie', cookie)
+    .send({
+      title: 'asdasddadsd',
+      price: -20
+    })
+    .expect(400);
+});
+
+it('updates the ticket if provided valid inputs - happy test', async () => {
+  const cookie = global.signin();
+
+  //create a ticket
+  const response = await request(app)
+  .post(`/api/tickets`)
+  .set('Cookie', cookie)
+  .send({
+    title: 'sfddsfsd',
+    price: 20
+  });
+
+  //update ticket
+  await request(app)
+    .put(`/api/tickets/${response.body.id}`)
+    .set('Cookie', cookie)
+    .send({
+      title: 'new title',
+      price: 100
+    })
+    .expect(200);
+  
+  //fetch the ticket again
+  const ticketResponse = await request(app)
+    .get(`/api/tickets/${response.body.id}`)
+    .send();
+  
+  expect(ticketResponse.body.title).toEqual('new title'); 
+  expect(ticketResponse.body.price).toEqual(100); 
+});
+
+```
+
+#### update the update route
+- tickets/src/routes/update.ts
+- validate the request, 
+- apply update 
+- save ticket
+- sending back ticket will have the updated data
+
+```ts
+//tickets/src/routes/update.ts
+import express, { Request, Response } from 'express';
+import { body } from 'express-validator';
+
+import {
+  validateRequest,
+  NotFoundError,
+  requireAuth,
+  NotAuthorizedError
+} from '@clarklindev/common';
+
+//...
+
+router.put('/api/tickets/:id',
+  requireAuth,
+  [
+    body('title')
+      .not()
+      .isEmpty()
+      .withMessage('Title is required'),
+    body('price')
+      .isFloat({gt: 0})
+      .withMessage('Price must be provided and greater than 0')
+  ],
+  validateRequest,
+  async (req: Request, res: Response) => {
+    const ticket = await Ticket.findById(req.params.id);
+
+    if(!ticket){
+      throw new NotFoundError();
+    }
+
+    if(ticket.userId !== req.currentUser!.id){
+      throw new NotAuthorizedError();
+    }
+
+    //apply update 
+    ticket.set({
+      title: req.body.title,
+      price: req.body.price
+    })
+
+    await ticket.save();  //ticket is now updated
+
+    //sending back ticket will have the updated data
+    res.send(ticket);
+  }
+);
 ```
 
 ### 291. Manual Testing
+- TODO: expose access to the ticket service 
+- need to update infra/k8s/ingress-srv.yaml 
+- add a new path to ingress-srv before the catchall (`path: /?(.*)`)  route
+
+#### updated kubernetes syntax (Kubernetes 1.19+)
+- NOTE: this is the updated syntax used in Kubernetes ingress resources , specifically for Kubernetes 1.19+. The tutorial uses the old style of defining serviceName and servicePort, which was deprecated in newer versions of Kubernetes.
+- NOTE: `pathType: ImplementationSpecific` -> allows a regex path match in Kubernetes Ingress
+
+#### DEPRECATED SYNTAX
+```yaml
+#infra/k8s/ingress-srv.yaml
+
+#...
+- path: /api/users/?(.*)
+  backend:
+    serviceName: auth-srv
+    servicePort: 3000
+#...
+```
+
+#### UPDATED SYNTAX
+```yaml
+#infra/k8s/ingress-srv.yaml
+#...
+paths:
+- path: /api/users/?(.*)
+  pathType: ImplementationSpecific
+  backend:
+    service:
+      name: auth-srv
+      port:
+        number: 3000
+- path: /api/tickets/?(.*)
+  pathType: ImplementationSpecific
+  backend:
+    service:
+      name: tickets-srv
+      port: 
+        number: 3000
+- path: /?(.*)
+  pathType: ImplementationSpecific
+  backend:
+    service:
+      name: client-srv
+      port:
+        number: 3000
+#...
+```
+
 ---
 
 ## section 14 - NATS streaming server - an event bus implementation (2hr57min)
