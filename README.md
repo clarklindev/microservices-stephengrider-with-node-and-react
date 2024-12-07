@@ -9972,8 +9972,72 @@ it('returns a 404 if the ticket is not found', async () => {
 <img src="exercise_files/udemy-microservices-section13-286-ticketing-service-overview-routes-GET-ALL.png" alt="udemy-microservices-section13-286-ticketing-service-overview-routes-GET-ALL.png" width="800"/>
 
 - GET /api/tickets
-- view all entries in collection
+- view all ticket entries in tickets collection
+- no authentication for GET
 
+- TODO: test that after 3 tickets are created
+  - if you query the api, the response should have length of 3
+make a request to api and expect length of 3 in response
+#### create test
+- `routes/__test__/index.test.ts`
+
+```ts
+import request from 'supertest';
+import { app } from '../../app';
+
+const createTicket = () => {
+  return request(app)
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({
+      title: 'adasdasda',
+      price: 20
+    });
+}
+
+it('can fetch a list of tickets', async () => {
+  
+  //create 3x tickets
+  await createTicket();
+  await createTicket();
+  await createTicket();
+
+  //make a request to api and expect length of 3 in response
+  const response = await request(app)
+    .get('/api/tickets')
+    .send()
+    .expect(200);
+  
+  expect(response.body.length).toEqual(3);
+
+});
+```
+
+#### create route
+- tickets/src/routes/index.ts
+
+```ts
+import express, { Request, Response } from 'express';
+import { Ticket } from '../models/ticket';
+
+const router = express.Router();
+
+router.get('/api/tickets', async (req: Request, res: Response) => {
+  const tickets = await Ticket.find({});
+  
+  res.send(tickets);
+
+});
+
+export { router as indexTicketRouter };
+```
+
+```ts
+//tickets/src/app.ts
+import {indexTicketRouter} from './routes/index';
+//...
+app.use(indexTicketRouter);
+```
 
 ### 287. Ticket Updating
 
