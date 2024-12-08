@@ -10662,6 +10662,10 @@ Common Options:
 
 
 ### 295. Creating a NATS Streaming Deployment
+- deploy NATS streaming deployment via kubernetes like any other service (with deployment yaml)
+- infra/k8s/
+- NOTE: folder named update: `section05-14-ticketing`
+
 ### 296. Big Notes on NATS Streaming
 ### 297. Building a NATS Test Project
 ### 298. Port-Forwarding with Kubectl
