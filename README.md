@@ -10662,9 +10662,71 @@ Common Options:
 
 
 ### 295. Creating a NATS Streaming Deployment
-- deploy NATS streaming deployment via kubernetes like any other service (with deployment yaml)
-- infra/k8s/
-- NOTE: folder named update: `section05-14-ticketing`
+- deploy NATS streaming deployment via kubernetes like any other of our services (with deployment yaml)
+- `section05-14-ticketing/infra/k8s/nats-depl.yaml`
+  - NOTE: the docker image for nats -> `image: nats-streaming:0.17.0`
+  - the commandline options (Streaming Server Options) are given and in array `args: []`
+  - arg order is important -> each argument and its value are separate values in the array
+- create a config for cluster ip service
+  - expose 2 separate ports
+    - client -> tcp -> port 2222
+    - monitoring -> tcp -> port 8222
+- skaffold
+  - `kubectl get pods`
+
+```yaml
+#section05-14-ticketing/infra/k8s/nats-depl.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+        - name: nats
+          image: nats-streaming:0.17.0
+          args: [
+            '-p',
+            '4222',
+            '-m',
+            '8222',
+            '-hbi',
+            '5s',
+            '-hbt',
+            '5s',
+            '-hbf',
+            '2',
+            '-SD',
+            '-cid',
+            'ticketing',
+          ]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-srv
+spec:
+  selector:
+    app: nats
+  ports:
+    - name: client
+      protocol: TCP
+      port: 4222
+      targetPort: 4222
+    - name: monitoring
+      protocol: TCP
+      port: 8222
+      targetPort: 8222
+```
 
 ### 296. Big Notes on NATS Streaming
 ### 297. Building a NATS Test Project
