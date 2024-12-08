@@ -10729,6 +10729,60 @@ spec:
 ```
 
 ### 296. Big Notes on NATS Streaming
+- `NATS streaming server` vs our `custom event bus` 
+
+## our custom event bus
+- custom event bus -> shared events with axios and express (eg. post event to event bus service)
+
+<img src="exercise_files/udemy-microservices-section14-296-our-custom-event-bus.png" alt="udemy-microservices-section14-296-our-custom-event-bus.png" width="800"/>
+
+### sending events
+- if event bus receives an event, it sends it off to every service (even originating service)
+
+<img src="exercise_files/udemy-microservices-section14-296-our-custom-event-bus-sends-events-to-every-service.png" alt="udemy-microservices-section14-296-our-custom-event-bus-sends-events-to-every-service.png" width="800"/>
+
+### events stored in memory
+- event bus stored events in memory -> if there was a service with down time and when it came back up, OR a new service added it fetched events it missed
+
+### adding new service
+- this was useful if you added new services -> the new service could request all events ever submitted -> and the event bus would send it and then the new service would be up to date.
+
+<img src="exercise_files/udemy-microservices-section14-296-our-custom-event-bus-new-service-can-request-event-history-to-get-updated.png" alt="udemy-microservices-section14-296-our-custom-event-bus-new-service-can-request-event-history-to-get-updated.png" width="800"/>
+
+## NATS Streaming server (node-nats-streaming)
+- NATS Streaming server - uses a client library (instead of custom event bus) called npm package: `node-nats-streaming`
+  - event-based 
+  - create some objects
+  - sets up listeners, 
+  - emit events
+  - callback based infrastructure
+- services listening for events also with `node-nats-streaming` library
+- so all event related stuff we use node-nats-streaming
+- for normal http requests, still use express/node/axios
+
+<img src="exercise_files/udemy-microservices-section14-296-using-nats.png" alt="udemy-microservices-section14-296-using-nats.png" width="800"/>
+
+- NATS Streaming requires you to subscribe to specific channels (or topics)
+- `channels of events OR types of events` you listen to specifically inside our services
+- so on NATS streaming server - you create topics/channels
+- to submit an event -> create an event in a service, reach out to NATS Streaming library and tell it to publish it to a specific channel
+- event only sent to services listening on that channel
+- a service has to subscribe/listen to a topics/channels to receive its events
+
+<img src="exercise_files/udemy-microservices-section14-296-using-nats-streaming-subscribe-to-channels.png" alt="udemy-microservices-section14-296-using-nats-streaming-subscribe-to-channels.png" width="800"/>
+
+### NATS streaming storing events - memory
+- NATS Streaming stores all events in memory (default), flat files or in a mySQL/Postgres DB
+- if a new service comes online -> it requests the NATS Streaming to give all events ever submitted 
+
+<img src="exercise_files/udemy-microservices-section14-296-using-nats-streaming-stores-events-by-default-in-memory.png" alt="udemy-microservices-section14-296-using-nats-streaming-stores-events-by-default-in-memory.png" width="800"/>
+
+### NATS streaming stores events - files (default) or db
+- can configure NATS Streaming that events get stored in file or db
+  - this way if the NATS Streaming goes down / offline / needs restart it loses everything stored in memory BUT it can then connect to the file / db to fetch all the events ever emitted
+
+<img src="exercise_files/udemy-microservices-section14-296-using-nats-streaming-stores-all-events-in-files-default-or-db.png" alt="udemy-microservices-section14-296-using-nats-streaming-stores-all-events-in-files-default-or-db.png" width="800"/>
+
 ### 297. Building a NATS Test Project
 ### 298. Port-Forwarding with Kubectl
 ### 299. Publishing Events
