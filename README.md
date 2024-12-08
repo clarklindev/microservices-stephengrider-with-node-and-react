@@ -10495,6 +10495,28 @@ paths:
 
 ## section 14 - NATS streaming server - an event bus implementation (2hr57min)
 ### 292. What Now?
+
+- Reminder of our services
+<img src="exercise_files/udemy-microservices-section14-292-reminder-our-services.png" alt="udemy-microservices-section14-292-reminder-our-services.png" width="800"/>
+
+<img src="exercise_files/udemy-microservices-section14-292-next-steps.png" alt="udemy-microservices-section14-292-next-steps.png" width="800">
+
+### what next?
+- OPTION 1 - frontend of ticket-related (client side)
+- OPTION 2 - ticket 'orders' service
+  - deals with people wanting to buy a ticket
+- OPTION 3 (WINNER) - add Event bus - wire tickets service up / handling events
+
+#### Event bus
+
+<img src="exercise_files/udemy-microservices-section14-292-reminder-NATS-streaming-server.png" alt="udemy-microservices-section14-292-reminder-NATS-streaming-server.png" width="800"/>
+
+- understanding and taking care of issues with handling data between tickets/orders service
+- TODO: implement event bus with NATS (streaming-server)
+  - before... we implement a simple event bus from scratch
+  - diferrences between our event bus (express) vs NATS
+
+
 ### 293. NATS Server Status - IMPORTANT NOTE
 ### 294. Three Important Items
 ### 295. Creating a NATS Streaming Deployment
