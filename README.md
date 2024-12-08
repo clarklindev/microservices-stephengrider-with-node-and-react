@@ -10496,7 +10496,8 @@ paths:
 ## section 14 - NATS streaming server - an event bus implementation (2hr57min)
 ### 292. What Now?
 
-- Reminder of our services
+- Reminder of our services  
+
 <img src="exercise_files/udemy-microservices-section14-292-reminder-our-services.png" alt="udemy-microservices-section14-292-reminder-our-services.png" width="800"/>
 
 <img src="exercise_files/udemy-microservices-section14-292-next-steps.png" alt="udemy-microservices-section14-292-next-steps.png" width="800">
@@ -10784,6 +10785,78 @@ spec:
 <img src="exercise_files/udemy-microservices-section14-296-using-nats-streaming-stores-all-events-in-files-default-or-db.png" alt="udemy-microservices-section14-296-using-nats-streaming-stores-all-events-in-files-default-or-db.png" width="800"/>
 
 ### 297. Building a NATS Test Project
+<img src="exercise_files/udemy-microservices-section14-297-nats-building-a-NATS-test-project.png" alt="udemy-microservices-section14-297-nats-building-a-NATS-test-project.png" width="800"/>
+
+- create a new sub-project (typscript) (this will be a test project)
+- install NATS streaming library and connect to NATS streaming server
+- 2 sub programs (npm scripts)
+  - one to emit events
+  - one to listen for events
+- will run outside of kubernetes
+  - but should connect to the `NATS Streaming server` inside the kubernetes cluster
+
+- `section05-14-ticketing/nats-test`
+- `npm init -y`
+- `pnpm i node-nats-streaming ts-node-dev typescript @types/node`
+- src/listener.ts
+- src/publisher.ts
+- add scripts to package.json
+
+#### troubleshoot 
+- this `tsc --init` command requires typescript to be installed globally 
+- `npm i -g typescript` 
+- NOTE: if you installing globally dont use pnpm, use npm is fine
+- ensure that npm is added to environment variables -> path: `c:\Users\admin\AppData\Roaming\npm\` 
+
+```json
+//package.json
+//...
+
+  "scripts": {
+    "publish": "ts-node-dev --notify false src/publisher.ts",
+    "listen": "ts-node-dev --notify false src/listen.ts"
+  },
+
+//...
+
+```
+- from `section05-14-ticketing/nats-test/` folder: make it a typescript project: `tsc --init` -> creates a `tsconfig.json`
+
+- note instead of calling it a `client`, documentation calls it `stan` (which is `nats` spelt backwards) 
+- `stan` is a nats project terminology for a client
+- `nats` is a library
+- `stan` is an instance / client used to connect to nats streaming server
+
+#### publisher.ts
+- .connect() has some arguments
+  - the arguments:
+    - 1st argument -> value set to 'ticketing'
+    - 2nd argument -> value set to 'abc'
+    - 3rd argument -> value set to an object with url
+
+- after client successfully connects to NATS streaming server -> it will emit a `connect` event.
+- we can listen for this event via callback: `stan.on('connect', ()=>{}) ` (executes after client has successfully connected to nats streaming server)
+- NOTE: this will yield an error because NATS streaming server is not on localhost:4222 but in the kubernetes cluster...
+
+
+```ts
+//section05-14-ticketing/nats-test/src/publisher.ts
+import nats from 'node-nats-streaming';
+
+const stan = nats.connect('ticketing', 'abc', {
+  url: 'http://localhost:4222'
+});
+
+stan.on('connect', ()=>{
+  console.log('publisher connected to NATS')
+})
+
+```
+#### troubleshoot 
+- error - typescript error with the `stan.on()` listener
+- FIX: ensure the project is typescript project by calling `tsc --init` from within `nats-test/` folder
+  - this creates `nats-test/tsconfig.json`
+
 ### 298. Port-Forwarding with Kubectl
 ### 299. Publishing Events
 ### 300. Small Required Command Change
@@ -10822,6 +10895,8 @@ spec:
 ### 329. Common Event Definitions Summary
 ### 330. Updating the Common Module
 ### 331. Restarting NATS
+
+---
 
 ## section 16 - managing a NATS client (1hr37min)
 ### 332. Publishing Ticket Creation
@@ -11004,7 +11079,7 @@ spec:
 ### 487. Sanitizing Price Input
 ### 488. Ticket Creation
 ### 489. Listing All Ticketst
-### 490. Reminder on Invalid <Link> with <a> child Errors
+### 490. Reminder on Invalid `<Link>` with `<a>` child Errors
 ### 491. Linking to Wildcard Routes
 ### 492. Creating an Order
 ### 493. Programmatic Navigation to Wildcard Routes
@@ -11018,6 +11093,8 @@ spec:
 ### 501. Filtering Reserved Tickets
 ### 502. Header Links
 ### 503. Rendering a List of Orders
+
+---
 
 ## section 23 - CI/CD (2hr17min)
 ### 504. Development Workflow
