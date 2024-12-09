@@ -10889,11 +10889,17 @@ stan.on('connect', ()=>{
 
 <img src="exercise_files/udemy-microservices-section14-298-port-forwarding-option3-port-forward-a-port-off-a-pod.png" alt="udemy-microservices-section14-298-port-forwarding-option3-port-forward-a-port-off-a-pod.png" width="800"/>
 
+//-------------------------------------------------------------------------------
+# STEPS TO PUBLISHING
+## STEP1 
+
 - /nats-test/
 - `kubectl get pods`
 
 <img src="exercise_files/udemy-microservices-section14-298-kubectrl-get-pods.png" alt="udemy-microservices-section14-298-kubectrl-get-pods.png" width="800"/>
 
+
+## STEP 2
 #### forwarding port
 - get name of pod: kubectl port-forward nats-depl-... [port on local machine to get access to the nats-depl-... pod]:[port on the pod trying get access to]
 - run from /nats-test/ folder: `kubectl port-forward nats-depl-85f8d5bb89-jx85p 4222:4222`
@@ -10906,6 +10912,7 @@ Forwarding from 127.0.0.1:4222 -> 4222
 Forwarding from [::1]:4222 -> 4222
 ```
 
+## STEP 3
 #### running publish
 - open another Terminal
   - /nats-test/ `pnpm run publish`
@@ -10919,6 +10926,72 @@ publisher connected to NATS
 - to easily break connection -> stop the process running the port forward command (will do it later)
 
 ### 299. Publishing Events
+
+<img src="exercise_files/udemy-microservices-section14-299-overview-of-publisher-and-listener-and-nats-initial-diagram.png" alt="udemy-microservices-section14-299-overview-of-publisher-and-listener-and-nats-initial-diagram.png" width="800"/>
+
+#### NATS streaming server
+- NATS streaming server has list of channels
+- we always publish information to a specific channel
+
+#### publisher
+
+- DATA
+- `data` to share (eg an object) eg. a ticket with 'title' 'price'
+- this data is reffered to in NATS as a message 
+- we sometimes refer to it as an event
+
+- SUBJECT
+- subject (name of channel where we want to share information): `ticket:created`
+- the data and subject is passed into stan client
+
+- CHANNEL
+- NATS streaming server will then add subject `ticket:created` to its list of channels
+- NATS will take this `data` and broadcast to anyone listening
+- NOTE: NATS can only communicate in 'strings' so need to convert js to JSON
+- stan.publish() 
+  - first param is the subject/channel
+  - second is data
+  - third (optional) is a callback function once publish has completed
+
+```ts
+//nats-test/publisher.ts
+
+import nats from 'node-nats-streaming';
+
+const stan = nats.connect('ticketing', 'abc', {
+  url: 'http://localhost:4222'
+});
+
+stan.on('connect', () => {
+  console.log('publisher connected to NATS')
+
+  const data = JSON.stringify({
+    id: '123',
+    title: 'concert',
+    price: 20,
+  });
+
+  stan.publish('ticket:created', data, () => {
+    console.log('event published')
+  });
+
+});
+```
+
+<img src="exercise_files/udemy-microservices-section14-299-stan-publish.png" alt="udemy-microservices-section14-299-stan-publish.png" width="800"/>
+
+#### listener
+- the listener will be listening for a subject - `ticket:created`
+- it will send this (subject) to stan client
+- `stan client` will tell `NATS Streaming server` that anytime data is received from this channel (subject), it should receive a copy of it
+- it receives this new data.
+
+- SUBSCRIPTION
+- `subscription` is what will listen to the channel and received data
+
+<img src="exercise_files/udemy-microservices-section14-299-overview-of-publisher-and-listener-and-nats.png" alt="udemy-microservices-section14-299-overview-of-publisher-and-listener-and-nats.png" width="800"/>
+
+
 ### 300. Small Required Command Change
 ### 301. Listening For Data
 ### 302. Accessing Event Data
