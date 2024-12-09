@@ -10993,6 +10993,21 @@ stan.on('connect', () => {
 
 
 ### 300. Small Required Command Change
+- REQUIRED for upcoming lessons
+- `ts-node-dev` updated library by default does NOT restart 
+- you need to enable it in scripts -> add `--rs` to `ts-node-dev` commands 
+
+- package.json
+
+```json
+//package.json
+"scripts": {
+  "publish": "ts-node-dev --rs --notify false src/publisher.ts",
+  "listen": "ts-node-dev --rs --notify false src/listener.ts"
+},
+```
+
+
 ### 301. Listening For Data
 ### 302. Accessing Event Data
 ### 303. Client ID Generation
