@@ -10515,12 +10515,14 @@ paths:
 - understanding and taking care of issues with handling data between tickets/orders service
 - TODO: implement event bus with NATS (streaming-server)
   - before... we implement a simple event bus from scratch
-  - diferrences between our event bus (express) vs NATS
+  - differences between our event bus (express) vs NATS
 
 
 ### 293. NATS Server Status - IMPORTANT NOTE
 - DockerHub image of the NATS Streaming Server (and the docs)
 - NOTE: [deprecation legacy docs](https://nats-io.gitbook.io/legacy-nats-docs/nats-streaming-server-aka-stan/developing-with-stan) warning for NATS Streaming server on docs 
+- So just to be clear, NATS Streaming server is deprecated not NATS, 
+- NATS streaming has been deprecated in favor of a more modern JetStream (newer, more robust persistence layer, offering advanced features like durable streams, stream processing, and more extensive support for persistent message queues).
 - there are other options for message queue services like RabbitMQ and Kafka
 - NATS shows how message queues work
 
