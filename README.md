@@ -11146,6 +11146,44 @@ const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
 ```
 
 ### 304. Queue Groups
+- 1x publisher / 2x listeners
+- listeners - second argument to subscribe()
+- PROBLEM: if both listeners commited code to db then you would have duplicate entries saved in db
+
+#### Queue Group
+- FIX: Queue Group - if there are `multiple instances` of `same service` (horizontal scaling) only one of them should receive the message
+- queue groups are created inside a channel
+- can have multiple queue groups inside a channel
+- queue group has a name (reference)
+- every instance of service eg. order service has a subscription and joins this queue group
+- incoming message -> NATS only sends it to one member inside queue group
+
+<img src="exercise_files/udemy-microservices-section14-304-queue-group-sends-to-one-in-group.png" alt="udemy-microservices-section14-304-queue-group-sends-to-one-in-group.png" width="800" />
+
+- queue groups basically limit the number of messages received by its members
+- other listeners subscribed to channel (not in queue group) will still receive a copy of the message
+
+<img src="exercise_files/udemy-microservices-section14-304-queue-group-all-subscribers-of-channel-receive-events.png" alt="udemy-microservices-section14-304-queue-group-all-subscribers-of-channel-receive-events.png" width="800" />
+
+#### creating queue group
+- you can add a listener to a queue group by specifying a 2nd parameter to the .subscribe() call
+  - eg `orders-service-queue-group` -> other listeners need to use this same string to be in same group 
+
+```ts
+//nats-test/src/listeners.ts
+
+//...
+stan.on('connect', () => {
+
+  const subscription = stan.subscribe(
+    'ticket:created', 
+    'orders-service-queue-group'
+  );
+}
+```
+
+<img src="exercise_files/udemy-microservices-section14-304-queue-group-only-one-in-group-receives-message.png" alt="udemy-microservices-section14-304-queue-group-only-one-in-group-receives-message.png" width="800"/>
+
 ### 305. Manual Ack Mode
 ### 306. Client Health Checks
 ### 307. Graceful Client Shutdown
