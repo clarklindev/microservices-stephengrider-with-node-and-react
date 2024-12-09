@@ -10836,8 +10836,11 @@ spec:
 
 - after client successfully connects to NATS streaming server -> it will emit a `connect` event.
 - we can listen for this event via callback: `stan.on('connect', ()=>{}) ` (executes after client has successfully connected to nats streaming server)
-- NOTE: this will yield an error because NATS streaming server is not on localhost:4222 but in the kubernetes cluster...
+- NOTE: this will yield an error because `NATS streaming server` is not on localhost:4222 but in the kubernetes cluster...
+  - by default we dont have access to anything running in the kubernetes cluster
+  - we are trying to run our program and trying to access a pod running inside a kubernetes cluster
 
+<img src="exercise_files/udemy-microservices-section14-298-connect-nats-on-localhost-port-4222-error.png" alt="udemy-microservices-section14-298-connect-nats-on-localhost-port-4222-error" width="800"/>
 
 ```ts
 //section05-14-ticketing/nats-test/src/publisher.ts
@@ -10858,6 +10861,63 @@ stan.on('connect', ()=>{
   - this creates `nats-test/tsconfig.json`
 
 ### 298. Port-Forwarding with Kubectl
+- for test purposes, to get access to the NATS Streaming server we can:
+
+#### accessing something inside a cluster
+- to access something inside the cluster there are some options:
+- we will use option 3
+
+## OPTION 1 - clusterIP service
+- access pod via cluster ip service
+- our publisher program can then communicate directly with ingress nginx
+- CON is that its not easy severe the link (ingress-nginx and clusterIP service) and then toggle it back on
+
+<img src="exercise_files/udemy-microservices-section14-298-port-forwarding-option1-connect-via-cluster-ip-service.png" alt="udemy-microservices-section14-298-port-forwarding-option1-connect-via-cluster-ip-service.png" width="800"/>
+
+## OPTION 2 - create a NodePort service
+- or can create a node port service to connect pod to outside world (outside the kubernetes cluster)
+- CON is that its not easy severe the link (NodePort servie) and then toggle it back on
+- would still require a config file
+
+<img src="exercise_files/udemy-microservices-section14-298-port-forwarding-option2-connect-via-nodeport-service.png" alt="udemy-microservices-section14-298-port-forwarding-option2-connect-via-nodeport-service.png" width="800"/>
+
+## OPTION 3 - (ONLY while in dev)  
+- run a command in terminal that tells `Kubernetes cluster` to `port forward` a port off a `specific pod` in our cluster.
+- this will cause cluster to behave as if it has a nodePort service running inside of it 
+- will expose the pod (port) to outside world
+- allows to connect from local machine
+
+<img src="exercise_files/udemy-microservices-section14-298-port-forwarding-option3-port-forward-a-port-off-a-pod.png" alt="udemy-microservices-section14-298-port-forwarding-option3-port-forward-a-port-off-a-pod.png" width="800"/>
+
+- /nats-test/
+- `kubectl get pods`
+
+<img src="exercise_files/udemy-microservices-section14-298-kubectrl-get-pods.png" alt="udemy-microservices-section14-298-kubectrl-get-pods.png" width="800"/>
+
+#### forwarding port
+- get name of pod: kubectl port-forward nats-depl-... [port on local machine to get access to the nats-depl-... pod]:[port on the pod trying get access to]
+- run from /nats-test/ folder: `kubectl port-forward nats-depl-85f8d5bb89-jx85p 4222:4222`
+- this command is not restricted to NATS but can be used connect to any pod we want to temporarily connect to
+
+- NOTE: DO NOT CLOSE THIS TERMINAL WINDOW
+
+```cmd
+Forwarding from 127.0.0.1:4222 -> 4222
+Forwarding from [::1]:4222 -> 4222
+```
+
+#### running publish
+- open another Terminal
+  - /nats-test/ `pnpm run publish`
+
+```cmd
+[INFO] 15:07:03 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.7.2)
+publisher connected to NATS
+```
+
+#### to stop port forwarding
+- to easily break connection -> stop the process running the port forward command (will do it later)
+
 ### 299. Publishing Events
 ### 300. Small Required Command Change
 ### 301. Listening For Data
