@@ -11018,12 +11018,20 @@ stan.on('connect', () => {
 //nats-test/src/listener.ts
 import nats from 'node-nats-streaming';
 
+console.clear();
+
 const stan = nats.connect('ticketing', '123', {
   url:'http://localhost:4222'
 });
 
 stan.on('connect', () => {
   console.log('Listener connected to NATS');
+
+  const subscription = stan.subscribe('ticket:created');
+
+  subscription.on('message', (msg) => {
+    console.log('message received');
+  })
 });
 ```
 
@@ -11036,7 +11044,7 @@ stan.on('connect', () => {
   - get pod name: `kubectl get pods`
   - forward port: `kubectl port-forward nats-depl-85f8d5bb89-jx85p 4222:4222`
 
-- vscode terminal 3 -> from `nats-test`
+- vscode terminal 3 -> from `nats-test/` folder
   - run publish: `pnpm run publish`
 
 - EXPECT:
@@ -11055,6 +11063,60 @@ Listener connected to NATS
 message received
 ```
 ### 302. Accessing Event Data
+- UPDATED: nats-test/src/listener.ts
+- giving the prop an annotation of `Message`
+  - ctrl + click on `Message` to see type definition
+  - important functions:
+    - `getSubject()` returns name of channel
+    - `getSequence()` get the number of the message (ie. 1st message is 1)
+    - `getData()` returns the data of the message 
+
+- Docker desktop is running / kubernetes is running
+- `Skaffold dev`
+
+-LISTEN
+- nats-test/ `pnpm run listen`
+
+- PUBLISH
+- docker desktop is running (docker / kubernetes)
+- 1st terminal window -> `skaffold dev` 
+
+-`nats-test/` folder: 
+  - get pods:  `kubectl get pods`
+  - 2nd terminal window -> forward port: `kubectl port-forward nats-depl-7b8d75cc76-rk5hd 4222:4222`
+    - NOTE: the pods name changes everytime skaffold dev is run: `nats-depl-`
+
+  - in 3rd terminal window -> `pnpm run publish`
+  - type: `rs` (to restart/re-connect publish) and everytime a new message will be sent and received by listener
+  - expect that the listener terminal receives the message and that event #number `msg.getSequence()` gets incremented
+
+<img src="exercise_files/udemy-microservices-section14-302-accessing-event-data-showing-rs-restarts-which-causes-publish.png" alt="udemy-microservices-section14-302-accessing-event-data-showing-rs-restarts-which-causes-publish.png" width="800"/>
+
+```ts
+//nats-test/src/listener.ts
+import nats, {Message} from 'node-nats-streaming';
+
+console.clear();
+
+const stan = nats.connect('ticketing', '123', {
+  url:'http://localhost:4222'
+});
+
+stan.on('connect', () => {
+  console.log('Listener connected to NATS');
+
+  const subscription = stan.subscribe('ticket:created');
+
+  subscription.on('message', (msg: Message) => {
+    const data = msg.getData();
+
+    if(typeof data === 'string'){
+      console.log(`Received event #${msg.getSequence()}, with data: ${data}`);
+    }
+  })
+});
+```
+
 ### 303. Client ID Generation
 ### 304. Queue Groups
 ### 305. Manual Ack Mode
