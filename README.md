@@ -11009,8 +11009,51 @@ stan.on('connect', () => {
 },
 ```
 
-
 ### 301. Listening For Data
+- TODO: create a subject/ channel we want to listen to
+- given to stan client
+- registers a subscription with NATS Streaming
+
+```ts
+//nats-test/src/listener.ts
+import nats from 'node-nats-streaming';
+
+const stan = nats.connect('ticketing', '123', {
+  url:'http://localhost:4222'
+});
+
+stan.on('connect', () => {
+  console.log('Listener connected to NATS');
+});
+```
+
+### TEST
+
+- vscode terminal 1 -> from main project dir run `scaffold dev` 
+
+#### PUBLISH
+- vscode terminal 2 -> from `nats-test/`
+  - get pod name: `kubectl get pods`
+  - forward port: `kubectl port-forward nats-depl-85f8d5bb89-jx85p 4222:4222`
+
+- vscode terminal 3 -> from `nats-test`
+  - run publish: `pnpm run publish`
+
+- EXPECT:
+```
+publisher connected to NATS
+event published
+```
+
+#### LISTEN
+- vscode terminal 4 -> from `nats-test`
+  - run publish: `pnpm run listen`
+
+- EXPECT:
+```
+Listener connected to NATS
+message received
+```
 ### 302. Accessing Event Data
 ### 303. Client ID Generation
 ### 304. Queue Groups
