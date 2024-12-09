@@ -11118,6 +11118,33 @@ stan.on('connect', () => {
 ```
 
 ### 303. Client ID Generation
+- adding additional listener (horizontal scale) causes error
+<img src="exercise_files/udemy-microservices-section14-303-client-id-generation-horizontal-scale-adding-additional-listener-causes-error.png" alt="udemy-microservices-section14-303-client-id-generation-horizontal-scale-adding-additional-listener-causes-error.png" width="800"/>
+
+- the second argument to publisher calling .connect() is the client id
+- NATS server maintains list of channels (subject)
+- NATS server maintains list of clients connected to it.
+- so when an additional listener is connected, currently we are using the same client id (which NATS doesnt want)
+
+<img src="exercise_files/udemy-microservices-section14-303-client-id-duplicate-error.png" alt="udemy-microservices-section14-303-client-id-duplicate-error.png" width="800"/>
+
+- FIX: randomly create the connect id 
+- OUTCOME: can run multiple clients each with a random generated ID
+
+#### generate connect id
+- we use `randomBytes` from `crypto` library `randomBytes(4).toString('hex')`
+- nats-test/src/listener.ts
+
+```ts
+//nats-test/src/listener.ts
+import {randomBytes} from 'crypto';
+
+const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
+  url:'http://localhost:4222'
+});
+
+```
+
 ### 304. Queue Groups
 ### 305. Manual Ack Mode
 ### 306. Client Health Checks
