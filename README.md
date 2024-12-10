@@ -11166,6 +11166,7 @@ const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
 <img src="exercise_files/udemy-microservices-section14-304-queue-group-all-subscribers-of-channel-receive-events.png" alt="udemy-microservices-section14-304-queue-group-all-subscribers-of-channel-receive-events.png" width="800" />
 
 #### creating queue group
+- the first is the name of the channel you want to listen 
 - you can add a listener to a queue group by specifying a 2nd parameter to the .subscribe() call
   - eg `orders-service-queue-group` -> other listeners need to use this same string to be in same group 
 
@@ -11174,7 +11175,7 @@ const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
 
 //...
 stan.on('connect', () => {
-
+  
   const subscription = stan.subscribe(
     'ticket:created', 
     'orders-service-queue-group'
@@ -11185,6 +11186,103 @@ stan.on('connect', () => {
 <img src="exercise_files/udemy-microservices-section14-304-queue-group-only-one-in-group-receives-message.png" alt="udemy-microservices-section14-304-queue-group-only-one-in-group-receives-message.png" width="800"/>
 
 ### 305. Manual Ack Mode
+- the first 2 paramaters are strings, but the third is chained on function calls
+- to add other options you can chain them on as methods onto `subscriptionOption()` call
+  - .setDeliverAllAvailable()
+  - .setManualAckMode()
+  - .setMaxInFlight()
+- eg. `const options = stan.subscriptionOptions().setMaxInFlight().setDeliverAllAvailable();`
+- options is then passed into subscribe() as the 3rd argument
+
+- **Previous Setup Recap:**
+  - Added a second argument to the `subscribe` call for setting up a queue group.
+  
+- **Customizing Subscriptions:**
+  - First two arguments (`channel name`, `queue group`) are strings.
+  - Additional options are more complex and set via chained method calls.
+
+- **Setting Options:**
+  - Options are created using `stan.subscriptionOptions()`.
+  - Configurable methods include:
+    - `setDeliverAllAvailable()`
+    - `setManualAckMode()`
+    - `setMaxInFlight()`
+  - Options are provided as the third argument to the `subscribe` call.
+
+```ts
+//nats-test/src/listeners.ts
+
+//...
+stan.on('connect', () => {
+  const options = stan
+    .subscriptionOptions()
+    .setManualAckMode(true);
+
+  const subscription = stan.subscribe(
+    'ticket:created', 
+    'orders-service-queue-group',
+    options
+  );
+
+  subscription.on('message', (msg: Message) => {
+    const data = msg.getData();
+
+    if (typeof data === 'string') {
+      console.log(`Received event #${msg.getSequence()}, with data: ${data}`)
+    }
+
+    msg.ack();
+  });
+
+}
+```
+
+### SUMMARY
+#### default .subscribe() behavior
+- when subscriber (listener) receives a message from NATS channel, by default it is marked as 'processed'
+- if there are errors during processing of message, the event/message is lost.
+
+<img src="exercise_files/udemy-microservices-section14-305-default-mode-vs-manual-ack-mode.png" alt="udemy-microservices-section14-305-default-mode-vs-manual-ack-mode.png" width="800" />
+
+- this causes NATS to not retry sending (otherwise it keeps sending message until ack() received)
+- getSequence() does not increase on retries
+
+- **Default Behavior of Subscriptions:**
+  - Events are marked as processed automatically upon receipt.
+  - Errors during processing result in event loss.
+
+#### override default
+- call `setManualAckMode(true)`
+- makes events NOT marked as processed until explicitly acknowledged calling `msg.ack()`
+- unprocessed events keep retries (every 30sec)
+
+- **Changing Default Behavior:**
+  - Use `setManualAckMode(true)` to enable manual acknowledgment.
+  - Manual acknowledgment ensures:
+    - Events are not marked as processed until explicitly acknowledged.
+    - Unacknowledged events are retried after a 30-second timeout.
+    - Events can be retried by another service or the same service.
+
+- **Manual Acknowledgment Workflow:**
+  - Acknowledge events using `msg.ack()`.
+  - Without acknowledgment:
+    - The server retries delivery every 30 seconds.
+    - Events cycle through queue group members until successfully processed.
+
+- **Use Case Importance:**
+  - Critical for ensuring event processing reliability (e.g., payment events).
+  - Prevents event loss due to transient failures or processing errors.
+
+- **Implementation Steps:**
+  1. Enable manual mode with `setManualAckMode(true)`.
+  2. Add `msg.ack()` in the event handler after successful processing.
+  3. Test by observing retries for unacknowledged events.
+
+- **Conclusion:**
+  - `setManualAckMode(true)` is crucial for ensuring fault tolerance and reliability in event processing.
+
+
+
 ### 306. Client Health Checks
 ### 307. Graceful Client Shutdown
 ### 308. Core Concurrency Issues
