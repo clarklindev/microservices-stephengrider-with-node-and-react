@@ -11281,10 +11281,149 @@ stan.on('connect', () => {
 - **Conclusion:**
   - `setManualAckMode(true)` is crucial for ensuring fault tolerance and reliability in event processing.
 
-
-
 ### 306. Client Health Checks
+- if the listeners are restarted quickly and publish restarted quickly after - it may publish message but the listeners might miss it, and only after show it with order wrong.
+
+<img src='exercise_files/udemy-microservices-section14-306-client-health-checks.png' alt='udemy-microservices-section14-306-client-health-checks.png' width='800'/>
+
+- troubleshooting an issue in a NATS streaming server where published events are delayed or temporarily lost when restarting listeners. 
+
+#### Issue Replication:
+
+- After restarting listeners, events (e.g., event 71) may not appear immediately in the listeners.
+- The server delays processing due to assumptions about temporary disconnections.
+- Investigation Using Monitoring Port:
+- The NATS server exposes a monitoring port (8222) to provide data about clients, channels, and subscriptions.
+
+- open another terminal window: `nats-test/`
+```terminal 
+kubectl get pods
+kubectl port-forward nats-depl-[pod name] 8222:8222
+```
+
+#### NATS streaming server monitoring page
+###### view in browser 
+- browser: `localhost:8222/streaming` (NATS streaming server monitoring page)
+
+<img src='exercise_files/udemy-microservices-section14-306-localhost-8222-nats-streaming.png' alt='udemy-microservices-section14-306-localhost-8222-nats-streaming.png' width='800'/>
+
+- http://localhost:8222/streaming/clientsz
+  - prints out every client (id) connected to NATS streaming server
+ 
+  <img src='exercise_files/udemy-microservices-section14-306-localhost-8222-nats-streaming-clients.png' alt='udemy-microservices-section14-306-localhost-8222-nats-streaming-clients.png' width='800'/>
+
+- http://localhost:8222/streaming/channelsz
+  - prints out all channels in NATS
+
+  <img src='exercise_files/udemy-microservices-section14-306-localhost-8222-nats-streaming-clients.png' alt='udemy-microservices-section14-306-localhost-8222-nats-streaming-clients.png' width='800'/>
+
+- http://localhost:8222/streaming/channelsz?subs=1
+  - Using the `subs=1` query, detailed channels information NATS streaming server is running
+  - helping identify disconnected clients.
+  - queue_name
+  - ack_wait
+  
+  <img src='exercise_files/udemy-microservices-section14-306-localhost-8222-nats-streaming-channels-subs=1.png' alt='udemy-microservices-section14-306-localhost-8222-nats-streaming-channels-subs=1.png' width='800'/>
+
+#### NATS waiting for listener to come back online...
+- restarting a subscription (listener) and then refreshing `NATS streaming server monitoring page` prints out 3 subscriptions.
+- stopping give NATS hope that the listener will come back online
+- NATS will wait until eventually it decides listener is not coming back... then removed from the list..
+- in `src/infra/k8s/nats-depl.yaml` - NOTE `-hbi`, `-hbt`, `-hbf`
+  - `hb` (heartbeat) request that Netsream Server sends to every connected client every x seconds as health check ensures they still running.
+  - `hbi` (how often NATS Stream server makes heartbeat request to clients)
+  - `hbt` (how long each client has to respond)
+  - `hbf` (how many times client request can fail before NATS assumes the connected client is dead)
+
+#### consequence of killing a listener
+- killing a listener
+- NATS sends a heart beat request
+- wait for heartbeat request to fail twice in a row 
+- NATS realises client is gone
+- NATS removes listener off `streaming/channels/subscriptions` list
+
+### figuring out client not active
+#### OPTION 1
+- we can implement tighter heartbeat checks (event then there is delay of eg. 10seconds before cleanup)
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+        - name: nats
+          image: nats-streaming:0.17.0
+          args: [
+            '-p',
+            '4222',
+            '-m',
+            '8222',
+            '-hbi',
+            '5s',
+            '-hbt',
+            '5s',
+            '-hbf',
+            '2',
+            '-SD',
+            '-cid',
+            'ticketing',
+          ]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-srv
+spec:
+  selector:
+    app: nats
+  ports:
+    - name: client
+      protocol: TCP
+      port: 4222
+      targetPort: 4222
+    - name: monitoring
+      protocol: TCP
+      port: 8222
+      targetPort: 8222
+```
+
+
+#### Observation:
+
+- When a listener restarts, its subscription lingers briefly as the server assumes it might reconnect.
+This leads to delayed delivery of messages or temporary loss until the server determines the client is offline.
+
+#### Root Cause:
+
+- The server's default behavior involves waiting for heartbeat failures before marking a client as disconnected.
+
+#### Potential Solutions:
+
+- Tighter Heartbeat Configurations:
+- Adjust: 
+  - HB (heartbeat frequency), 
+  - HBT (response time), and 
+  - HBF (failure count) to detect disconnections faster.
+
+#### Explicit Client Notifications:
+- Implement methods for clients to explicitly notify the server of disconnection to prevent lingering subscriptions.
+
+- This diagnostic approach and solutions aim to reduce message delays and ensure the NATS streaming server handles client disconnections more reliably. Further adjustments and enhancements are discussed in subsequent steps.
+
 ### 307. Graceful Client Shutdown
+
+
 ### 308. Core Concurrency Issues
 ### 309. Common Questions
 ### 310. [Optional] More Possible Concurrency Solutions
