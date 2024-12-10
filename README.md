@@ -11455,7 +11455,31 @@ process.on('SIGTERM', ()=> stan.close());
 TEST - observe the subscription list in the browser, ensuring that closed clients are removed from the server's list of active subscriptions.
 - not foolproof -> If the process is forcibly killed (eg. through the task manager), the shutdown request wont be sent.
 
-### 308. Core Concurrency Issues
+# 308. Core Concurrency Issues 
+- THEORY LESSON
+- THIS IS AN IMPORTANT LESSON (MAYBE THE MOST IMPORTANT IN COURSE)
+- events arriving outside of intended order
+
+- some things that can go wrong:
+  1. Listener can fail to process the event
+    - file for storage is locked preventing processing event
+    - limit to amount you can deposit
+  2. waiting for event 1 to retry 
+    - causes order of received events to process out of order
+    - ie. event 1 failed and needs to retry
+    - event 2, 3 get processed before event 1
+  3. one listener might run quicker than another
+    - so backlog of deposit
+    - and withdrawal (faster)
+  4. listener shuts down (ungracefully)
+    - NATS thinks listener still alive, sends the message, fails acknowledge 
+    - withdrawal request gets processed
+    - 30seconds later -> shuts down and retries on another listener
+  5. processing same event twice in a row 
+    - listener fails to process event on time 
+    - eg. time to process event/message takes exactly 30seconds 
+    - at 30 seconds NATS assumes the event process failed and sends out another event for processing
+
 ### 309. Common Questions
 ### 310. [Optional] More Possible Concurrency Solutions
 ### 311. Solving Concurrency Issues
