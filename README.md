@@ -10878,7 +10878,7 @@ stan.on('connect', ()=>{
 
 ## OPTION 2 - create a NodePort service
 - or can create a node port service to connect pod to outside world (outside the kubernetes cluster)
-- CON is that its not easy severe the link (NodePort servie) and then toggle it back on
+- CON is that its not easy severe the link (NodePort service) and then toggle it back on
 - would still require a config file
 
 <img src="exercise_files/udemy-microservices-section14-298-port-forwarding-option2-connect-via-nodeport-service.png" alt="udemy-microservices-section14-298-port-forwarding-option2-connect-via-nodeport-service.png" width="800"/>
