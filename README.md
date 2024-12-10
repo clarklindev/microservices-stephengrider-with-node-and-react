@@ -11342,8 +11342,7 @@ kubectl port-forward nats-depl-[pod name] 8222:8222
 - NATS realises client is gone
 - NATS removes listener off `streaming/channels/subscriptions` list
 
-### figuring out client not active
-#### OPTION 1
+### figuring out client not active - OPTION 1
 - we can implement tighter heartbeat checks (event then there is delay of eg. 10seconds before cleanup)
 
 ```yaml
@@ -11421,8 +11420,40 @@ This leads to delayed delivery of messages or temporary loss until the server de
 
 - This diagnostic approach and solutions aim to reduce message delays and ensure the NATS streaming server handles client disconnections more reliably. Further adjustments and enhancements are discussed in subsequent steps.
 
+### figuring out client not active - OPTION 2
 ### 307. Graceful Client Shutdown
+- the client explicitly notifies the NATS Streaming server when it is closing, so the server stops sending messages
 
+- TODO: modify the `listener` and `publisher` code to detect when the process is about to close (eg. on a manual restart or if the terminal is closed).
+- calling stan.close() will tell program to close down client first...and dont send any more messages
+- then `stan.on('close', ()=>{})` will be invoked
+
+```ts
+//nats-test/listeners.ts
+//...
+stam.on('connect', ()=> {
+  //...
+
+  stan.on('close', ()=> {
+    console.log('NATS connection closed');
+    process.exit();
+  });
+
+  //...
+});
+
+process.on('SIGINT', ()=> stan.close());
+process.on('SIGTERM', ()=> stan.close());
+
+```
+- when realizing process will close...we add event handlers to `send a shutdown request` to the server, informing it that the client is going offline and shouldn't receive any more messages
+- TODO: add handlers for termination signals to ensure that when the process is interrupted, the client sends a `close signal` to the server before the process ends.
+  - `SIGINT` (interrupt signal -> eg. restarting program) 
+  - `SIGTERM` (terminate signal -> eg. CTRL + C) 
+- NOTE on windows 'SIGINT' and 'SIGTERM' might not work correctly...
+
+TEST - observe the subscription list in the browser, ensuring that closed clients are removed from the server's list of active subscriptions.
+- not foolproof -> If the process is forcibly killed (eg. through the task manager), the shutdown request wont be sent.
 
 ### 308. Core Concurrency Issues
 ### 309. Common Questions
