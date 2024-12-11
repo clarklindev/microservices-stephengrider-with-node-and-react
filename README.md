@@ -11750,6 +11750,175 @@ width='600'
   - it cant figure out the next events' last sequence number...
 
 ### 311. Solving Concurrency Issues
+- the system is poorly designed and relying on NATS to fix it
+- redesign the service
+- SOLUTION -> adding the transaction number to events (by redesigning the transaction service / db stored data)
+
+#### revisiting the blog app (earlier in course)
+
+<img src='exercise_files/udemy-microservices-section14-311-revisiting-blog-post.png'
+alt='udemy-microservices-section14-311-revisiting-blog-post.png'
+width='600'
+/>
+
+- simplified diagram:
+
+<img src='exercise_files/udemy-microservices-section14-311-revisiting-blog-post-simplified-diag.png'
+alt='udemy-microservices-section14-311-revisiting-blog-post-simplified-diag.png'
+width='600'
+/>
+
+- simplified with generic terminology:
+
+<img src='exercise_files/udemy-microservices-section14-311-revisiting-blog-post-simplified-diag-generic-terminology.png'
+alt='udemy-microservices-section14-311-revisiting-blog-post-simplified-diag-generic-terminology.png'
+width='600'
+/>
+- we've been focusing on NATS and the services that listens to events coming out from NATS
+
+<img src='exercise_files/udemy-microservices-section14-311-revisiting-blog-post-simplified-diag-relates-to-nats+service.png'
+alt='udemy-microservices-section14-311-revisiting-blog-post-simplified-diag-relates-to-nats+service.png'
+width='600'
+/>
+
+- but the publisher we've neglected
+- what is the publisher 
+  - where the events are coming from and its underlying data
+- TODO: figuring out what service is responsible for these events
+- for our app it would probably be a transactions/account service
+
+#### updated diagram
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-updated-transaction-service-diagram.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-updated-transaction-service-diagram.png'
+width='600'
+/>
+
+- the diagram brings the idea of transactions service
+  - create transactions
+  - service to record transactions
+  - db to store them
+  - emit transaction event (which is the publisher events)
+
+#### visualizing how we would design this transactions service
+- user logs onto banking website
+- makes transactions
+- event moves to transaction service
+- saved in transactions db (storing user id who created transaction and will also have list of all their transactions)
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-visualizing-transactions-service.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-visualizing-transactions-service.png'
+width='600'
+/>
+---
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-transaction-events.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-transaction-events.png'
+width='600'
+/>
+
+- with the transactions saved -> emit events
+- event would be an object with possibly the follwing properties:
+
+<div style="background-color: #f3ba7b; color: black">
+  eg. 
+  <ul>
+    <li>description of event -`transaction:created`</li>
+    <li>deposit: 70</li>
+    <li>id: 'ksjf'</li>
+    <li>userId: 'CZQ'</li>
+    <li>number: 1</li>
+  </ul>
+</div>
+
+- NOTE: the number is `transaction number` for the user `determined by the database` NOT sequence number determined by NATS
+
+- transactions for accounts service (redesigned publisher message / event(transaction))
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-better-redesigned-publisher-events.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-better-redesigned-publisher-events.png'
+width='600'
+/>   
+
+- the database would have an entry for each user calculating the balance
+- each user starts with `balance: 0` and no `last transaction number: -`
+
+### normal processing flow - no problems
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_1.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_1.png'
+width='600'
+/>
+
+---
+
+- after processing 1st transaction...
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_2.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_2.png'
+width='600'
+/>
+
+---
+- after processing 2nd transaction...
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_3_2nd-transaction.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_3_2nd-transaction.png'
+width='600'
+/>
+
+---
+- after processing 3rd transaction...
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_4_3nd-transaction.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_4_3nd-transaction.png'
+width='600'
+/>
+
+### handling unprocessed events  
+
+## NEW RULE
+- events now have a transaction number 
+- service should only process the event if the event's `transaction number` is one more than `user in db's` last transaction number
+  - ie. db user -> last transaction number should equal the event's transaction number minus 1.
+
+- `event 1` goes to service A and service A crashes...
+- if event is not acknowledged (30seconds) -> moves back to NATS for retry later
+- `event 2` goes to service B
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-unprocessed-events-flow.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-unprocessed-events-flow.png'
+width='600'
+/>
+
+- service tries to process transaction 2 (2-1 = 1 (look in db for last tranaction number of 1)) BUT the db doesnt have a last transaction number yet...
+- this means we didnt process event 2 before event 1 (even though they are handled by different service listeners)
+- when transaction 1 is ready for processing by account service it does the comparison and sees theres nothing in db, but its okay because the event is the first transaction.
+- transaction is processed
+- balance and last transaction number updated in db
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-processing-1.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-processing-1.png'
+width='600'
+/>
+
+- transaction number 2 is reissued by NATS
+- transaction 2 is processed
+- balance and last transaction number is updated in db
+
+<img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-processing-after-2.png'
+alt='udemy-microservices-section14-311-solving-concurrency-issues-processing-after-2.png'
+width='600'
+/>
+
+- transaction 3 goes to `Account service listener B` etc etc
+
+#### concurrency issues fixed
+1. where NATS thinks client is alive while its actually dead
+2. one listener running quicker than another
+3. listener can fail to process the event where we have to wait 30secs before re-issue
+4. different users trying to access the db committing to db at same time
+
 ### 312. Concurrency Control with the Tickets App
 ### 313. Event Redelivery
 ### 314. Durable Subscriptions
