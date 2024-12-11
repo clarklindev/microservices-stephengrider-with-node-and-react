@@ -11532,9 +11532,98 @@ TEST - observe the subscription list in the browser, ensuring that closed client
 - solutions can help mitigate some problems (e.g., limiting instances)
 - perfect handling of concurrency is often impractical for most applications.
 
-
-
 ### 310. [Optional] More Possible Concurrency Solutions
+- 16min 42sec
+- THESE SOLUTIONS WONT WORK (STEPHENS THOUGHTS)
+
+- Each solution progresses closer to resolving concurrency challenges but falls short due to technical limitations or performance trade-offs. 
+
+## 3 potential solutions 
+- highlighting 3 solutions for handling concurrency in distributed systems and why these don't fully work
+
+### 1. Shared State with Sequence Numbers:
+- Events are processed sequentially by checking a shared store (processed sequence #'s) to ensure previous events are completed (processed).
+
+- Pro: Ensures events are processed exactly once and in the correct order.
+- Con: Sequential processing leads to significant performance bottlenecks, especially when unrelated accounts or resources are held up by delays.
+
+#### when everything works as it should (in-order)
+
+<img src="exercise_files/udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_1.png" alt="udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_1.png" width="600"/>
+
+- number one, it goes over to service A
+- service will immediately process this event. So it's going to deposit $70.
+- It will then take that sequence number and put it into the shared store.
+---
+
+<img src="exercise_files/udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_2.png" alt="udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_2.png" width="600"/>
+
+- sequence number two, that's a deposit goes over to B
+- B is going to then look into this data store and see if the previous event sequence number (# 1) has already been processed.
+- Number one has been processed because it is inside the data store.
+- Service B can successfully or at least try to process number two. 
+---
+
+<img src="exercise_files/udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_3.png" alt="udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_3.png" width="600"/>
+
+- withdrawal goes over to service A
+- A checks to see that the previous sequence number has already been processed.
+- number two has been processed because three minus one is two. 
+- so it is in the store -> successfully withdraw the $100 right away.
+
+---
+
+<img src='exercise_files/udemy-microservices-section14-310-01-possible-solution-3-waiting-for-previous-sequence-one-at-a-time.png'
+alt='udemy-microservices-section14-310-01-possible-solution-3-waiting-for-previous-sequence-one-at-a-time.png'
+width='600'
+/>
+
+
+- with this same solution, if there are two accounts instead of just one...
+- account for userA -> 0 , account for userB -> 0
+- sequence1 goes to serviceA , sequence2 goes to serviceB
+- serviceB looks at shared store and sees sequence1 is not processed and not in the store yet, so it waits
+- say sequence1 (userA) fails and times-out -> goes back to NATS for reissue
+- sequence2 (userB) is waiting for sequence1 (userA) event to be processed even though sequence2 (userB) is not for same user (userA)   
+---
+
+### 2. User-Specific Sequence Numbers:
+- Each user/resource has its own sequence number, enabling parallel event processing across users.
+- tries to solve problems with solution 1 
+
+- Pro: Eliminates dependency between unrelated users/resources, improving concurrency.
+- Con: Requires separate channels for each user/resource, which incurs overhead and hits scalability limits in systems like NATS Streaming Server.
+
+<img src="exercise_files/udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence.png" alt="udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence.png" width="600"/>
+
+- going to track exactly which user each event is intended to be processed for.
+- sequence #1 -> User Jim -> trying to deposit $70 -> goes to service A
+- try process for User Jim
+
+<img src="exercise_files/udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence-channel-deposit-withdraw-overhead-max-limits.png" alt="udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence-channel-deposit-withdraw-overhead-max-limits" width="600"/>
+
+### 3. Publisher-Stored Events with Sequence Numbers:
+- Publishers track dispatched events and their sequence numbers, allowing listeners to ensure correct order.
+
+- Pro: Further isolates event dependencies and enforces order.
+- Con: Publishers lack access to assigned sequence numbers from NATS Streaming Server, making implementation impractical.
+
+<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.png" width="600"/>
+
+<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_2.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_2.png" width="600"/>
+
+<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_3.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_3.png" width="600"/>
+
+<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_4.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_4.png" width="600"/>
+
+<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_5.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_5.png" width="600"/>
+
+<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_6.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_6.png" width="600"/>
+
+<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_7.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_7.png" width="600"/>
+
+<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_8.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_8.png" width="600"/>
+
 ### 311. Solving Concurrency Issues
 ### 312. Concurrency Control with the Tickets App
 ### 313. Event Redelivery
