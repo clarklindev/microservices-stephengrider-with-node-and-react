@@ -12006,7 +12006,215 @@ width='600'
 - versioning always fixes every scenario UNLESS the event/message for a ticket continuously loops on retry/fail attempts to be processed.
 
 ### 313. Event Redelivery
+- all events emmited to NATS Streaming is automatically saved in NATS `event history`
+- event also gets send to account service (listeners) 
+- a subscription can then be customized to retrieve the list of events from NATS
+
+<img src='exercise_files/udemy-microservices-section14-313-event-redelivery-nats-event-history.png'
+alt='udemy-microservices-section14-313-event-redelivery-nats-event-history.png'
+width='600'
+/>
+
+- TODO: ensure there is only one listener (these options run differently with a [304. Queue Groups](#304-queue-groups))
+  - remove queue-group from `nats-test/src/listeners.ts`
+
+```ts
+// section05-14-ticketing/nats-test/src/listeners.ts
+
+//...
+  const options = stan
+    .subscriptionOptions()
+    .setManualAckMode(true);
+
+  const subscription = stan.subscribe(
+    'ticket:created',
+    // 'orders-service-queue-group',
+    options
+  );
+//...
+```
+
+#### events history redelivery
+
+- in `listeners.ts` to tell nats to get some messages delivered in the past...add a subscription option
+- CTRL + click on `.subscriptionOptions()`
+- methods available to call to customize which events (submitted in past) get replayed (resent) while offline
+  - `setStartAtSequence()`
+  - `setStartTime()`
+  - `setStartWithLastReceived()`
+  - `setDeliverAllAvailable()`
+
+- FIX: chain on `setDeliverAllAvailable()`
+- PROS - this delivers all events/messages sent in the past
+- CON - everytime starting a new listener (restarting service, scaling up) - the full event history is sent -> not feasible
+
+```ts
+// section05-14-ticketing/nats-test/src/listeners.ts
+
+//...
+  const options = stan
+    .subscriptionOptions()
+    .setManualAckMode(true)
+    .setDeliverAllAvailable()
+
+  const subscription = stan.subscribe(
+    'ticket:created',
+    // 'orders-service-queue-group',
+    options
+  );
+//...
+```
+
+- below is copy-and-paste from CTRL+click: `nats-test/node_modules/node-nats-streaming/index.d.ts`
+```ts
+//nats-test/node_modules/node-nats-streaming/index.d.ts
+//...
+declare interface SubscriptionOptions  {
+    durableName?: string;
+    maxInFlight?: number;
+    ackWait?: number;
+    startPosition: StartPosition;
+    startSequence?: number;
+    startTime?: number;
+    manualAcks?: boolean;
+    setMaxInFlight(n: number):SubscriptionOptions;
+    setAckWait(millis: number): SubscriptionOptions;
+    setStartAt(startPosition: StartPosition): SubscriptionOptions;
+    setStartAtSequence(sequence: number): SubscriptionOptions;
+    setStartTime(date: Date): SubscriptionOptions;
+    setStartAtTimeDelta(millis: number):SubscriptionOptions;
+    setStartWithLastReceived():SubscriptionOptions;
+    setDeliverAllAvailable():SubscriptionOptions;
+    setManualAckMode(tf: boolean): SubscriptionOptions;
+    setDurableName(durableName: string): SubscriptionOptions;
+}
+//...
+```
+
 ### 314. Durable Subscriptions
+- durable subscriptions is a more effective alternative to re-delivering all past events for message processing systems.
+
+- A subscription with a unique identifier (set using `setDurableName`) allows the system to `track which events have been processed`.
+- when calling `setDurableName()` pass-in a name (string) for the subscription
+
+```ts
+// section05-14-ticketing/nats-test/src/listeners.ts
+
+//...
+  const options = stan
+    .subscriptionOptions()
+    .setManualAckMode(true)
+    .setDeliverAllAvailable()
+    .setDurableName('accounting-service');
+
+  const subscription = stan.subscribe(
+    'ticket:created',
+    // 'queue-group',
+    options
+  );
+//...
+```
+
+<img src='exercise_files/udemy-microservices-section14-314-durable-subscription_1.png'
+alt='udemy-microservices-section14-314-durable-subscription_1.png'
+width='600'
+/>
+
+- creating a durable subscription -> in channel we are listening to, NATS will internally create a record listing all durable subscriptions we have.
+
+- when we emit an event -> NATS will record whether durable subscription has received AND successfully processed the event
+- as soon as service (listener) has processed event, NATS will store a record in the (durable subscription) the event processed successfully
+
+<img src='exercise_files/udemy-microservices-section14-314-durable-subscription_2-storing-event-as-processed.png'
+alt='udemy-microservices-section14-314-durable-subscription_2-storing-event-as-processed.png'
+width='600'
+/>
+
+---
+
+#### service goes offline
+- if service goes down (offline)... 
+- and events come in eg. `event 2` and `event 3`
+- the service wont receive the event BUT.. NATS will store the event the service missed in durable subscription
+
+<img src='exercise_files/udemy-microservices-section14-314-durable-subscription_3-storing-unprocessed-events.png'
+alt='udemy-microservices-section14-314-durable-subscription_3-storing-unprocessed-events.png'
+width='600'
+/>
+
+---
+
+#### service comes back online
+- when service comes back online 
+- and connects with same id (durable-subscription-`ID`)
+- NATS looks at what was processed and what hasnt
+- unprocessed events/messages are sent to account service (listener) for processing
+
+<img src='exercise_files/udemy-microservices-section14-314-durable-subscription_4-service-back-online-messages-processed-nats-marks-as-processed.png'
+alt='udemy-microservices-section14-314-durable-subscription_4-service-back-online-messages-processed-nats-marks-as-processed.png'
+width='600'
+/>
+
+- once processed
+- durable subscriptions marks it as PROCCESSED 
+
+<img src='exercise_files/udemy-microservices-section14-314-durable-subscription_5-after-processed.png'
+alt='udemy-microservices-section14-314-durable-subscription_5-after-processed.png'
+width='600'
+/>
+
+- Ensures no events are missed (by services), even if the service goes offline temporarily.
+- Events that were missed during downtime are re-delivered when the service reconnects with the same durable name.
+- AND no events are erroneously re-processed (fixing `setDeliverAllAvailable()` option when called on its own)..
+
+#### Set Deliver All Available:
+- when using `setDurableName()` you still need `setDeliverAllAvailable()`
+- `setDeliverAllAvailable()` ensures that when a service connects for the first time, it receives all past events.
+- Used only for the initial subscription setup. 
+- On subsequent reconnects (restarts), `setDeliverAllAvailable()` is ignored and the system checks the durable name to avoid redundant re-delivery.
+
+#### The Issue of Disconnections:
+- If a client disconnects, we close our connection to NATS 
+- NATS sees it is the client with the durable subscription `setDurableName`
+- NATS might assume it won't reconnect and discard the durable subscription's history.
+
+<img src='exercise_files/udemy-microservices-section14-314-durable-subscription_6-durable-subscript-history-dump.png'
+alt='udemy-microservices-section14-314-durable-subscription_6-durable-subscript-history-dump.png'
+width='600'
+/>
+
+- This can be mitigated by using `queue groups`.
+
+#### Queue Groups:
+- fixing NATS discarding durable subscription history...
+
+- Adding a queue group (setQueueGroup) ensures the durable subscription's state is preserved even during brief disconnections.
+- queue group -> `Prevents the system from dumping the durable subscription's history` and allows multiple instances of a service to process events efficiently without redundancy.
+
+```ts
+// section05-14-ticketing/nats-test/src/listeners.ts
+
+//...
+  const options = stan
+    .subscriptionOptions()
+    .setManualAckMode(true)
+    .setDeliverAllAvailable() 
+    .setDurableName('accounting-service');
+
+  const subscription = stan.subscribe(
+    'ticket:created',
+    'queue-group-name'  //set queue group name
+    options
+  );
+//...
+```
+
+#### Combining Options:
+
+- `SetDeliverAllAvailable` ensures delivery of all past events during the first connection.
+- `SetDurableName` tracks processed events for a subscription.
+- `Queue Groups` prevent the loss of durable subscription state (prevent durableName history dump) during disconnections and coordinate event delivery across multiple service instances.
+- These three options are tightly coupled and essential for achieving reliable and efficient event processing in systems where services might go offline or scale dynamically.
 
 ---
 
