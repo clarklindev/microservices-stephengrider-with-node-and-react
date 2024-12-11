@@ -11481,6 +11481,59 @@ TEST - observe the subscription list in the browser, ensuring that closed client
     - at 30 seconds NATS assumes the event process failed and sends out another event for processing
 
 ### 309. Common Questions
+
+- THEORY
+
+- there are challenges of concurrency and event-based communication in microservices
+- potential issues with both asynchronous and synchronous communication styles.
+
+#### Concurrency Problems in Microservices:
+
+<img src="exercise_files/udemy-microservices-section14-309-01-is-async-bad-vs-sync-or-monolithic-vs-microservices.png" alt="udemy-microservices-section14-309-01-is-async-bad-vs-sync-or-monolithic-vs-microservices.png" width="600"/>
+
+- Asynchronous communication between microservices via events can lead to concurrency issues. However, these same problems (eg inconsistent states or race conditions) can also occur with synchronous communication in monolithic architectures.
+
+- in a monolithic app, multiple instances of the application may cause race conditions due to load balancing, leading to potential errors like an incorrect balance during transactions.
+
+<img src="exercise_files/udemy-microservices-section14-309-02-monolithic-with-load-balancer.png" alt="udemy-microservices-section14-309-02-monolithic-with-load-balancer.png" width="600"/>
+
+- with micro-architecture the problems are a lot more prominent because:
+  - latency regarding NATS (race-conditions)
+  - automatic retries of delivering events
+  - more complex system
+  - communication jumps
+
+#### Failure of Single Instance Solution:
+- 2 instances of account service
+
+<img src="exercise_files/udemy-microservices-section14-309-03-possible-solution-1-two-service-listener.png" alt="udemy-microservices-section14-309-03-possible-solution-1-two-service-listener.png" width="600"/>
+
+- 1 instance of account service
+
+<img src="exercise_files/udemy-microservices-section14-309-03-possible-solution-1-single-copy-service-listener-fail-bottleneck.png" alt="udemy-microservices-section14-309-03-possible-solution-1-single-copy-service-listener-fail-bottleneck.png" width="600"/>
+
+- using just one instance of a service to avoid concurrency issues. 
+- creates a bottleneck, limiting the app's scalability. 
+- This also doesn't completely solve the issue because failures (e.g., temporary issues with file systems or retries) can still occur, leading to the same concurrency problems.
+
+- Scaling vertically (increasing resources) is not enough for handling more traffic; hence, the need to scale horizontally (running multiple service instances) is important.
+
+#### The Myth of Perfect Concurrency Handling:
+
+<img src="exercise_files/udemy-microservices-section14-309-03-possible-solution-2-solving-every-concurrency-issue-fail.png" alt="udemy-microservices-section14-309-03-possible-solution-2-solving-every-concurrency-issue-fail.png" width="600"/>
+
+- Trying to handle every possible concurrency issue through code is not feasible because there are potentially infinite scenarios. 
+- in most applications (e.g., social media platforms), minor inconsistencies like out-of-order or duplicate events are often not critical.
+- find balance between solving concurrency issues and the time and effort required. 
+- Sometimes, trying to fix every possible issue isn't worth the engineering cost.
+
+#### Conclusion:
+- concurrency issues are inevitable, whether in microservices or monolithic architectures. 
+- solutions can help mitigate some problems (e.g., limiting instances)
+- perfect handling of concurrency is often impractical for most applications.
+
+
+
 ### 310. [Optional] More Possible Concurrency Solutions
 ### 311. Solving Concurrency Issues
 ### 312. Concurrency Control with the Tickets App
