@@ -11541,13 +11541,13 @@ TEST - observe the subscription list in the browser, ensuring that closed client
 ## 3 potential solutions 
 - highlighting 3 solutions for handling concurrency in distributed systems and why these don't fully work
 
-### 1. Shared State with Sequence Numbers:
-- Events are processed sequentially by checking a shared store (processed sequence #'s) to ensure previous events are completed (processed).
+## 1. Shared State with Sequence Numbers:
+- Events are processed sequentially (in-order) by checking a shared store (processed sequence #'s) to ensure previous events are completed (processed).
 
 - Pro: Ensures events are processed exactly once and in the correct order.
 - Con: Sequential processing leads to significant performance bottlenecks, especially when unrelated accounts or resources are held up by delays.
 
-#### when everything works as it should (in-order)
+### when everything works as it should (in-order)
 
 <img src="exercise_files/udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_1.png" alt="udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_1.png" width="600"/>
 
@@ -11567,17 +11567,18 @@ TEST - observe the subscription list in the browser, ensuring that closed client
 <img src="exercise_files/udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_3.png" alt="udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_3.png" width="600"/>
 
 - withdrawal goes over to service A
-- A checks to see that the previous sequence number has already been processed.
+- service A checks to see that the previous sequence number has already been processed.
 - number two has been processed because three minus one is two. 
 - so it is in the store -> successfully withdraw the $100 right away.
 
 ---
 
+### what if there are 2 accounts instead of one?
+
 <img src='exercise_files/udemy-microservices-section14-310-01-possible-solution-3-waiting-for-previous-sequence-one-at-a-time.png'
 alt='udemy-microservices-section14-310-01-possible-solution-3-waiting-for-previous-sequence-one-at-a-time.png'
 width='600'
 />
-
 
 - with this same solution, if there are two accounts instead of just one...
 - account for userA -> 0 , account for userB -> 0
@@ -11587,8 +11588,10 @@ width='600'
 - sequence2 (userB) is waiting for sequence1 (userA) event to be processed even though sequence2 (userB) is not for same user (userA)   
 ---
 
-### 2. User-Specific Sequence Numbers:
-- Each user/resource has its own sequence number, enabling parallel event processing across users.
+## 2. User-Specific Sequence Numbers:
+- at 4min 15sec
+
+- `Each user/resource` has its `own sequence number`, enabling parallel event processing across users.
 - tries to solve problems with solution 1 
 
 - Pro: Eliminates dependency between unrelated users/resources, improving concurrency.
@@ -11597,32 +11600,154 @@ width='600'
 <img src="exercise_files/udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence.png" alt="udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence.png" width="600"/>
 
 - going to track exactly which user each event is intended to be processed for.
-- sequence #1 -> User Jim -> trying to deposit $70 -> goes to service A
-- try process for User Jim
+- sequence #1 for User Jim -> trying to deposit $70 -> goes to service A
+- sequence #1 for User Mary -> trying to deposit $40
+- Jim's event processed -> stores processed sequence number in its own sequence 
+  - and shared data store -> updated: $70
+- mary's event processed -> stores processed sequence number in its own sequence 
+  - and shared data store -> updated $40
+- THEN jims 2nd sequence comes, sees sequence 1 is already processed 
+  - sequence 2 is then processed -> stores processed sequence number in its own sequence
+- THEN jims 3rd sequence comes, sees sequence 2 is already processed 
+  - sequence 3 is then processed -> stores processed sequence number in its own sequence
+
+--- 
+
+<img src="exercise_files/udemy-microservices-section14-310-02-possible-solution-4-event-1-mary-does-not-hold-up-event-2-jim.png" alt="udemy-microservices-section14-310-02-possible-solution-4-event-1-mary-does-not-hold-up-event-2-jim.png" width="600"/>
+
+### how does have separate sequence numbers for separate users (resource) help?
+- showing that there is no hold-up for other user sequence
+- `event 1 Jim` to service A
+- `event 1 Jim `is processed 
+- `event 1 Mary` to service B
+- `event 2 Jim` to service A
+- if there is a problem with `event 1 mary`, `event 2 Jim` can still complete
+
+### problem with channel limits and processing overhead
+- problem is that if each user (resource) gets its own sequence numbers, with NATS streaming server you would need a channel for each (ie 2 channels per resource):
+  - account:deposit:jim
+  - account:withdrawal:jim
+  - account:deposit:mary
+  - account:withdrawal:mary
+- with NAT streaming server (or any event bus) there is processing overhead in adding more channels 
+- and there are max limits to number of channels 
 
 <img src="exercise_files/udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence-channel-deposit-withdraw-overhead-max-limits.png" alt="udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence-channel-deposit-withdraw-overhead-max-limits" width="600"/>
+---
 
 ### 3. Publisher-Stored Events with Sequence Numbers:
-- Publishers track dispatched events and their sequence numbers, allowing listeners to ensure correct order.
+- 9min 15sec
+- solution 3 - trying to overcome users (owners) not being able to get own sequence numbers
+  - the event is stored at the publisher (ie. publisher has db that tracks all events dispatched over time)
+  - the publisher also tracks the sequence id of every event
+  - publisher will know what `last sequences` apply for which user (NOT REALLY TRUE -> see discussion end of solution 3)
+  - then when an event is dispatched in future, it will attach the previous sequence id that modified the user
 
+- Publishers track `dispatched events` and `their sequence numbers`, allowing listeners to ensure correct order.
 - Pro: Further isolates event dependencies and enforces order.
 - Con: Publishers lack access to assigned sequence numbers from NATS Streaming Server, making implementation impractical.
 
-<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.png" width="600"/>
+  <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-hoping-NATS-returns-the-sequence-number.png"  alt="udemy-microservices-section14-310-03-possible-solution-5-hoping-NATS-returns-the-sequence-number.png" width="600"/>
 
-<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_2.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_2.png" width="600"/>
+  ---
 
-<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_3.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_3.png" width="600"/>
+  - the sequence number is only assigned AFTER gets sent from publisher to NATS streaming
+  - hoping that the sequence number gets sent back to publisher
 
-<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_4.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_4.png" width="600"/>
+  <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.png" width="600"/>
+
+  ---
+
+  - then after, event goes on to account service (listener) to be processed
+  - the deposit amount is stored in db -> $70
+  - the `sequence number` of the event just processed is also `stored` in db (sequence #1)
+
+
+  <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.5.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.5.png" width="600"/>
+
+  ---
+
+  - the publisher then moves on to `event 2: user mary`
+  - dispatch the event
+  - NATS assigns the sequence number (2) -> hopefully sent back to publisher
+  - moves to service listener
+  - processed and saved to db -> last ID processed (sequence number) saved
+
+  <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_2.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_2.png" width="600"/>
+  
+  ---
+
+  - next `event 3 - User Jim`
+  - we know its for User Jim and last time this user processed a sequence was 1, so for event 3 we put `1 in last sequence`
+  - gets passed to NATS
+  - given a sequence number (3)
+  - then looks at `last sequence number` that modified user jim -> (1)
+  - service A looks in DB -> then makes sure the most recent last processed id was the same -> (1)
+
+  <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_3.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_3.png" width="600"/>
+
+---
+
+  - as long as the numbers are equal to each other, the event can be processed
+
+  <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_4.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_4.png" width="600"/>
+
+---
+
+  - then we go on to next event 
+  - we know its about `user Jim` -> look at most recent event -> which has sequence number of (3)
+  - so we put that for the event -> 3
 
 <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_5.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_5.png" width="600"/>
 
+---
+
+- sent off to NATS 
+- which gives it sequence number -> 4
+- sent to account service (listener)
+- checks last processed sequence are same (new event's `last processed sequence` AND the saved `db's last processed sequence for user` ) -> 3
+
 <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_6.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_6.png" width="600"/>
+
+---
+
+- processes sequence 4
+- saves to db -> user jim last processed updates to 4  
+- balance updates
 
 <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_7.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_7.png" width="600"/>
 
+---
+
+### different scenario
+
 <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_8.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_8.png" width="600"/>
+
+- where jim has a deposit $40
+- AND simultaneously jim has a withdrawal $100
+- if you accidentally try process withdrawal before the deposit
+  - service B looks at event's `last sequence` -> 3
+  - service B looks in DB's `last sequence`  for `user jim` -> 1
+  - AND THAT IS NOT THE SAME!!!
+  - service B will refuse to process the event
+  - event will eventually time-out
+  - sent back to NATS for retry
+  - sequence 4 is waiting until sequence 3 gets processe
+  - sequence 3 then gets processed (last processed sequence in db same as last sequence number on event)
+  - db -> `user jim` gets updated with last processed sequence id (3)
+  - (see image below)
+
+  - then sequence 4 goes to account service (listener) etc...
+
+<img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_9.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_9.png" width="600"/>
+
+---
+
+#### why this wont work?
+- it wont work because the event sequence number is not sent back from NATS to publisher
+- sending events to NATS is a one-way operation 
+- so NATS doesnt send anything back to the publisher 
+  - it cant figure out the next events' last sequence number...
 
 ### 311. Solving Concurrency Issues
 ### 312. Concurrency Control with the Tickets App
