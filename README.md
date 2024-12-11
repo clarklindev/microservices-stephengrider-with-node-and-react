@@ -11920,6 +11920,91 @@ width='600'
 4. different users trying to access the db committing to db at same time
 
 ### 312. Concurrency Control with the Tickets App
+- theory lesson
+
+<img src='exercise_files/udemy-microservices-section14-312-concurrency-control-with-ticketing-service-using-ticket-versioning.png'
+alt='udemy-microservices-section14-312-concurrency-control-with-ticketing-service-using-ticket-versioning.png'
+width='600'
+/>
+
+- how the concept of "versioning" (or "last transaction number") is applied to the ticketing service in a microservices architecture. 
+- The ticketing service, which handles creating and updating tickets, will maintain a version number that tracks changes to each ticket. 
+- This versioning is critical because the order service, which handles ticket orders, needs to know the current price of tickets and how that price changes over time.
+
+### how it works:
+
+- request will come in to service that owns the resource
+- save the resource
+- emit event describing change
+- NOTE: the Orders service is interested in the price and any price changes
+- The `ticket service` is responsible for management of `ticket version` in tickets database...
+- all other services will lag the ticket version in ticket database managed by ticket service
+
+#### Ticket Creation and Versioning: 
+- When a ticket is created with a price (e.g., $10), it's assigned a version number (e.g., version 1). 
+
+<img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-01-create-ticket-event-saved.png'
+alt='udemy-microservices-section14-312-concurrency-with-tickets-app-01-create-ticket-event-saved.png'
+width='600'
+/>
+
+- An event is emitted to notify other services, such as the order service, about the creation.
+
+<img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-02-emit-event.png'
+alt='udemy-microservices-section14-312-concurrency-with-tickets-app-02-emit-event.png'
+width='600'
+/>
+
+#### Ticket Updates: 
+- Subsequent updates (e.g., changing the price from $10 to $50, and then to $100) also increment the version number. 
+
+<img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-03-ticket-update.png'
+alt='udemy-microservices-section14-312-concurrency-with-tickets-app-03-ticket-update.png'
+width='600'
+/>
+
+- Each update triggers an event that is sent to other services.
+
+<img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-03-ticket-update-version3.png'
+alt='udemy-microservices-section14-312-concurrency-with-tickets-app-03-ticket-update-version3.png'
+width='600'
+/>
+
+#### Event Processing: 
+- Events are processed by services (like the order service) in the correct order. 
+- Sometimes events may arrive out of order or fail to be processed. In such cases, the version number helps ensure that updates are applied correctly, and prevents inconsistent states.
+
+<img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-04-ticket-created-fails-to-be-processed.png'
+alt='udemy-microservices-section14-312-concurrency-with-tickets-app-04-ticket-created-fails-to-be-processed.png'
+width='600'
+/>
+
+#### Handling Failures: 
+- If an event fails or is processed out of order, the service checks the version number of the ticket before applying the update. 
+- If the ticket version is incorrect, the update is not applied until the correct version is processed, ensuring consistency.
+
+<img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-05-incorrect-version-order.png'
+alt='udemy-microservices-section14-312-concurrency-with-tickets-app-05-incorrect-version-order.png'
+width='600'
+/>
+
+- ticket v1 moves out from NATS to be processed
+- ticket v1 gets processed
+
+<img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-06-retry-v1-and-processed.png'
+alt='udemy-microservices-section14-312-concurrency-with-tickets-app-06-retry-v1-and-processed.png'
+width='600'
+/>
+
+- etc etc for v2 and v3
+
+#### Versioning and MongoDB: 
+- MongoDB and Mongoose can handle much of the versioning automatically, simplifying the implementation. The versioning system ensures that services always have the correct, or lagging, version of a ticket, preventing inconsistencies between services.
+
+- while the versioning system might sound complex, it's crucial for maintaining data integrity across microservices, especially when events are delayed or processed out of order. 
+
+- versioning always fixes every scenario UNLESS the event/message for a ticket continuously loops on retry/fail attempts to be processed.
+
 ### 313. Event Redelivery
 ### 314. Durable Subscriptions
 
