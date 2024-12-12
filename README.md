@@ -12443,10 +12443,14 @@ export enum Subjects{
 ```
 
 ### 321. Custom Event Interface
-- an interface to describe the coupling of a `subject` and its associated `event data` 
+- Custom Event Interface -> an interface to describe the coupling of a `subject` and its associated `event data` 
 - TODO: create a new file `nats-test/src/events/ticket-created-event.ts`
-- we set up tight-coupling between the subject and its data
-- need to check that when you use a subject, it matches with its associated data 
+- we set up tight-coupling between the subject and its data.
+
+<img src='exercise_files/udemy-microservices-section15-319-mapping-subject-data-relationship.png'
+alt='udemy-microservices-section15-319-mapping-subject-data-relationship.png'
+width='600'
+/>
 
 ```ts
 //nats-test/src/events/ticket-created-event.ts
@@ -12464,6 +12468,84 @@ export interface TicketCreatedEvent {
 ```
 
 ### 322. Enforcing Listener Subjects
+
+- typscript needs to check that the `subject` matches up with type of data provided to `onMessage(data)` 
+
+<img src='exercise_files/udemy-microservices-section15-322-enforcing-listener-subjects.png'
+alt='udemy-microservices-section15-322-enforcing-listener-subjects.png'
+width='600'
+/>
+
+- in `src/events/base-listener.ts` 
+- create an interface -> this interface describes a generic event 
+- it will have a property `subject` and its value must be one of the values of `Subjects` Enum
+```ts
+//src/events/base-listener.ts
+import { Subjects } from './subjects';
+
+interface Event{
+  subject: Subjects;
+  data: any;
+}
+
+//...
+```
+
+#### Generic type
+- setup Listener as a generic class
+- this syntax says whenever we extend Listener, we have to provide a custom type `Listener<T extends Event>`
+- this is like an argument for types (reference it in function via T)
+- `T extends Event` -> just ensures that whatever is passed in as T -> should abide by Events' interface
+- and `subject` should be equal to whatever is T's `subject`
+- and `data` should be equal to whatever is T's `data`
+
+```ts
+export abstract class Listener<T extends Event> {
+  abstract subject: T['subject'];
+  abstract onMessage(data: T['data'], msg: Message):void;
+  //...
+}
+```
+
+#### using Listener
+- /`nats-test/src/events/ticket-created-listener.ts`
+- when using Listener (generic class) -> need to provide an argument for type T
+- provide Listener with a type (... eg. TicketCreatedEvent) - that describes the event we expect to receive inside this listener
+
+<img src='exercise_files/udemy-microservices-section15-319-generic-listener-class-warning.png'
+alt='udemy-microservices-section15-319-generic-listener-class-warning.png'
+width='600'
+/>
+
+- TODO: `import {TicketCreatedEvent} from './ticket-created-event';`
+- provide this as the generic type to Listener: `... extends Listener<TicketCreatedEvent>`
+- typescript warns that subject is a string BUT the Listener class has type passed in to generic `abstract subject: T['subject'];`
+  - and when you look at what T is... we pass T as `TicketCreatedEvents`
+  - so subject needs to be of type exactly equal of whatever is defined in `TicketCreatedEvents` subject type
+- provide the type annotation to `subject` as `Subjects.TicketCreated` so that subjects type can never be set to anything else (will always only be type: `Subjects.TicketCreated`) later on in code... 
+- if it was `subject = Subjects.TicketCreated;` -> subject can be anything else inside `Subjects`
+
+```ts
+//nats-test/src/events/ticket-created-listener.ts
+
+import { Message } from "node-nats-streaming";
+
+import { Listener } from "./base-listener";
+import { Subjects } from "./subjects";
+import {TicketCreatedEvent} from './ticket-created-event';
+
+export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
+  // subject = 'ticket:created'; 
+  subject: Subjects.TicketCreated = Subjects.TicketCreated;
+  queueGroupName = 'payments-service';
+
+  onMessage(data: any, msg: Message) {
+    console.log('event data:', data);
+    msg.ack();
+  }
+}
+```
+
 ### 323. Quick Note: 'readonly' in Typescript
 ### 324. Enforcing Data Types
 ### 325. Where Does this Get Used?
