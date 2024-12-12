@@ -12428,6 +12428,20 @@ width='600'
 - mismatched data should result in an error
 
 ### 320. Subjects Enum
+
+#### creating a file to store enums
+- use enum to store all possible `subjects`
+- usage: `Subjects.TicketCreated`
+- `nats-test/src/events/subjects.ts`
+
+```ts
+//nats-test/src/events/subjects.ts
+export enum Subjects{
+  TicketCreated = 'ticket:created',
+  OrderUpdated = 'order:updated'
+}
+```
+
 ### 321. Custom Event Interface
 ### 322. Enforcing Listener Subjects
 ### 323. Quick Note: 'readonly' in Typescript
