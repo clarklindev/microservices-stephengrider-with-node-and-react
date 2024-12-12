@@ -12253,16 +12253,16 @@ width='600'
   - customize `subject`
   - customize `onMessage`
 
-### 316. The Listener Abstract Class
+### 316. Listener abstract class
 - TODO: implement class `Listener`
 - `nats-test/src/listener.ts`
 
-### Listener Class:
+### listener class
 
 - the `client is a pre-initialized NATS client` (Stan) -> ready-to-use.
 - passed into the `Listener constructor` to ensure it is already connected.
 
-### Subscription Options:
+### subscription options
 
 - subscription options - defined using a helper method, which configures settings like: 
   - `setDeliverAllAvailable()` - delivering all available messages, 
@@ -12271,7 +12271,7 @@ width='600'
 
 - NOTE: `queueGroupName` and `durableName` are usually the same
 
-### Listen Method:
+### listen method
 
 - subscribes to a subject and group, then `listens for incoming messages`.
 - Upon receiving a message -> it is logged and parsed. 
@@ -12334,6 +12334,53 @@ abstract class Listener{
 ```
 
 ### 317. Extending the Listener
+
+- TODO: making a listener: `TicketCreatedListener` by extending abstract Listener class
+- `nats-test/src/publisher.ts` is `publishing events` on channel `ticket:created`
+- `nats-test/src/listener.ts` is listening for `ticket:created`
+
+#### using TicketCreatedListener
+- usage: `new TicketCreatedListener(stan).listen();`
+
+```ts
+//nats-test/src/listener.ts/
+//...
+const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
+  url:'http://localhost:4222'
+});
+
+//...
+stan.on('connect', () => {
+  console.log('Listener connected to NATS');
+  
+  stan.on('close', () => {
+    console.log('NATS connection closed');
+    process.exit();
+  });
+
+  new TicketCreatedListener(stan).listen();
+});
+
+//...
+abstract class Listener{
+  //...
+}
+//...
+
+class TicketCreatedListener extends Listener{
+  subject = 'ticket:created';
+  queueGroupName = 'payments-service';
+
+  onMessage(data: any, msg: Message) {
+    console.log('event data:', data);
+    msg.ack();
+  }
+}
+
+//...
+
+```
+
 ### 318. Quick Refactor
 ### 319. Leveraging TypeScript for Listener Validation
 ### 320. Subjects Enum
