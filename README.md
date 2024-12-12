@@ -12521,9 +12521,13 @@ width='600'
 - provide this as the generic type to Listener: `... extends Listener<TicketCreatedEvent>`
 - typescript warns that subject is a string BUT the Listener class has type passed in to generic `abstract subject: T['subject'];`
   - and when you look at what T is... we pass T as `TicketCreatedEvents`
-  - so subject needs to be of type exactly equal of whatever is defined in `TicketCreatedEvents` subject type
+  - so subject needs to be of type whatever is defined in `TicketCreatedEvents` subject type
+
+#### this part is updated to be 'readonly' in lesson 323
 - provide the type annotation to `subject` as `Subjects.TicketCreated` so that subjects type can never be set to anything else (will always only be type: `Subjects.TicketCreated`) later on in code... 
-- if it was `subject = Subjects.TicketCreated;` -> subject can be anything else inside `Subjects`
+- if it was `subject = Subjects.TicketCreated;` -> subject can be anything else inside `Subjects
+
+- NOTE: defining subject as `readonly` ensures it doesnt get updated.. 
 
 ```ts
 //nats-test/src/events/ticket-created-listener.ts
@@ -12536,7 +12540,8 @@ import {TicketCreatedEvent} from './ticket-created-event';
 
 export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
   // subject = 'ticket:created'; 
-  subject: Subjects.TicketCreated = Subjects.TicketCreated;
+  // subject: Subjects.TicketCreated = Subjects.TicketCreated;
+  readonly subject = Subjects.TicketCreated;
   queueGroupName = 'payments-service';
 
   onMessage(data: any, msg: Message) {
@@ -12547,6 +12552,16 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
 ```
 
 ### 323. Quick Note: 'readonly' in Typescript
+- make 'subject' `readonly`
+
+```ts
+export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
+  readonly subject = Subjects.TicketCreated;
+ 
+  // ...everything else
+}
+```
+
 ### 324. Enforcing Data Types
 ### 325. Where Does this Get Used?
 ### 326. Custom Publisher
