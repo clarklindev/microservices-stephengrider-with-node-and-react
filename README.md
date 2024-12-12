@@ -12382,6 +12382,34 @@ class TicketCreatedListener extends Listener{
 ```
 
 ### 318. Quick Refactor
+- The Listener class will be defined in common/ module (repo)
+- the services will import this Listener 
+- each service will then define a subclass of Listener and have its own custom logic
+
+<img src='exercise_files/udemy-microservices-section15-318-quick-refactor-listeners-defined-in-services.png'
+alt='udemy-microservices-section15-318-quick-refactor-listeners-defined-in-services.png'
+width='600'
+/>
+
+#### Refactor
+- the abstact base listener is moved to: `nats-test/src/events/base-listener.ts`
+- the TicketCreatedListener is also moved to its own file: `nats-test/src/events/ticket-created-listner.ts`
+
+#### usage
+- import `TicketCreatedListener` and create an instance
+
+```ts
+//nats-test/src/listener.ts
+import { TicketCreatedListener } from './events/ticket-created-listener';
+
+//...
+
+stan.on('connect', () => {
+  //...
+  new TicketCreatedListener(stan).listen();
+});
+```
+
 ### 319. Leveraging TypeScript for Listener Validation
 ### 320. Subjects Enum
 ### 321. Custom Event Interface
