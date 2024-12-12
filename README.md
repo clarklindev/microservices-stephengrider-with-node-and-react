@@ -12229,17 +12229,17 @@ width='600'
 - extracting code to make reusable listeners (pub/receive messages)
 - move to common module library
 - TODO: create a class called `Listener`
-- `Listener` will be an `abstract` class 
+- `Listener` -> `abstract` class 
 
 - properties:
-  - (abstract) subject -> string -> channel to listen to 
-  - (abstract) onMessage() -> function -> run when a message is received
-  - client -> Stan -> pre-initialized NATS client
-  - (abstract) queueGroupName -> string -> name of the queue group this listener will join
-  - ackWait -> number -> number of seconds this listener has to ack a messsage (default 30seconds)
-  - subscriptionOptions -> SubscriptionOptions -> subscription options
-  - listen -> function -> code to set up the subscription
-  - parseMessage -> function -> helper to parse a message
+  - (abstract) `subject` -> string -> channel to listen to 
+  - (abstract) `onMessage()` -> function -> run when a message is received
+  - `client` -> Stan -> pre-initialized NATS client
+  - (abstract) `queueGroupName` -> string -> name of the queue group this listener will join
+  - `ackWait` -> number -> number of seconds this listener has to ack a messsage (default 30seconds)
+  - `subscriptionOptions` -> SubscriptionOptions -> subscription options
+  - `listen` -> function -> code to set up the subscription
+  - `parseMessage` -> function -> helper to parse a message
 
 <img src='exercise_files/udemy-microservices-section15-315-reusable-nats-listener-abstract-subclasses.png'
 alt='udemy-microservices-section15-315-reusable-nats-listener-abstract-subclasses.png'
@@ -12249,11 +12249,90 @@ width='600'
 - will create subclasses of Listener 
   - `orderUpdatedListener` 
   - `ticketCreatedListener`  
-- listens for a particular event
-- customize `subject`
-- customize `onMessage`
+  - listens for a particular event
+  - customize `subject`
+  - customize `onMessage`
 
 ### 316. The Listener Abstract Class
+- TODO: implement class `Listener`
+- `nats-test/src/listener.ts`
+
+### Listener Class:
+
+- the `client is a pre-initialized NATS client` (Stan) -> ready-to-use.
+- passed into the `Listener constructor` to ensure it is already connected.
+
+### Subscription Options:
+
+- subscription options - defined using a helper method, which configures settings like: 
+  - `setDeliverAllAvailable()` - delivering all available messages, 
+  - `setManualAckMode(true)` - enabling manual acknowledgement, 
+  - `setDurableName(this.queueGroupName)` - and setting the durableName to the groupName.
+
+- NOTE: `queueGroupName` and `durableName` are usually the same
+
+### Listen Method:
+
+- subscribes to a subject and group, then `listens for incoming messages`.
+- Upon receiving a message -> it is logged and parsed. 
+  - if the data is a `string`, its parsed as JSON. 
+  - if it’s a `buffer`, it's converted to a string and then parsed.
+- the parsed data (parseMessage(msg:Message)) is passed to the `onMessage()` method (which is abstract and must be implemented in subclasses).
+
+```ts
+// nats-test/src/listener.ts
+import nats, {Message, Stan} from 'node-nats-streaming';
+import {randomBytes} from 'crypto';
+
+const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
+    url:'http://localhost:4222'
+  });
+
+//...
+abstract class Listener{
+  abstract subject: string;
+  abstract queueGroupName: string;
+  abstract onMessage: (data:any, msg: Message) => void;
+
+  protected ackWait = 5 * 1000;
+
+  constructor(private client: Stan) {
+  }
+
+  subscriptionOptions() {
+    return this.client
+      .subscriptionOptions()
+      .setDeliverAllAvailable()
+      .setManualAckMode(true)
+      .setAckWait(this.ackWait)
+      .setDurableName(this.queueGroupName);
+  }
+
+  listen() {
+    const subscription = this.client.subscribe(
+      this.subject,
+      this.queueGroupName,
+      this.subscriptionOptions()
+    );
+
+    subscription.on('message', (msg: Message) => {
+      console.log(`Message received: ${this.subject} / ${this.queueGroupName}`);
+
+      const parsedData = this.parseMessage(msg);
+      this.onMessage(parsedData, msg);
+    })
+  }
+
+  parseMessage(msg:Message) {
+    const data = msg.getData();
+    return typeof data === 'string'
+      ? JSON.parse(data) 
+      : JSON.parse(data.toString('utf8'))
+  }
+}
+
+```
+
 ### 317. Extending the Listener
 ### 318. Quick Refactor
 ### 319. Leveraging TypeScript for Listener Validation
