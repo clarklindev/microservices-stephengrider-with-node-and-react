@@ -12443,6 +12443,26 @@ export enum Subjects{
 ```
 
 ### 321. Custom Event Interface
+- an interface to describe the coupling of a `subject` and its associated `event data` 
+- TODO: create a new file `nats-test/src/events/ticket-created-event.ts`
+- we set up tight-coupling between the subject and its data
+- need to check that when you use a subject, it matches with its associated data 
+
+```ts
+//nats-test/src/events/ticket-created-event.ts
+
+import { Subjects } from "./subjects"; //import enum
+
+export interface TicketCreatedEvent {
+  subject: Subjects.TicketCreated;
+  data: {
+    id: string;
+    title: string;
+    price: number;
+  };
+}
+```
+
 ### 322. Enforcing Listener Subjects
 ### 323. Quick Note: 'readonly' in Typescript
 ### 324. Enforcing Data Types
