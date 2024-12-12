@@ -12220,6 +12220,39 @@ width='600'
 
 ## section 15 - connecting to NATS in a nodejs world (1hr22min)
 ### 315. Reusable NATS Listeners
+
+<img src='exercise_files/udemy-microservices-section15-315-reusable-nats-listener.png'
+alt='udemy-microservices-section15-315-reusable-nats-listener.png'
+width='600'
+/>
+
+- extracting code to make reusable listeners (pub/receive messages)
+- move to common module library
+- TODO: create a class called `Listener`
+- `Listener` will be an `abstract` class 
+
+- properties:
+  - (abstract) subject -> string -> channel to listen to 
+  - (abstract) onMessage() -> function -> run when a message is received
+  - client -> Stan -> pre-initialized NATS client
+  - (abstract) queueGroupName -> string -> name of the queue group this listener will join
+  - ackWait -> number -> number of seconds this listener has to ack a messsage (default 30seconds)
+  - subscriptionOptions -> SubscriptionOptions -> subscription options
+  - listen -> function -> code to set up the subscription
+  - parseMessage -> function -> helper to parse a message
+
+<img src='exercise_files/udemy-microservices-section15-315-reusable-nats-listener-abstract-subclasses.png'
+alt='udemy-microservices-section15-315-reusable-nats-listener-abstract-subclasses.png'
+width='600'
+/>
+
+- will create subclasses of Listener 
+  - `orderUpdatedListener` 
+  - `ticketCreatedListener`  
+- listens for a particular event
+- customize `subject`
+- customize `onMessage`
+
 ### 316. The Listener Abstract Class
 ### 317. Extending the Listener
 ### 318. Quick Refactor
