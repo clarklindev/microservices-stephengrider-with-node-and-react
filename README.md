@@ -12411,6 +12411,22 @@ stan.on('connect', () => {
 ```
 
 ### 319. Leveraging TypeScript for Listener Validation
+- the first app: difficult to remember:
+  - remembering properties of events
+  - remembering names of the events / spelling errors
+ 
+<img src='exercise_files/udemy-microservices-section15-319-mapping-between-subject-names-and-event-data.png'
+alt='udemy-microservices-section15-319-mapping-between-subject-names-and-event-data.png'
+width='600'
+/>
+
+<img src='exercise_files/udemy-microservices-section15-319-mapping-subject-data-relationship.png'
+alt='udemy-microservices-section15-319-mapping-subject-data-relationship.png'
+width='600'
+/>
+
+- mismatched data should result in an error
+
 ### 320. Subjects Enum
 ### 321. Custom Event Interface
 ### 322. Enforcing Listener Subjects
