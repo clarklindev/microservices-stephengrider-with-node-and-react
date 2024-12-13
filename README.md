@@ -12609,7 +12609,96 @@ width='600'
 - define custom listeners specific to the service’s business logic (e.g., handling `ticketCreated` events with custom logic in `onMessage`).
 
 ### 326. Custom Publisher
+- refactoring to create `base-publisher.ts` (similar to base-listener.ts)
+- TODO: the whole point of doing all this is to get Typescript to check our code:
+  - that when we emit data, it has the correct properties
+  - checking that when publishing data, we provide the correct subject name
+- NOTE: in lesson 327. we correct - data should be passed as JSON
+- nats-test/src/events/base-publisher.ts
+
+```ts
+//nats-test/src/events/base-publisher.ts
+
+import { Stan } from 'node-nats-streaming';
+import { Subjects } from './subjects';
+
+interface Event{
+  subject: Subjects;
+  data: any;
+}
+
+export abstract class Publisher<T extends Event> {
+  abstract subject: T['subject'];
+  constructor(private client: Stan) { }
+
+  publish(data: T['data']) {
+    this.client.publish(this.subject, JSON.stringify(data), () => { 
+      console.log('event published');
+    })
+  }
+}
+```
+
+#### custom publisher class
+- nats-test/src/events/ticket-created-publisher.ts
+
+```ts
+//nats-test/src/events/ticket-created-publisher.ts
+import { Publisher } from './base-publisher';
+import { TicketCreatedEvent } from './ticket-created-event';
+import { Subjects } from './subjects';
+
+export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent> {
+  readonly subject = Subjects.TicketCreated;
+}
+```
+
 ### 327. Using the Custom Publisher
+- FIX: firstly fix this -> data should be passed as JSON (src/events/base-publisher.ts)
+
+- using `TicketCreatedPublisher`
+
+- we receive warning when using TicketCreatedPublisher 
+<img src='exercise_files/udemy-microservices-section15-327-using-the-custom-publisher-TicketCreatedPublisher.png'
+alt='udemy-microservices-section15-327-using-the-custom-publisher-TicketCreatedPublisher.png'
+width='600'
+/>
+
+- nats-test/src/publisher.ts
+
+```ts
+//...
+import { TicketCreatedPublisher } from './events/ticket-created-publisher';
+
+//...
+stan.on('connect', () => {
+  console.log('publisher connected to NATS');
+
+  //BEFORE
+  // const data = JSON.stringify({
+  //   id: '123',
+  //   title: 'concert',
+  //   price: 20,
+  // });
+  // stan.publish('ticket:created', data, () => {
+  //   console.log('event published')
+  // });
+
+  //UPDATE
+  const publisher = new TicketCreatedPublisher(stan);
+  publisher.publish({
+    id: '123',
+    title: 'concert',
+    price: 20
+  });
+
+});
+
+//...
+
+```
+
+
 ### 328. Awaiting Event Publication
 ### 329. Common Event Definitions Summary
 ### 330. Updating the Common Module
