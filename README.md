@@ -12563,6 +12563,28 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
 ```
 
 ### 324. Enforcing Data Types
+-`onMessage(data:any)` need to update the type -> it should reference the data type of the T's (TicketCreatedEvent) data type
+- FIX: `onMessage(data':TicketCreatedEvent['data'])`
+- nats-test/src/events/ticket-created-event.ts
+
+```ts
+//nats-test/src/events/ticket-created-event.ts
+import { Message } from "node-nats-streaming";
+import { Listener } from "./base-listener";
+import { TicketCreatedEvent } from "./ticket-created-event";
+import { Subjects } from "./subjects";
+
+export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
+  readonly subject = Subjects.TicketCreated;
+  queueGroupName = 'payments-service';
+
+  onMessage(data: TicketCreatedEvent['data'], msg: Message) {
+    msg.ack();
+  }
+
+}
+```
+
 ### 325. Where Does this Get Used?
 ### 326. Custom Publisher
 ### 327. Using the Custom Publisher
