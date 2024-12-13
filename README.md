@@ -12855,7 +12855,32 @@ kubectl delete pod nats-depl-958fb4786-p8d9m
 ---
 
 ## section 16 - managing a NATS client (1hr37min)
+- the common library has updated and has the events and listeners and common library's `index.ts` exports them
+- tickets service now uses this updated common library -> has access to these updates (events + listeners)
+
+## Tickets/
 ### 332. Publishing Ticket Creation
+- route `tickets/src/routes/new.ts` 
+- TODO: when someone issues a new ticket
+  1. - ticket is created
+  2. - saved to database
+  3. - publish an event to notify all other services in app a ticket was just created
+
+- tickets/src/events/publishers
+- tickets/src/events/listeners
+- TODO: ticket service -> create a new custom publisher -> `ticket-created-publisher.ts`
+- `tickets/src/events/publishers/ticket-created-publisher.ts`
+- usage: new TicketCreatedPublisher(client).publish(ticket);
+
+```ts
+//tickets/src/events/publishers/ticket-created-publisher.ts
+import { Publisher, Subjects, TicketCreatedEvent } from '@clarklindev/common';
+
+export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent>{
+  readonly subject = Subjects.TicketCreated;
+}
+```
+
 ### 333. More on Publishing
 ### 334. NATS Client Singleton
 ### 335. Node Nats Streaming Installation
