@@ -3,13 +3,12 @@ import {body} from 'express-validator';
 
 import { requireAuth, validateRequest} from '@clarklindev/common';
 import { Ticket } from '../models/ticket';
+import { TicketCreatedPublisher } from '../events/publishers/ticket-created-publisher';
 
 const router = express.Router();
 
 router.post('/api/tickets',
-
   requireAuth,
-
   [
     body('title')
       .not()
@@ -20,11 +19,11 @@ router.post('/api/tickets',
       .isFloat({ gt: 0})
       .withMessage('Price must be greater than 0')
   ],
-
   validateRequest,
 
   async (req: Request, res: Response) => { 
     const { title, price } = req.body;
+
     const ticket = Ticket.build({
       title,
       price,
@@ -32,6 +31,13 @@ router.post('/api/tickets',
     });
 
     await ticket.save();
+
+    await new TicketCreatedPublisher(client).publish({
+      id: ticket.id,
+      title: ticket.title,
+      price: ticket.price,
+      userId: ticket.userId
+    });
 
     res.status(201).send(ticket);
   }
