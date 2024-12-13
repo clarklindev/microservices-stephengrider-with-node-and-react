@@ -12784,7 +12784,73 @@ width='600'
   - apache avro
 
 ### 330. Updating the Common Module
-### 331. Restarting NATS
+- TODO: update the common library by extracting code from nats-test
+- TODO: rebuild + publish -> common/ project
+- TODO: update nats-test tickets project to use the common module inside there...
+
+#### nats-test
+- from nats-test/src/events/ move these files to common module under `events/`
+  - section05-15-ticketing/nats-test/src/events/base-listener.ts 
+  - section05-15-ticketing/nats-test/src/events/base-publisher.ts 
+  - section05-15-ticketing/nats-test/src/events/subjects.ts 
+  - section05-15-ticketing/nats-test/src/events/ticket-created-event.ts
+
+#### common module ([repo](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git))
+- create events/
+- TODO: update subjects.ts
+
+```ts
+export enum Subjects{
+  TicketCreated = 'ticket:created',
+  TicketUpdated = 'ticket:updated',
+}
+```
+- create src/events/ticket-updated-event.ts
+```ts
+//src/events/ticket-updated-event.ts
+import { Subjects } from './subjects';
+export interface TicketUdpatedEvent {
+  subject: Subjects.TicketUpdated,
+  data: {
+    id: string;
+    title: string;
+    price: number;
+    userId: string;
+  }
+}
+```
+- src/index.ts -> update by exporting all event files in events/ 
+
+```ts
+//...
+
+export * from './events/base-listener';
+export * from './events/base-publisher';
+export * from './events/subjects';
+export * from './events/ticket-created-event';
+export * from './events/ticket-updated-event';
+```
+#### publishing common library
+- common/ library
+- install `node-nats-streaming` - `pnpm i node-nats-streaming`
+- re-publish: `pnpm run pub` 
+  - commit
+  - build
+  - version
+  - delete build
+  - publish
+
+#### tickets service
+- section05-15-ticketing/tickets/
+- pnpm update @clarklindev/common
+
+### 331. Restarting NATS to clear NATS history
+- restarting nats pod -> will result in a all events that have been emitted to be dumped
+- ticketing/
+
+```cmd
+kubectl delete pod nats-depl-958fb4786-p8d9m
+```
 
 ---
 
