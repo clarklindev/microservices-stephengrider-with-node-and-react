@@ -12586,6 +12586,28 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
 ```
 
 ### 325. Where Does this Get Used?
+- understanding what code goes into Common module (when refactoring)
+
+<img src='exercise_files/udemy-microservices-section15-325-what-goes-into-common-module.png'
+alt='udemy-microservices-section15-325-what-goes-into-common-module.png'
+width='600'
+/>
+
+- eventually, the code will be merged into a common module. 
+
+#### common module
+
+- subjects: a central list of all possible event channels for emitting events in the streaming server.
+- base Listener class: A foundational listener class.
+- event interfaces: definitions of all possible events and their data structures.
+
+- these shared components ensure consistency across services by standardizing event subjects, structures, and logic.
+
+#### service modules (e.g., Ticket Service, Payment Service):
+
+- import definitions from the common module (e.g., subjects, listeners, event interfaces).
+- define custom listeners specific to the service’s business logic (e.g., handling `ticketCreated` events with custom logic in `onMessage`).
+
 ### 326. Custom Publisher
 ### 327. Using the Custom Publisher
 ### 328. Awaiting Event Publication
