@@ -12697,9 +12697,70 @@ stan.on('connect', () => {
 //...
 
 ```
-
-
 ### 328. Awaiting Event Publication
+- publishing to NATS is an async operation 
+- TODO: be able to use it as `async` with async/await 
+- ensure that the `base-publisher.ts` class `returns a promise` from `publish()`
+
+- UPDATE: src/events/base-publisher.ts
+```ts
+//base-publisher.ts
+import { Stan } from 'node-nats-streaming';
+import { Subjects } from './subjects';
+
+interface Event{
+  subject: Subjects;
+  data: any;
+}
+
+export abstract class Publisher<T extends Event> {
+  abstract subject: T['subject'];
+  constructor(private client: Stan) { }
+
+  publish(data: T['data']): Promise<void> {
+
+    return new Promise((resolve, reject) => {
+      this.client.publish(this.subject, data, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        console.log('event published to subject: ', this.subject);
+        resolve();
+      });
+
+    });
+    
+  }
+}
+```
+- UPDATED: nats-test/src/publisher.ts
+```ts
+import nats from 'node-nats-streaming';
+import { TicketCreatedPublisher } from './events/ticket-created-publisher';
+
+console.clear();
+
+const stan = nats.connect('ticketing', 'abc', {
+  url: 'http://localhost:4222'
+});
+
+stan.on('connect', async () => {
+  console.log('publisher connected to NATS');
+
+  const publisher = new TicketCreatedPublisher(stan);
+  try {
+    await publisher.publish({
+      id: '123',
+      title: 'concert',
+      price: 20
+    });
+  }
+  catch (err) {
+    console.error(err);
+  }
+});
+```
+
 ### 329. Common Event Definitions Summary
 ### 330. Updating the Common Module
 ### 331. Restarting NATS
