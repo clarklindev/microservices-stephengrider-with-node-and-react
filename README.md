@@ -12762,6 +12762,27 @@ stan.on('connect', async () => {
 ```
 
 ### 329. Common Event Definitions Summary
+#### testing...
+  - Publishers -> making requests (axios) -> not a lot to test
+  - Listeners -> similar to request handlers -> lots to test
+
+#### architecture
+- the common module is where we define list of event names (Subjects)
+- the common module is where we define the different events 
+- CONS -> the common module is written in typescript -> only works if all our services are written with Typescript
+  - ie. if there are multi-languages services
+
+<img src='exercise_files/udemy-microservices-section15-329-common-event-definitions-summary.png'
+alt='udemy-microservices-section15-329-common-event-definitions-summary.png'
+width='600'
+/>
+
+#### cross-language support
+- alternatives with cross language support 
+  - JSON schema
+  - protobuf
+  - apache avro
+
 ### 330. Updating the Common Module
 ### 331. Restarting NATS
 
