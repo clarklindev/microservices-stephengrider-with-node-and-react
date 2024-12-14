@@ -13086,7 +13086,7 @@ catch(err){
 #### Connection Logic:
 - A `connect()` function is defined to establish a connection with the NATS server.
 - This method accepts `cluster ID`, `client ID`, and `URL` as arguments.
-- The `connection` is established using `Nats.connect({ cluster ID, client ID, URL })`.
+- The `connection` is established using NatsWrapper's instance `.connect({ cluster ID, client ID, URL })`.
 - The connection handling uses Promises to allow async/await syntax instead of relying on traditional callback handling.
 - Error handling is implemented using the on('error') event, rejecting the promise on failure.
 
@@ -13094,7 +13094,7 @@ catch(err){
 - Errors are caught and rejected during the connection attempt.
 
 #### Testing the Connection:
-- The connect method is invoked from an index file with required connection settings (ticketing, a random client ID, and the NATS server URL http://nats-crv:4222).
+- The connect method is invoked from an index file with required connection settings (`ticketing`, `a random client ID`, and the `NATS server` URL http://nats-crv:4222).
 - After starting the application, a successful connection logs "Connected to NATS" in the console.
 
 #### Cluster ID and Connection Details:
@@ -13102,10 +13102,84 @@ catch(err){
 - The client ID should be random to avoid conflicts.
 - The URL points to the service nats-crv:4222, which is defined in the deployment.
 
-- TODO: using natsWrapper inside 'new' route -> `tickets/src/routes/new.ts`
-
-
 ### 339. Accessing the NATS Client
+- TODO: using client from `natsWrapper` inside 'new' route -> `tickets/src/routes/new.ts`
+- NOTE: it is marked as private
+  - exposing _client to outside but should throw error if still undefined
+  - FIX: add a getter `get client()`
+  - FIX: updated get client() so src/nats-wrapper.ts `connect()` can access client via `this.client` instead of `this._client!`
+
+```ts
+//src/nats-wrapper.ts
+
+get client() {
+  if (!this._client) {
+    throw new Error('Cannot access NATS client before connecting');
+  } 
+  return this._client;
+}
+
+connect(clusterId:string, clientId:string, url:string) {
+  this._client = nats.connect(clusterId, clientId, { url });
+
+  return new Promise<void>((resolve, reject) => {
+    this.client.on('connect', () => {
+      console.log('Connected to NATS');
+      resolve();
+    });
+
+    this.client.on('error', (err) => {
+      reject(err);
+    });
+
+  });
+  
+}
+
+```
+  
+- USAGE: access .client via `natsWrapper`
+
+```ts
+//tickets/src/routes/new.ts
+import { TicketCreatedPublisher } from '../events/publishers/ticket-created-publisher';
+import { natsWrapper } from '../nats-wrapper';
+
+router.post('/api/tickets',
+  requireAuth,
+  [
+    body('title')
+      .not()
+      .isEmpty()
+      .withMessage('Title is required'),
+    
+    body('price')
+      .isFloat({ gt: 0})
+      .withMessage('Price must be greater than 0')
+  ],
+  validateRequest,
+
+  async (req: Request, res: Response) => { 
+    //...
+    await ticket.save();
+
+    await new TicketCreatedPublisher(natsWrapper.client).publish({
+      id: ticket.id,
+      title: ticket.title,
+      price: ticket.price,
+      userId: ticket.userId
+    });
+
+    res.status(201).send(ticket);
+
+  }
+);
+
+
+
+```
+
+
 ### 340. Graceful Shutdown
 ### 341. Successful Listen!
 ### 342. Ticket Update Publishing
