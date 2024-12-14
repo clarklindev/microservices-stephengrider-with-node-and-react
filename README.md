@@ -13493,6 +13493,40 @@ width='600'
 - NOTE: this idea of 'transactions' is NOT part of the course - adds complexity (but it should be considered for reallife production env) 
 
 ### 345. Fixing a Few Tests
+
+#### failed tests
+- The test suite for the ticketing service is failing, primarily due to issues with the NATS client not being initialized. 
+- This problem arose after adding event publishing functionality. 
+- In development, the NATS client is initialized within a NATS wrapper Singleton, allowing publishers to access it. 
+
+<img src='exercise_files/udemy-microservices-section15-345-development-environment-natswrapper.png'
+alt='udemy-microservices-section15-345-development-environment-natswrapper.png'
+width='600'
+/>
+
+- in the test environment, the client isn't initialized, causing errors such as "Cannot access NATS client before connecting."
+
+<img src='exercise_files/udemy-microservices-section15-345-failed-test-environment-due-to-uninitialized-client.png'
+alt='udemy-microservices-section15-345-failed-test-environment-due-to-uninitialized-client.png'
+width='600'
+/>
+
+### resolve failed tests
+- two approaches are considered:
+
+#### Connecting to a real NATS server during tests: 
+- This is not ideal, as it would require a running NATS server locally or via another mechanism, complicating the test environment.
+
+#### implement the Jest mocking approach:
+- Jest can intercept import statements in the test environment and redirect them to a fake NATS wrapper. 
+- This fake wrapper will include a "fake" initialized NATS client, tricking the application into thinking the client is real without actually connecting to a NATS server.
+- preffered method -> avoids dependency on a real NATS server while simplifying test execution. 
+
+<img src='exercise_files/udemy-microservices-section15-345-jest-intercept-import-statements.png'
+alt='udemy-microservices-section15-345-jest-intercept-import-statements.png'
+width='600'
+/>
+
 ### 346. Redirecting Imports
 ### 347. Providing a Mock Implementation
 ### 348. Test-Suite Wide Mocks
