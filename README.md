@@ -13102,6 +13102,8 @@ catch(err){
 - The client ID should be random to avoid conflicts.
 - The URL points to the service nats-crv:4222, which is defined in the deployment.
 
+- TODO: using natsWrapper inside 'new' route -> `tickets/src/routes/new.ts`
+
 
 ### 339. Accessing the NATS Client
 ### 340. Graceful Shutdown
