@@ -13454,6 +13454,44 @@ width='600'
 />
 
 ### 344. Handling Publish Failures
+- FIX -> fixing lesson 343 design...
+
+#### using an events collection db and a saved flag
+- instead of saving transtion to db and then emitting an event, the event is stored in an `events collection db`
+- then with the event, we record whether the event has been published (sent) 
+  - initially when saved to database -> `sent` will be: `NO`
+
+  <img src='exercise_files/udemy-microservices-section15-344-using-events-collection-with-sent-flag.png'
+  alt='udemy-microservices-section15-344-using-events-collection-with-sent-flag.png'
+  width='600'
+  />
+
+- have separate code to watch events collection - that notes when an event is saved to `events collection db` 
+  - it will extract this event
+  - publish it off to NATS
+
+  <img src='exercise_files/udemy-microservices-section15-344-watch-for-saved-event-and-publish-to-nats.png'
+  alt='udemy-microservices-section15-344-watch-for-saved-event-and-publish-to-nats.png'
+  width='600'
+  />
+
+  - once sucessfully published -> the `sent` flag can update to `YES`
+
+  <img src='exercise_files/udemy-microservices-section15-344-after-nats-publish-flag-set-to-yes.png'
+  alt='udemy-microservices-section15-344-after-nats-publish-flag-set-to-yes.png'
+  width='600'
+  />
+
+#### rollback when failed saving to db 
+- if inserting to any db fails, ALL inserts should be reverted (rollback)
+- most db's have this feature implemented (called a `transaction`)
+- database transaction is a 'set of changes' and if any of the changes fail, do not make any of the changes
+- TODO: wrapping events in a database transaction ensuring: 
+  - a record is saved to transactions collection
+  - AND the event is recorded in events collection 
+
+- NOTE: this idea of 'transactions' is NOT part of the course - adds complexity (but it should be considered for reallife production env) 
+
 ### 345. Fixing a Few Tests
 ### 346. Redirecting Imports
 ### 347. Providing a Mock Implementation
