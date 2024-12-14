@@ -13414,6 +13414,45 @@ new TicketUpdatedPublisher(natsWrapper.client).publish({
 - if you try run tests, wont work because tests dont have connection to NATS
  
 ### 343. Failed Event Publishing
+
+#### no await
+- tickets/src/routes/update.ts -> update ticket event, there is no `await` keyword
+  - `new TicketUpdatedPublisher(natsWrapper.client).publish({})`
+- if there is no await -> and a response is sent immediately after publishing to nats... 
+- if an error occurs when publishing event to NATS... you already sent a response...
+
+<img src='exercise_files/udemy-microservices-section15-343-failed-event-publishing-no-await.png'
+alt='udemy-microservices-section15-343-failed-event-publishing-no-await.png'
+width='600'
+/>
+
+#### with await
+- tickets/src/routes/new.ts for creating -> creating ticket event, this IS an `await` keyword
+  - `await new TicketCreatedPublisher(natsWrapper.client).publish({})`
+- if anything goes wrong -> and because we have `await` -> if anything goes wrong -> throwing error will be caught by error handling middleware.
+
+<img src='exercise_files/udemy-microservices-section15-343-failed-event-publishing-with-await.png'
+alt='udemy-microservices-section15-343-failed-event-publishing-with-await.png'
+width='600'
+/>
+
+### Data-integrity issue
+- user makes a transaction to deposit money
+- the transaction gets saved to Transactions database (+ $70)
+- in normal circumstances, event is emitted and accounts database is updated..
+
+<img src='exercise_files/udemy-microservices-section15-343-failed-emit-event.png'
+alt='udemy-microservices-section15-343-failed-emit-event.png'
+width='600'
+/>
+
+- if the emit event fails and never gets communicated with accounts database ($ 0), there is data integrity issue (transactions db and accounts db will show different balance)
+
+<img src='exercise_files/udemy-microservices-section15-343-failed-emit-event_2.png'
+alt='udemy-microservices-section15-343-failed-emit-event_2.png'
+width='600'
+/>
+
 ### 344. Handling Publish Failures
 ### 345. Fixing a Few Tests
 ### 346. Redirecting Imports
