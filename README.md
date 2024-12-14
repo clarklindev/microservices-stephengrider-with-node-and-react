@@ -12995,6 +12995,23 @@ export const natsWrapper = new NatsWrapper();
 ```
 
 ### 337. TS Error - Did you forget to include 'void' in your type argument
+- we will be returning a promise in our natsWrapper class.
+
+- ERROR
+```cmd
+Expected 1 arguments, but got 0. Did you forget to include 'void' in your type argument to 'Promise'?
+```
+- FIX:
+```ts
+// src/nats-wrapper.ts
+return new Promise<void>((resolve, reject) => {
+  this._client!.on('connect', () => {
+    console.log('Connected to NATS');
+    resolve();
+  });
+}
+```
+
 ### 338. Singleton Implementation
 ### 339. Accessing the NATS Client
 ### 340. Graceful Shutdown
