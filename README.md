@@ -13179,8 +13179,57 @@ router.post('/api/tickets',
 
 ```
 
-
 ### 340. Graceful Shutdown
+- similar to to handling shutdown in `nats-test/src/listener.ts`
+
+#### move logic into index.ts
+- less ideal implementation that embeds shutdown logic directly into a method, which could lead to bad design. 
+- Specifically, having hidden methods arbitrarily exit the program isn't advisable, as it could create problems when shared across services.
+- attempt graceful exit by moving shutdown logic to index.ts for better control, centralizing the exit handling.
+- This prevents unexpected program exits from being triggered in unintended places.
+
+#### TESTING graceful shutdown
+- restart skaffold
+- simulating Nats connection loss and ensuring graceful shutdown
+
+#### deleting the pod
+- deleting the Nats pod : `section05-15-ticketing/`
+```
+kubectl get pods
+kubectl delete pod ...
+
+```
+#### container restarts
+- triggering a close event, and observing that the container restarts (due to the process exiting and Kubernetes’ auto-recovery). This confirms the shutdown logic works as expected.
+
+
+```
+kubectl get pods
+```
+
+<img src='exercise_files/udemy-microservices-section15-340-restarts-tickets-depl-when-losing-connect-to-nats.png'
+alt='udemy-microservices-section15-340-restarts-tickets-depl-when-losing-connect-to-nats.png'
+width='600'
+/>
+
+
+```ts
+//tickets/src/index.ts
+//...
+    await natsWrapper.connect('ticketing', 'laskjf', 'http://nats-srv:4222');
+
+    natsWrapper.client.on('close', () => {
+      console.log('NATS connection closed!');
+      process.exit();
+    });
+    process.on('SIGINT', () => natsWrapper.client.close());
+    process.on('SIGTERM', () => natsWrapper.client.close());
+
+//...
+```
+
+
+
 ### 341. Successful Listen!
 ### 342. Ticket Update Publishing
 ### 343. Failed Event Publishing
