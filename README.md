@@ -12946,6 +12946,12 @@ width='600'
 /> 
 
 ### 335. Node Nats Streaming Installation
+- folder: `/section05-15-ticketing/tickets/`
+
+```ts
+pnpm i node-nats-streaming
+```
+
 ### 336. Remember Mongoose?
 ### 337. TS Error - Did you forget to include 'void' in your type argument
 ### 338. Singleton Implementation
