@@ -13365,6 +13365,54 @@ width='600'
 ---
 
 ### 342. Ticket Update Publishing
+- `tickets/src/events/publishers/ticket-updated-publisher.ts`
+- publishes that a ticket was updated
+
+```ts
+//tickets/src/events/publishers/ticket-updated-publisher.ts
+import { Publisher, Subjects, TicketUpdatedEvent } from '@clarklindev/common';
+
+export class TicketUpdatedPublisher extends Publisher<TicketUpdatedEvent>{
+  readonly subject = Subjects.TicketUpdated;
+}
+```
+
+- tickets/src/routes/update.ts
+- UPDATES..
+```ts
+//...
+import { TicketUpdatedPublisher } from '../events/publishers/ticket-updated-publisher';
+import { natsWrapper } from '../nats-wrapper';
+//...
+
+router.put('/api/tickets/:id',
+//...
+await ticket.save();  //ticket is now updated
+
+new TicketUpdatedPublisher(natsWrapper.client).publish({
+  id: ticket.id,
+  title: ticket.title,
+  price: ticket.price,
+  userId: ticket.userId
+});
+
+//...
+
+);
+```
+#### Postman
+- ensure loggedin - check with GET https://ticketing.dev/api/users/currentuser
+- Postman PUT https://ticketing.dev/api/tickets/
+- use ticket id from creating a ticket (eg. 675dad175b8e62713cb7ac9c)
+
+- POSTMAN -> PUT https://ticketing.dev/api/tickets/675dad175b8e62713cb7ac9c
+  - update eg. price -> 10
+
+- TEST -> scaffold terminal -> should see: `[tickets] event published to subject:  ticket:updated`
+
+#### Tests
+- if you try run tests, wont work because tests dont have connection to NATS
+ 
 ### 343. Failed Event Publishing
 ### 344. Handling Publish Failures
 ### 345. Fixing a Few Tests

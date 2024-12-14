@@ -9,7 +9,8 @@ import {
 } from '@clarklindev/common';
 
 import { Ticket } from '../models/ticket';
-
+import { TicketUpdatedPublisher } from '../events/publishers/ticket-updated-publisher';
+import { natsWrapper } from '../nats-wrapper';
 const router = express.Router();
 
 router.put('/api/tickets/:id',
@@ -42,6 +43,13 @@ router.put('/api/tickets/:id',
     })
 
     await ticket.save();  //ticket is now updated
+
+    new TicketUpdatedPublisher(natsWrapper.client).publish({
+      id: ticket.id,
+      title: ticket.title,
+      price: ticket.price,
+      userId: ticket.userId
+    });
 
     //sending back ticket will have the updated data
     res.send(ticket);
