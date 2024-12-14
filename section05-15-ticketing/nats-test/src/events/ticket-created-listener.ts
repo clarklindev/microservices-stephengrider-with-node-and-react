@@ -1,8 +1,6 @@
 
 import { Message } from "node-nats-streaming";
-import { Listener } from "./base-listener";
-import { TicketCreatedEvent } from "./ticket-created-event";
-import { Subjects } from "./subjects";
+import { Listener, TicketCreatedEvent, Subjects} from "@clarklindev/common";
 
 export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
   readonly subject = Subjects.TicketCreated;
@@ -10,6 +8,11 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
 
   onMessage(data: TicketCreatedEvent['data'], msg: Message) {
     console.log('event data:', data);
+
+    console.log(data.id);
+    console.log(data.title);
+    console.log(data.price);
+
     msg.ack();
   }
 

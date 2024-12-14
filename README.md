@@ -13228,9 +13228,142 @@ width='600'
 //...
 ```
 
-
-
 ### 341. Successful Listen!
+- checking if new ticket route handler (tickets/routes/new.ts) that events are being published event publisher (TicketCreatedPublisher) successfully publishes an event.
+- in `nats-test/src/listener.ts` 
+  - we are importing `TicketCreatedListener` from './events/ticket-created-listener';
+  - `TicketCreatedListener` listening to events of type `Subjects.TicketCreated`
+
+
+```ts
+//nats-test/src/events/ticket-created-listener.ts
+
+import { Message } from "node-nats-streaming";
+import { Listener, TicketCreatedEvent, Subjects} from "@clarklindev/common";
+
+export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
+  readonly subject = Subjects.TicketCreated;
+  queueGroupName = 'payments-service';
+
+  onMessage(data: TicketCreatedEvent['data'], msg: Message) {
+    console.log('event data:', data);
+
+    console.log(data.id);
+    console.log(data.title);
+    console.log(data.price);
+
+    msg.ack();
+  }
+
+}
+```
+
+#### TEST
+
+## TERMINAL WINDOW 1
+- skaffold dev
+
+## TERMINAL WINDOW 2
+### update nats-test dependencies
+- update the nats-test/package.json so it uses @clarklindev/common
+  - pnpm update @clarklindev/common
+
+### create port forwarding
+- nats-test/ -
+  - `kubectl get pods`
+
+<img src='exercise_files/udemy-microservices-section15-341-create-port-forward.png'
+alt='udemy-microservices-section15-341-create-port-forward.png'
+width='600'
+/>
+
+  - `kubectl port-forward [podname] [port-local]:[port-to-access]`
+    - eg. kubectl port-forward nats-depl-79cd79cc87-cjxh8 4222:4222
+
+<img src='exercise_files/udemy-microservices-section15-341-nats-test-listener.png'
+alt='udemy-microservices-section15-341-nats-test-listener.png'
+width='600'
+/>
+
+  - see [298. Port-Forwarding with Kubectl](#298-port-forwarding-with-kubectl)
+    - this will cause cluster to behave as if it has a nodePort service running inside of it 
+    - will expose the pod (port) to outside world
+    - allows to connect from local machine
+
+## TERMINAL WINDOW 3
+### run nats-test -> listen
+- new terminal window
+- nats-test/ directory
+- `pnpm run listen`
+- OUTCOME: 
+
+```cmd
+Listener connected to NATS
+```
+
+## POSTMAN
+### postman create ticket
+- create a ticket from POSTMAN
+- NOTE: you need to be authenticated to create a ticket
+- GET -> https://ticketing.dev/api/users/currentuser
+
+#### sign in if not authenticated
+- POST -> https://ticketing.dev/api/users/signin 
+- POST -> https://ticketing.dev/api/users/signup
+
+  - headers -> Content-Type - application/json
+  - body -> RAW -> JSON
+  {
+      "email":"test@test.com",
+      "password":"password"
+  }
+
+### verify the listener receives the event
+- verify that the nats-test `ticket-created-listener`
+
+### create a ticket
+- POST -> https://ticketing.dev/api/tickets/
+- body -> raw -> JSON ->
+
+```json
+{
+  "title": "NEW CONCERT",
+  "price": 50
+}
+```
+### sucess
+
+- post man successfully created ticket
+
+<img src='exercise_files/udemy-microservices-section15-341-create-ticket-success.png'
+alt='udemy-microservices-section15-341-create-ticket-success.png'
+width='600'
+/>
+
+---
+
+- skaffold message: successfully published
+
+<img src='exercise_files/udemy-microservices-section15-341-skaffold-success-publish.png'
+alt='udemy-microservices-section15-341-skaffold-success-publish.png'
+width='600'
+/>
+
+---
+
+- nats-test listener
+
+<img src='exercise_files/udemy-microservices-section15-341-nats-test-message-received.png'
+alt='udemy-microservices-section15-341-nats-test-message-received.png'
+width='600'
+/>
+
+#### troubleshoot
+- was complaining about userId not in `TicketCreatedEvent` even though i published common/ repo
+- FIX: delete nats-test/node_modules and re-install dependencies: `pnpm i`
+
+---
+
 ### 342. Ticket Update Publishing
 ### 343. Failed Event Publishing
 ### 344. Handling Publish Failures

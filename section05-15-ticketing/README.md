@@ -40,7 +40,10 @@
 
 ```
 gcloud container clusters get-credentials ticketing-dev
+
 ```
+
+gcloud auth application-default login
 
 5. ensure cluster-admin permissions
 
