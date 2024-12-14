@@ -12996,6 +12996,7 @@ export const natsWrapper = new NatsWrapper();
 
 ### 337. TS Error - Did you forget to include 'void' in your type argument
 - we will be returning a promise in our natsWrapper class.
+- for lesson 338...
 
 - ERROR
 ```cmd
@@ -13013,6 +13014,95 @@ return new Promise<void>((resolve, reject) => {
 ```
 
 ### 338. Singleton Implementation
+- tickets/src/nats-wrapper.ts
+- TODO: create a nats client inside nats-wrapper.ts
+- creating the client will happen in `connect()` so creation can be deffered
+- making a callback a `promise` to allow us to use async/await 
+- by wrapping our callback with a promise then calling resolve from within callback
+- note typescript warns of this._client pottentially being undefined, because we are calling this._client from within a callback function and could have unassigned the._client 
+- FIX: add !
+
+```ts
+//tickets/src/nats-wrapper.ts
+import nats, { Stan } from 'node-nats-streaming';
+
+class NatsWrapper{
+  private _client?: Stan;
+
+  connect(clusterId:string, clientId:string, url:string) {
+    this._client = nats.connect(clusterId, clientId, { url });
+
+    return new Promise<void>((resolve, reject) => {
+      this._client!.on('connect', () => {
+        console.log('Connected to NATS');
+        resolve();
+      });
+
+      this._client!.on('error', (err) => {
+        reject(err);
+      });
+
+    });
+    
+  }
+
+}
+
+export const natsWrapper = new NatsWrapper();
+```
+### using natsWrapper
+- note the lowercase 'n' , means this is an instance that is shared between our different files
+- connect() 
+  - 1st argument -> value of `cluster id` connecting to (infra/k8s/nats-dep.yaml - > args -> -cid -> `ticketing`)
+  - 2nd argument is client id (random string)
+  - 3rd argumment -> service governing nats deployment (infra/k8s/nats-depl.yaml -> service section -> metadata -> name -> `nats-srv`)
+- TEST: skaffold dev
+
+```ts
+//tickets/src/index.ts
+import { natsWrapper } from './nats-wrapper';
+
+///...
+try{
+  await natsWrapper.connect('ticketing', 'laskjf', 'http://nats-srv:4222');
+
+  //...
+  await mongoose.connect(
+    //...
+  );
+}
+catch(err){
+  console.error(err);
+}
+```
+
+#### implementation of a Nats (NATS messaging system) client wrapper class 
+- implementation of a Nats client wrapper class with a focus on connecting to the NATS server using async/await syntax. 
+
+#### Class Property for Client:
+- A private property `_client` is added to represent the NATS client. 
+- It's marked optional (_client?) because it's not immediately initialized during the class's construction.
+
+#### Connection Logic:
+- A `connect()` function is defined to establish a connection with the NATS server.
+- This method accepts `cluster ID`, `client ID`, and `URL` as arguments.
+- The `connection` is established using `Nats.connect({ cluster ID, client ID, URL })`.
+- The connection handling uses Promises to allow async/await syntax instead of relying on traditional callback handling.
+- Error handling is implemented using the on('error') event, rejecting the promise on failure.
+
+#### Error Handling:
+- Errors are caught and rejected during the connection attempt.
+
+#### Testing the Connection:
+- The connect method is invoked from an index file with required connection settings (ticketing, a random client ID, and the NATS server URL http://nats-crv:4222).
+- After starting the application, a successful connection logs "Connected to NATS" in the console.
+
+#### Cluster ID and Connection Details:
+- The cluster ID (ticketing) comes from the deployment configuration in Kubernetes.
+- The client ID should be random to avoid conflicts.
+- The URL points to the service nats-crv:4222, which is defined in the deployment.
+
+
 ### 339. Accessing the NATS Client
 ### 340. Graceful Shutdown
 ### 341. Successful Listen!
