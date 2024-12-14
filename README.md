@@ -12929,6 +12929,22 @@ router.post('/api/tickets',
 
 ```
 ### 334. NATS Client Singleton
+- after successfully set up a publisher (TicketCreatedPublisher(client)) needs a nats client instance to handle publishing.
+- index.ts already has startup logic
+- just like mongodb (which maintains internal connection management)
+  - mongoose -> mongoose internally keeps a record of all connections -> does NOT return the client (when you use it, it is a copy of mongoose directly connected to server)
+- the NATS client is required to successfully publish messages
+  - the Nats client works differently—it returns a connection object upon calling Nats.connect()
+  - This means `the client must be manually shared across different parts of the application`, unlike Mongoose's behavior.
+- the NATS client should be created before starting to listen to traffic
+
+- create client -> `nats-client.ts` that behaves as a singleton accessible by other files (index.ts, TicketCreatedRoute Handler)
+
+<img src='exercise_files/udemy-microservices-section15-334-singleton-nats-client.png'
+alt='udemy-microservices-section15-334-singleton-nats-client.png'
+width='600'
+/> 
+
 ### 335. Node Nats Streaming Installation
 ### 336. Remember Mongoose?
 ### 337. TS Error - Did you forget to include 'void' in your type argument
