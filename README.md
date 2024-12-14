@@ -12936,9 +12936,18 @@ router.post('/api/tickets',
 - the NATS client is required to successfully publish messages
   - the Nats client works differently—it returns a connection object upon calling Nats.connect()
   - This means `the client must be manually shared across different parts of the application`, unlike Mongoose's behavior.
-- the NATS client should be created before starting to listen to traffic
+  - The issue arises because the dependencies between files could create circular imports. 
+  - Specifically, importing the Nats client from index into route handlers (and vice versa) risks cyclical dependencies
+- The solution is to create a new singleton-like file called nats-client
 
-- create client -> `nats-client.ts` that behaves as a singleton accessible by other files (index.ts, TicketCreatedRoute Handler)
+#### Nats client
+
+1. Manage the creation and initialization of the Nats client.
+2. Act as a singleton to provide consistent client access across different modules without the risk of circular imports.
+3. Handle connection logic and ensure graceful shutdowns if the connection is lost or the app shuts down.
+
+- create client -> `nats-client.ts` 
+- By isolating the client initialization in this new file, index will import it for startup logic, while route handlers can import this pre-initialized client as needed—avoiding cyclical imports.
 
 <img src='exercise_files/udemy-microservices-section15-334-singleton-nats-client.png'
 alt='udemy-microservices-section15-334-singleton-nats-client.png'
