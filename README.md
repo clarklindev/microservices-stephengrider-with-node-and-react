@@ -12962,6 +12962,38 @@ pnpm i node-nats-streaming
 ```
 
 ### 336. Remember Mongoose?
+
+- mongoose design
+
+<img src='exercise_files/udemy-microservices-section15-334-mongoose-design.png'
+alt='udemy-microservices-section15-334-mongoose-design.png'
+width='600'
+/>
+
+- NATS equivalent design
+- NatsWrapper's goal is to initialize a client from NATS/stan library
+- instead of exporting class, we create an instance of `NatsWrapper` and export single instance
+- the file will be called `nats-wrapper.ts` for consistency (instead of nats-client.ts)
+- the instance can be shared to other files
+
+<img src='exercise_files/udemy-microservices-section15-334-nats-design.png'
+alt='udemy-microservices-section15-334-nats-design.png'
+width='600'
+/>
+
+```ts
+//tickets/src/nats-wrapper.ts
+import nats, { Stan } from 'node-nats-streaming';
+
+class NatsWrapper{
+  //create a new client
+  //assign to a property of class
+
+}
+
+export const natsWrapper = new NatsWrapper();
+```
+
 ### 337. TS Error - Did you forget to include 'void' in your type argument
 ### 338. Singleton Implementation
 ### 339. Accessing the NATS Client
