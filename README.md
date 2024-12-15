@@ -12856,38 +12856,6 @@ kubectl delete pod nats-depl-958fb4786-p8d9m
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## section 16 - managing a NATS client (1hr37min)
 - the common library has updated and has the events and listeners and common library's `index.ts` exports them
 - tickets service now uses this updated common library -> has access to these updates (events + listeners)
