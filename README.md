@@ -13863,7 +13863,86 @@ it('publishes an event', async ()=>{
 ```
 
 ### 350. NATS Env Variables
+- tickets/src/index.ts
+- NOTE: the connection props are hardcoded... this should go in environment variables
+- move this into: `infra/k8s/tickets-depl.yaml`
+  - cluster-id (NATS_CLUSTER_ID)
+  - client-id (CLIENT_ID)
+  - url-for-nats (NATS_URL)
 
+```ts
+//...
+
+const start = async () => {
+  //...
+
+  try {
+    await natsWrapper.connect('ticketing', 'laskjf', 'http://nats-srv:4222');
+  }
+  catch (err) {
+    console.error(err);
+  }
+};
+```
+
+- with client-id, this is special case because every copy of `tickets` service will get its own `client-id`
+- and we should generate a random client-id because when we read the logs, the meaning is lost
+- kubectl get pods
+- the name of ticket-depl-xxx pod name is unique for every instance, so we can use that as client id
+
+- tell kubernetes to use the name of the current pod as the value:
+
+```yaml
+# infra/k8s/tickets-depl.yaml
+#...
+  - name: NATS_CLIENT_ID
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+#...
+```
+
+- full tickets-depl environment variable example:
+
+```yaml
+# infra/k8s/tickets-depl.yaml
+          env: 
+            - name: MONGO_URI
+              value: 'mongodb://tickets-mongo-srv:27017/tickets'
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+            - name: NATS_URL
+              value: 'http://nats-srv:4222'
+            - name: NATS_CLUSTER_ID
+              value: ticketing
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+```
+
+#### ensure the environment variables exist
+- in `tickets/src/index.ts` 
+
+```ts
+//tickets/src/index.ts
+//...
+
+  if (!process.env.NATS_URL) {
+    throw new Error('NATS_URL must be defined');
+  }  
+  if (!process.env.NATS_CLUSTER_ID) {
+    throw new Error('NATS_CLUSTER_ID must be defined');
+  }  
+  if (!process.env.NATS_CLIENT_ID) {
+    throw new Error('NATS_CLIENT_ID must be defined');
+  }  
+
+//...
+```
 ---
 
 ## section 17 - cross-service data replication in action (2hr44min)
