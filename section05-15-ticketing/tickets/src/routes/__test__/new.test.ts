@@ -110,4 +110,5 @@ it('publishes an event', async () => {
 
   //check that publish() function gets invoked after creating a ticket
   expect(natsWrapper.client.publish).toHaveBeenCalled();
+  
 });

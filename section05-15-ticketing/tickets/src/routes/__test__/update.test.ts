@@ -144,4 +144,7 @@ it('publishes an event', async ()=>{
       price: 100
     })
     .expect(200);
+  
+  expect(natsWrapper.client.publish).toHaveBeenCalled();
+
 });
