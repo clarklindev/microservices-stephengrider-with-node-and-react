@@ -42,7 +42,9 @@ beforeAll(async ()=>{
   await mongoose.connect(mongoUri, {});
 });
 
-beforeEach(async ()=>{
+beforeEach(async () => {
+  jest.clearAllMocks();
+  
   const collections = await mongoose.connection.db?.collections();
 
   if(collections){

@@ -1,6 +1,7 @@
 import { app } from "../../app";
 import request from "supertest";
 import { Ticket } from "../../models/ticket";
+import { natsWrapper } from "../../nats-wrapper";
 
 //TODO: test to ensure the request does NOT return a 404 (app.ts throws NotFoundError as catchall route when invalid url)
 it('has a route handler to handle listening to /api/tickets for post requests', async () => {
@@ -71,6 +72,7 @@ it('creates a ticket given valid inputs', async () => {
   const title = "adsfjsdfdslf";
   const price = 20;
 
+  //create ticket
   await request(app)
     .post('/api/tickets')
     .set('Cookie', global.signin())
@@ -86,5 +88,26 @@ it('creates a ticket given valid inputs', async () => {
   expect(tickets[0].title).toEqual(title);
   expect(tickets[0].price).toEqual(price);
 
+});
 
+it('publishes an event', async () => {
+  //create a new ticket
+  const title = "adsfjsdfdslf";
+  const price = 20;
+
+  //create ticket
+  await request(app)
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({
+      title,
+      price
+    })
+    .expect(201);
+  
+  //publish function should have been called...
+  console.log(natsWrapper);
+
+  //check that publish() function gets invoked after creating a ticket
+  expect(natsWrapper.client.publish).toHaveBeenCalled();
 });

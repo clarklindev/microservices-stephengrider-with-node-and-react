@@ -13650,8 +13650,11 @@ width='600'
 - the base publisher receives the client
 - and the only thing it does with it, is call `this.client.publish(subject, data, callback)` (see below)
 - the expectation is that in publish() the `callback` will eventually be called by the client
+- NOTE: Publisher is from common/ module -> `import { Publisher, Subjects, TicketCreatedEvent } from '@clarklindev/common';`
 
 ```ts
+//common/src/events/base-publisher.ts
+
 import { Stan } from 'node-nats-streaming';
 import { Subjects } from './subjects';
 
@@ -13725,6 +13728,140 @@ beforeAll(async ()=>{
 
 
 ### 349. Ensuring Mock Invocations
+- ensuring routes are both publishing events:
+  - `tickets/src/routes/new.ts` 
+  - `tickets/src/routes/update.ts` 
+
+#### wrapping fake implementation with mock function
+- update: syntax
+
+```ts
+//tickets/src/__mocks__/nats-wrapper.ts
+jest.fn().mockImplementation(
+  ()=>{} //FAKE IMPLEMENTATION
+)
+```
+
+- TODO: `tickets/src/__mocks__/nats-wrapper.ts`
+  - we have the fake implementation of publish()
+  - we need to unsure this (mock function) gets called -> instead of calling this fake implementation of function, we provide a mock function
+  - a mock function is a fake function, but we can make tests around it
+    - the mock function will internally keep track of whether it has been called, arguments it has been provided.. etc
+    - can expect that it gets executed, or executed with a particular argument
+  - the mock function still needs to call the callback function that it will be provided (so it needs both the fake implementation AND the mock function)
+
+```ts
+//tickets/src/__mocks__/nats-wrapper.ts
+export const natsWrapper = {
+  client: {
+    publish: 
+    
+    //FAKE IMPLEMENTATION
+    // (subject: string, data: string, callback: () => void) => {
+    //   callback();
+    // }
+
+    //MOCK FUNCTION
+    jest.fn().mockImplementation(
+      (subject: string, data: string, callback: () => void) => {
+        callback();
+      }
+    )
+  }
+};
+```
+- now, we can then make assertions to ensure the publish function is being invoked
+
+#### using mock implementation
+- `tickets/src/routes/__test__/new.test.ts`
+- create a new test making assertions around the mockImplementation
+- the test creates a new ticket
+- right after creating a ticket - we expect that it also publish an event notifying other services that a new ticket was created
+- so we import `nats-wrapper` (original) and jest will import the fake one from `tickets/src/__mocks__/nats-wrapper.ts`
+- NOTE: if you log natsWrapper in `new.test.ts`, it will log the fake implementation which means jest swops out the original for the fake.
+- check that publish() was called after creating a ticket: `expect(natsWrapper.client.publish).toHaveBeenCalled();`
+
+
+```ts
+//tickets/src/routes/__test__/new.test.ts
+import {natsWrapper} from '../../nats-wrapper';
+
+it('publishes an event', async () => {
+  //create a new ticket
+  const title = "adsfjsdfdslf";
+  const price = 20;
+
+  //create ticket
+  await request(app)
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({
+      title,
+      price
+    })
+    .expect(201);
+
+  //publish function should have been called...
+  console.log(natsWrapper);
+
+  //check that publish() function gets invoked after creating a ticket
+  expect(natsWrapper.client.publish).toHaveBeenCalled();
+});
+
+```
+
+#### resetting mock function data
+- NOTE: the mock implementation in mock natsWrapper gets re-used for all the tests
+  - before each test is run, the mockFunction should reset
+- ie. the mock function internally tracks how many times it gets called, arguments it is provided etc. and we should reset this for each test
+- ticketing/src/test/setup.ts 
+
+```ts
+//ticketing/src/test/setup.ts 
+beforeEach(async () => {
+  jest.clearAllMocks();
+
+  //...
+});
+```
+
+### ensure publish gets called in update.test.ts
+- `tickets/src/routes/__test__/update.test.ts`
+- ensure that a ticket is updated
+- then ensure that the publish() is called
+
+```ts
+//tickets/src/routes/__test__/update.test.ts
+import {natsWrapper} from '../../nats-wrapper';
+
+//...
+it('publishes an event', async ()=>{
+  const cookie = global.signin();
+
+  //create a ticket
+  const response = await request(app)
+  .post(`/api/tickets`)
+  .set('Cookie', cookie)
+  .send({
+    title: 'sfddsfsd',
+    price: 20
+  });
+
+  //update ticket
+  await request(app)
+    .put(`/api/tickets/${response.body.id}`)
+    .set('Cookie', cookie)
+    .send({
+      title: 'new title',
+      price: 100
+    })
+    .expect(200);
+
+  expect(natsWrapper.client.publish).toHaveBeenCalled();
+});
+
+```
+
 ### 350. NATS Env Variables
 
 ---
