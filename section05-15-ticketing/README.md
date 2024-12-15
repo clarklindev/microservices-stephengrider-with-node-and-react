@@ -117,6 +117,20 @@ skaffold dev
 https://ticketing.dev/api/users/currentuser
 ```
 
+--------------------------------------------------------------
+## Running Tickets/ app
+- search main README.md for 
+`TERMINAL WINDOW 1`
+`TERMINAL WINDOW 2`
+`TERMINAL WINDOW 3`
+`TERMINAL WINDOW 4`
+
+`### 298. Port-Forwarding with Kubectl` -> `# STEPS TO PUBLISHING`
+
+
+
+---------------------------------------------------------------
+
 #### TROUBLESHOOT
 
 ##### deleting nginx ingress controller
