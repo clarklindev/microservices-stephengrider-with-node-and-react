@@ -13559,9 +13559,142 @@ jest.mock('../../nats-wrapper');
 ```
 - jest will see that we want to mock this file and use the implementation inside `src/__mocks__/` with the same name
 
-
-
 ### 347. Providing a Mock Implementation
+## Summary
+- This process involves creating a mock implementation for the Nats wrapper to test the new ticket route handler. 
+- The goal is to isolate dependencies and simulate their behavior.
+
+### Understand the Real Nats Wrapper:
+
+- The real wrapper contains a client property, connect function, and private _client property.
+- The new ticket route handler only uses the client property, so the mock only needs to simulate this.
+
+### Creating the Mock Implementation:
+
+- Define a client property in the mock object.
+- Add a publish function to the mock client that accepts a subject, data, and a callback function.
+- The publish function immediately invokes the callback to simulate the event being published.
+
+### Behavior of the Fake Client:
+
+- The fake publish method is used in tests for components like the ticket created publisher which rely on the client.
+- This ensures that tests simulate the client.publish behavior without using the actual Nats library.
+
+### Integrating the Mock:
+
+- The mock file is imported in test environments to replace the real Nats wrapper.
+- All other tests using the Nats wrapper must also import this mock to avoid test failures.
+
+### Testing:
+
+- After implementing the mock, run the tests. If some still fail, ensure that the mock is used consistently across all test files.
+- Modify other test files to redirect imports of the real Nats wrapper to the mock file.
+- This approach decouples the tests from external dependencies, ensuring consistent behavior during unit testing.
+
+---
+
+- looking at how new ticket route handler uses the NatsWrapper
+
+<img src='exercise_files/udemy-microservices-section15-347-mocking-looking-at-natswrapper.png'
+alt='udemy-microservices-section15-347-mocking-looking-at-natswrapper.png'
+width='600'
+/>
+
+#### New Ticket Route handler
+- does not care about `_client` (as it is private)
+- does not care about `connect()` as it is invoked in index.ts when starting project creating NATS client (not in test environment)
+- only cares about `client:Stan` -> so this is what we need to define in our fake implementation
+
+<img src='exercise_files/udemy-microservices-section15-347-TicketCreatedPublisher-imports-NatsWrapper-only-cares-about-client.png'
+alt='udemy-microservices-section15-347-TicketCreatedPublisher-imports-NatsWrapper-only-cares-about-client.png'
+width='600'
+/>
+
+- we know the client is provided to TicketCreatedPublisher when using this route: `router.post('/api/tickets',()=>{});`
+
+```ts
+//tickets/src/routes/new.ts
+import { natsWrapper } from '../nats-wrapper';
+
+router.post('/api/tickets', ()=>{
+  //...
+  await new TicketCreatedPublisher(natsWrapper.client).publish({
+    id: ticket.id,
+    title: ticket.title,
+    price: ticket.price,
+    userId: ticket.userId
+  });
+});
+
+```
+
+#### client is used in TicketCreatedPublisher which extends Publisher
+- `tickets/src/events/publisher/ticket-created-publisher.ts`
+- looking at TicketCreatedPublisher -> it doesnt deal with client directly, need to look at `Publisher`
+
+```ts
+//tickets/src/events/publisher/ticket-created-publisher.ts
+import { Publisher, Subjects, TicketCreatedEvent } from '@clarklindev/common';
+export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent>{
+  readonly subject = Subjects.TicketCreated;
+}
+```
+
+#### base publisher (common/src/events/base-publisher.ts)
+
+<img src='exercise_files/udemy-microservices-section15-347-base-publisher-receives-client.png'
+alt='udemy-microservices-section15-347-base-publisher-receives-client.png'
+width='600'
+/>
+
+- the base publisher receives the client
+- and the only thing it does with it, is call `this.client.publish(subject, data, callback)` (see below)
+- the expectation is that in publish() the `callback` will eventually be called by the client
+
+```ts
+import { Stan } from 'node-nats-streaming';
+import { Subjects } from './subjects';
+
+interface Event{
+  subject: Subjects;
+  data: any;
+}
+
+export abstract class Publisher<T extends Event> {
+  abstract subject: T['subject'];
+  constructor(private client: Stan) { }
+
+  publish(data: T['data']): Promise<void> {
+
+    return new Promise((resolve, reject) => {
+      this.client.publish(this.subject, JSON.stringify(data), (err) => {
+        if (err) {
+          return reject(err);
+        }
+        console.log('event published to subject: ', this.subject);
+        resolve();
+      });
+
+    });
+    
+  }
+}
+```
+- so we need to make sure that the mock nats-wrapper `tickets/src/__mocks__/nats-wrapper.ts`
+  - has a `client`, that is an object
+  - client has a `publish()` function that takes: `subject`, `data`, `callback`
+
+```ts
+//tickets/src/__mocks__/nats-wrapper.ts
+export const natsWrapper = {
+  client: {
+    publish: (subject:string, data:string, callback:() => void){
+      callback()
+    }
+  }
+}
+```
+
 ### 348. Test-Suite Wide Mocks
 ### 349. Ensuring Mock Invocations
 ### 350. NATS Env Variables
