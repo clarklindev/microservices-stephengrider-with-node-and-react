@@ -13950,12 +13950,84 @@ const start = async () => {
 ## section 17 - cross-service data replication in action (2hr44min)
 ### 351. The Orders Service
 
-<img src='exercise_files/'
-alt=''
+<img src='exercise_files/udemy-microservices-section17-351-0-cross-service-data-replication-orders-service-overview.png'
+alt='udemy-microservices-section17-351-0-cross-service-data-replication-orders-service-overview.png'
 width='600'
 />
 
+## Overview - Orders Service
+- creating an order / updating an order
+
+- listing of tickets
+
+<img src='exercise_files/udemy-microservices-section17-351-1-all-ticket-listing.png'
+alt='udemy-microservices-section17-351-1-all-ticket-listing.png'
+width='600'
+/>
+
+- clicking on listing gives option to purchase
+
+<img src='exercise_files/udemy-microservices-section17-351-2-click-ticket-details-view-option-to-purchase.png'
+alt='udemy-microservices-section17-351-2-click-ticket-details-view-option-to-purchase.png'
+width='600'
+/>
+
+- paying for an order
+  - lock down ticket
+  - time limit to purchase until lockdown expires
+  
+<img src='exercise_files/udemy-microservices-section17-351-3-warning-countdown-notice-for-purchase.png'
+alt='udemy-microservices-section17-351-3-warning-countdown-notice-for-purchase.png'
+width='600'
+/>
+
+## orders collection data model
+
+<img src='exercise_files/udemy-microservices-section17-351-tickets-service-model-and-orders-service-model.png'
+alt='udemy-microservices-section17-351-tickets-service-model-and-orders-service-model.png'
+width='600'
+/>
+
+### Orders service - Order collection
+- userId - user who created order trying to buy this ticket
+- status - expired, paid, pending
+- expiresAt -> timestamp -> time of expiry
+- ticketId -> references ticket collection (Orders service - Ticket collection)
+
+### Orders service - ticket collection
+- orders service will store `collection of tickets` but it will store cut-down ticket data
+  - title
+  - price 
+  - version -> describes the version of the ticket (version updated when ticket updated)
+    - used by orders service to ensure correct order of processing events
+
+<img src='exercise_files/udemy-microservices-section17-351-ticket-version-is-important-as-orders-service-receives-order-at-random-order.png'
+alt='udemy-microservices-section17-351-ticket-version-is-important-as-orders-service-receives-order-at-random-order.png'
+width='600'
+/>
+
+- because orders service is trying to replicate ticket data it needs to listen for 
+  - ticket:created event
+  - ticket:updated event
+
 ### 352. Scaffolding the Orders Service
+- installing dependencies
+- routing rules
+- kubernetes deployment file
+
+<img src='exercise_files/udemy-microservices-section17-352-orders-service-setup.png'
+alt='udemy-microservices-section17-352-orders-service-setup.png'
+width='600'
+/>
+
+#### TODO's
+- duplicate `tickets` service
+- install dependencies
+- build an image out of the orders service (docker)
+- create a kubernetes deployment file
+- set up file sync options in the skaffold.yaml file
+- set up routing rules in the ingress service
+
 ### 353. A Touch More Setup
 ### 354. Ingress Routing Rules
 ### 355. Scaffolding a Few Route Handlers
