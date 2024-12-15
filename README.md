@@ -12221,8 +12221,8 @@ width='600'
 ## section 15 - connecting to NATS in a nodejs world (1hr22min)
 ### 315. Reusable NATS Listeners
 
-<img src='exercise_files/udemy-microservices-section15-315-reusable-nats-listener.png'
-alt='udemy-microservices-section15-315-reusable-nats-listener.png'
+<img src='exercise_files/udemy-microservices-section16-315-reusable-nats-listener.png'
+alt='udemy-microservices-section16-315-reusable-nats-listener.png'
 width='600'
 />
 
@@ -12241,8 +12241,8 @@ width='600'
   - `listen` -> function -> code to set up the subscription
   - `parseMessage` -> function -> helper to parse a message
 
-<img src='exercise_files/udemy-microservices-section15-315-reusable-nats-listener-abstract-subclasses.png'
-alt='udemy-microservices-section15-315-reusable-nats-listener-abstract-subclasses.png'
+<img src='exercise_files/udemy-microservices-section16-315-reusable-nats-listener-abstract-subclasses.png'
+alt='udemy-microservices-section16-315-reusable-nats-listener-abstract-subclasses.png'
 width='600'
 />
 
@@ -12386,8 +12386,8 @@ class TicketCreatedListener extends Listener{
 - the services will import this Listener 
 - each service will then define a subclass of Listener and have its own custom logic
 
-<img src='exercise_files/udemy-microservices-section15-318-quick-refactor-listeners-defined-in-services.png'
-alt='udemy-microservices-section15-318-quick-refactor-listeners-defined-in-services.png'
+<img src='exercise_files/udemy-microservices-section16-318-quick-refactor-listeners-defined-in-services.png'
+alt='udemy-microservices-section16-318-quick-refactor-listeners-defined-in-services.png'
 width='600'
 />
 
@@ -12415,13 +12415,13 @@ stan.on('connect', () => {
   - remembering properties of events
   - remembering names of the events / spelling errors
  
-<img src='exercise_files/udemy-microservices-section15-319-mapping-between-subject-names-and-event-data.png'
-alt='udemy-microservices-section15-319-mapping-between-subject-names-and-event-data.png'
+<img src='exercise_files/udemy-microservices-section16-319-mapping-between-subject-names-and-event-data.png'
+alt='udemy-microservices-section16-319-mapping-between-subject-names-and-event-data.png'
 width='600'
 />
 
-<img src='exercise_files/udemy-microservices-section15-319-mapping-subject-data-relationship.png'
-alt='udemy-microservices-section15-319-mapping-subject-data-relationship.png'
+<img src='exercise_files/udemy-microservices-section16-319-mapping-subject-data-relationship.png'
+alt='udemy-microservices-section16-319-mapping-subject-data-relationship.png'
 width='600'
 />
 
@@ -12447,8 +12447,8 @@ export enum Subjects{
 - TODO: create a new file `nats-test/src/events/ticket-created-event.ts`
 - we set up tight-coupling between the subject and its data.
 
-<img src='exercise_files/udemy-microservices-section15-319-mapping-subject-data-relationship.png'
-alt='udemy-microservices-section15-319-mapping-subject-data-relationship.png'
+<img src='exercise_files/udemy-microservices-section16-319-mapping-subject-data-relationship.png'
+alt='udemy-microservices-section16-319-mapping-subject-data-relationship.png'
 width='600'
 />
 
@@ -12471,8 +12471,8 @@ export interface TicketCreatedEvent {
 
 - typscript needs to check that the `subject` matches up with type of data provided to `onMessage(data)` 
 
-<img src='exercise_files/udemy-microservices-section15-322-enforcing-listener-subjects.png'
-alt='udemy-microservices-section15-322-enforcing-listener-subjects.png'
+<img src='exercise_files/udemy-microservices-section16-322-enforcing-listener-subjects.png'
+alt='udemy-microservices-section16-322-enforcing-listener-subjects.png'
 width='600'
 />
 
@@ -12512,8 +12512,8 @@ export abstract class Listener<T extends Event> {
 - when using Listener (generic class) -> need to provide an argument for type T
 - provide Listener with a type (... eg. TicketCreatedEvent) - that describes the event we expect to receive inside this listener
 
-<img src='exercise_files/udemy-microservices-section15-319-generic-listener-class-warning.png'
-alt='udemy-microservices-section15-319-generic-listener-class-warning.png'
+<img src='exercise_files/udemy-microservices-section16-319-generic-listener-class-warning.png'
+alt='udemy-microservices-section16-319-generic-listener-class-warning.png'
 width='600'
 />
 
@@ -12588,8 +12588,8 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
 ### 325. Where Does this Get Used?
 - understanding what code goes into Common module (when refactoring)
 
-<img src='exercise_files/udemy-microservices-section15-325-what-goes-into-common-module.png'
-alt='udemy-microservices-section15-325-what-goes-into-common-module.png'
+<img src='exercise_files/udemy-microservices-section16-325-what-goes-into-common-module.png'
+alt='udemy-microservices-section16-325-what-goes-into-common-module.png'
 width='600'
 />
 
@@ -12659,8 +12659,8 @@ export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent> {
 - using `TicketCreatedPublisher`
 
 - we receive warning when using TicketCreatedPublisher 
-<img src='exercise_files/udemy-microservices-section15-327-using-the-custom-publisher-TicketCreatedPublisher.png'
-alt='udemy-microservices-section15-327-using-the-custom-publisher-TicketCreatedPublisher.png'
+<img src='exercise_files/udemy-microservices-section16-327-using-the-custom-publisher-TicketCreatedPublisher.png'
+alt='udemy-microservices-section16-327-using-the-custom-publisher-TicketCreatedPublisher.png'
 width='600'
 />
 
@@ -12772,8 +12772,8 @@ stan.on('connect', async () => {
 - CONS -> the common module is written in typescript -> only works if all our services are written with Typescript
   - ie. if there are multi-languages services
 
-<img src='exercise_files/udemy-microservices-section15-329-common-event-definitions-summary.png'
-alt='udemy-microservices-section15-329-common-event-definitions-summary.png'
+<img src='exercise_files/udemy-microservices-section16-329-common-event-definitions-summary.png'
+alt='udemy-microservices-section16-329-common-event-definitions-summary.png'
 width='600'
 />
 
@@ -12853,6 +12853,40 @@ kubectl delete pod nats-depl-958fb4786-p8d9m
 ```
 
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## section 16 - managing a NATS client (1hr37min)
 - the common library has updated and has the events and listeners and common library's `index.ts` exports them
@@ -12949,8 +12983,8 @@ router.post('/api/tickets',
 - create client -> `nats-client.ts` 
 - By isolating the client initialization in this new file, index will import it for startup logic, while route handlers can import this pre-initialized client as needed—avoiding cyclical imports.
 
-<img src='exercise_files/udemy-microservices-section15-334-singleton-nats-client.png'
-alt='udemy-microservices-section15-334-singleton-nats-client.png'
+<img src='exercise_files/udemy-microservices-section16-334-singleton-nats-client.png'
+alt='udemy-microservices-section16-334-singleton-nats-client.png'
 width='600'
 /> 
 
@@ -12965,8 +12999,8 @@ pnpm i node-nats-streaming
 
 - mongoose design
 
-<img src='exercise_files/udemy-microservices-section15-334-mongoose-design.png'
-alt='udemy-microservices-section15-334-mongoose-design.png'
+<img src='exercise_files/udemy-microservices-section16-334-mongoose-design.png'
+alt='udemy-microservices-section16-334-mongoose-design.png'
 width='600'
 />
 
@@ -12976,8 +13010,8 @@ width='600'
 - the file will be called `nats-wrapper.ts` for consistency (instead of nats-client.ts)
 - the instance can be shared to other files
 
-<img src='exercise_files/udemy-microservices-section15-334-nats-design.png'
-alt='udemy-microservices-section15-334-nats-design.png'
+<img src='exercise_files/udemy-microservices-section16-334-nats-design.png'
+alt='udemy-microservices-section16-334-nats-design.png'
 width='600'
 />
 
@@ -13207,8 +13241,8 @@ kubectl delete pod ...
 kubectl get pods
 ```
 
-<img src='exercise_files/udemy-microservices-section15-340-restarts-tickets-depl-when-losing-connect-to-nats.png'
-alt='udemy-microservices-section15-340-restarts-tickets-depl-when-losing-connect-to-nats.png'
+<img src='exercise_files/udemy-microservices-section16-340-restarts-tickets-depl-when-losing-connect-to-nats.png'
+alt='udemy-microservices-section16-340-restarts-tickets-depl-when-losing-connect-to-nats.png'
 width='600'
 />
 
@@ -13272,16 +13306,16 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
 - nats-test/ -
   - `kubectl get pods`
 
-<img src='exercise_files/udemy-microservices-section15-341-create-port-forward.png'
-alt='udemy-microservices-section15-341-create-port-forward.png'
+<img src='exercise_files/udemy-microservices-section16-341-create-port-forward.png'
+alt='udemy-microservices-section16-341-create-port-forward.png'
 width='600'
 />
 
   - `kubectl port-forward [podname] [port-local]:[port-to-access]`
     - eg. kubectl port-forward nats-depl-79cd79cc87-cjxh8 4222:4222
 
-<img src='exercise_files/udemy-microservices-section15-341-nats-test-listener.png'
-alt='udemy-microservices-section15-341-nats-test-listener.png'
+<img src='exercise_files/udemy-microservices-section16-341-nats-test-listener.png'
+alt='udemy-microservices-section16-341-nats-test-listener.png'
 width='600'
 />
 
@@ -13335,8 +13369,8 @@ Listener connected to NATS
 
 - post man successfully created ticket
 
-<img src='exercise_files/udemy-microservices-section15-341-create-ticket-success.png'
-alt='udemy-microservices-section15-341-create-ticket-success.png'
+<img src='exercise_files/udemy-microservices-section16-341-create-ticket-success.png'
+alt='udemy-microservices-section16-341-create-ticket-success.png'
 width='600'
 />
 
@@ -13344,8 +13378,8 @@ width='600'
 
 - skaffold message: successfully published
 
-<img src='exercise_files/udemy-microservices-section15-341-skaffold-success-publish.png'
-alt='udemy-microservices-section15-341-skaffold-success-publish.png'
+<img src='exercise_files/udemy-microservices-section16-341-skaffold-success-publish.png'
+alt='udemy-microservices-section16-341-skaffold-success-publish.png'
 width='600'
 />
 
@@ -13353,8 +13387,8 @@ width='600'
 
 - nats-test listener
 
-<img src='exercise_files/udemy-microservices-section15-341-nats-test-message-received.png'
-alt='udemy-microservices-section15-341-nats-test-message-received.png'
+<img src='exercise_files/udemy-microservices-section16-341-nats-test-message-received.png'
+alt='udemy-microservices-section16-341-nats-test-message-received.png'
 width='600'
 />
 
@@ -13421,8 +13455,8 @@ new TicketUpdatedPublisher(natsWrapper.client).publish({
 - if there is no await -> and a response is sent immediately after publishing to nats... 
 - if an error occurs when publishing event to NATS... you already sent a response...
 
-<img src='exercise_files/udemy-microservices-section15-343-failed-event-publishing-no-await.png'
-alt='udemy-microservices-section15-343-failed-event-publishing-no-await.png'
+<img src='exercise_files/udemy-microservices-section16-343-failed-event-publishing-no-await.png'
+alt='udemy-microservices-section16-343-failed-event-publishing-no-await.png'
 width='600'
 />
 
@@ -13431,8 +13465,8 @@ width='600'
   - `await new TicketCreatedPublisher(natsWrapper.client).publish({})`
 - if anything goes wrong -> and because we have `await` -> if anything goes wrong -> throwing error will be caught by error handling middleware.
 
-<img src='exercise_files/udemy-microservices-section15-343-failed-event-publishing-with-await.png'
-alt='udemy-microservices-section15-343-failed-event-publishing-with-await.png'
+<img src='exercise_files/udemy-microservices-section16-343-failed-event-publishing-with-await.png'
+alt='udemy-microservices-section16-343-failed-event-publishing-with-await.png'
 width='600'
 />
 
@@ -13441,15 +13475,15 @@ width='600'
 - the transaction gets saved to Transactions database (+ $70)
 - in normal circumstances, event is emitted and accounts database is updated..
 
-<img src='exercise_files/udemy-microservices-section15-343-failed-emit-event.png'
-alt='udemy-microservices-section15-343-failed-emit-event.png'
+<img src='exercise_files/udemy-microservices-section16-343-failed-emit-event.png'
+alt='udemy-microservices-section16-343-failed-emit-event.png'
 width='600'
 />
 
 - if the emit event fails and never gets communicated with accounts database ($ 0), there is data integrity issue (transactions db and accounts db will show different balance)
 
-<img src='exercise_files/udemy-microservices-section15-343-failed-emit-event_2.png'
-alt='udemy-microservices-section15-343-failed-emit-event_2.png'
+<img src='exercise_files/udemy-microservices-section16-343-failed-emit-event_2.png'
+alt='udemy-microservices-section16-343-failed-emit-event_2.png'
 width='600'
 />
 
@@ -13461,8 +13495,8 @@ width='600'
 - then with the event, we record whether the event has been published (sent) 
   - initially when saved to database -> `sent` will be: `NO`
 
-  <img src='exercise_files/udemy-microservices-section15-344-using-events-collection-with-sent-flag.png'
-  alt='udemy-microservices-section15-344-using-events-collection-with-sent-flag.png'
+  <img src='exercise_files/udemy-microservices-section16-344-using-events-collection-with-sent-flag.png'
+  alt='udemy-microservices-section16-344-using-events-collection-with-sent-flag.png'
   width='600'
   />
 
@@ -13470,15 +13504,15 @@ width='600'
   - it will extract this event
   - publish it off to NATS
 
-  <img src='exercise_files/udemy-microservices-section15-344-watch-for-saved-event-and-publish-to-nats.png'
-  alt='udemy-microservices-section15-344-watch-for-saved-event-and-publish-to-nats.png'
+  <img src='exercise_files/udemy-microservices-section16-344-watch-for-saved-event-and-publish-to-nats.png'
+  alt='udemy-microservices-section16-344-watch-for-saved-event-and-publish-to-nats.png'
   width='600'
   />
 
   - once sucessfully published -> the `sent` flag can update to `YES`
 
-  <img src='exercise_files/udemy-microservices-section15-344-after-nats-publish-flag-set-to-yes.png'
-  alt='udemy-microservices-section15-344-after-nats-publish-flag-set-to-yes.png'
+  <img src='exercise_files/udemy-microservices-section16-344-after-nats-publish-flag-set-to-yes.png'
+  alt='udemy-microservices-section16-344-after-nats-publish-flag-set-to-yes.png'
   width='600'
   />
 
@@ -13499,15 +13533,15 @@ width='600'
 - This problem arose after adding event publishing functionality. 
 - In development, the NATS client is initialized within a NATS wrapper Singleton, allowing publishers to access it. 
 
-<img src='exercise_files/udemy-microservices-section15-345-development-environment-natswrapper.png'
-alt='udemy-microservices-section15-345-development-environment-natswrapper.png'
+<img src='exercise_files/udemy-microservices-section16-345-development-environment-natswrapper.png'
+alt='udemy-microservices-section16-345-development-environment-natswrapper.png'
 width='600'
 />
 
 - in the test environment, the client isn't initialized, causing errors such as "Cannot access NATS client before connecting."
 
-<img src='exercise_files/udemy-microservices-section15-345-failed-test-environment-due-to-uninitialized-client.png'
-alt='udemy-microservices-section15-345-failed-test-environment-due-to-uninitialized-client.png'
+<img src='exercise_files/udemy-microservices-section16-345-failed-test-environment-due-to-uninitialized-client.png'
+alt='udemy-microservices-section16-345-failed-test-environment-due-to-uninitialized-client.png'
 width='600'
 />
 
@@ -13522,15 +13556,15 @@ width='600'
 - This fake wrapper will include a "fake" initialized NATS client, tricking the application into thinking the client is real without actually connecting to a NATS server.
 - preffered method -> avoids dependency on a real NATS server while simplifying test execution. 
 
-<img src='exercise_files/udemy-microservices-section15-345-jest-intercept-import-statements.png'
-alt='udemy-microservices-section15-345-jest-intercept-import-statements.png'
+<img src='exercise_files/udemy-microservices-section16-345-jest-intercept-import-statements.png'
+alt='udemy-microservices-section16-345-jest-intercept-import-statements.png'
 width='600'
 />
 
 ### 346. Redirecting Imports
 
-<img src='exercise_files/udemy-microservices-section15-346-moking-with-jest-process.png'
-alt='udemy-microservices-section15-346-moking-with-jest-process.png'
+<img src='exercise_files/udemy-microservices-section16-346-moking-with-jest-process.png'
+alt='udemy-microservices-section16-346-moking-with-jest-process.png'
 width='600'
 />
 
@@ -13595,8 +13629,8 @@ jest.mock('../../nats-wrapper');
 
 - looking at how new ticket route handler uses the NatsWrapper
 
-<img src='exercise_files/udemy-microservices-section15-347-mocking-looking-at-natswrapper.png'
-alt='udemy-microservices-section15-347-mocking-looking-at-natswrapper.png'
+<img src='exercise_files/udemy-microservices-section16-347-mocking-looking-at-natswrapper.png'
+alt='udemy-microservices-section16-347-mocking-looking-at-natswrapper.png'
 width='600'
 />
 
@@ -13605,8 +13639,8 @@ width='600'
 - does not care about `connect()` as it is invoked in index.ts when starting project creating NATS client (not in test environment)
 - only cares about `client:Stan` -> so this is what we need to define in our fake implementation
 
-<img src='exercise_files/udemy-microservices-section15-347-TicketCreatedPublisher-imports-NatsWrapper-only-cares-about-client.png'
-alt='udemy-microservices-section15-347-TicketCreatedPublisher-imports-NatsWrapper-only-cares-about-client.png'
+<img src='exercise_files/udemy-microservices-section16-347-TicketCreatedPublisher-imports-NatsWrapper-only-cares-about-client.png'
+alt='udemy-microservices-section16-347-TicketCreatedPublisher-imports-NatsWrapper-only-cares-about-client.png'
 width='600'
 />
 
@@ -13642,8 +13676,8 @@ export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent>{
 
 #### base publisher (common/src/events/base-publisher.ts)
 
-<img src='exercise_files/udemy-microservices-section15-347-base-publisher-receives-client.png'
-alt='udemy-microservices-section15-347-base-publisher-receives-client.png'
+<img src='exercise_files/udemy-microservices-section16-347-base-publisher-receives-client.png'
+alt='udemy-microservices-section16-347-base-publisher-receives-client.png'
 width='600'
 />
 
@@ -13947,6 +13981,12 @@ const start = async () => {
 
 ## section 17 - cross-service data replication in action (2hr44min)
 ### 351. The Orders Service
+
+<img src='exercise_files/'
+alt=''
+width='600'
+/>
+
 ### 352. Scaffolding the Orders Service
 ### 353. A Touch More Setup
 ### 354. Ingress Routing Rules
