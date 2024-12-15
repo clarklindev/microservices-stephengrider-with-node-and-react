@@ -13688,14 +13688,42 @@ export abstract class Publisher<T extends Event> {
 //tickets/src/__mocks__/nats-wrapper.ts
 export const natsWrapper = {
   client: {
-    publish: (subject:string, data:string, callback:() => void){
-      callback()
+    publish: (subject: string, data: string, callback: () => void) => {
+      callback();
     }
   }
-}
+};
 ```
 
 ### 348. Test-Suite Wide Mocks
+- TODO: from `/tickets/src/routes/__test__/new.test.ts`:
+  - remove `jest.mock('../../nats-wrapper');`
+
+- TODO: `tickets/src/test/setup.ts` -> add jest.mock() before `beforeAll()`
+  - this ensures all of our tests use the `fake` nats-wrapper()
+
+```ts
+//...
+jest.mock('../nats-wrapper');
+
+let mongo:any;
+
+beforeAll(async ()=>{
+  //...
+});
+
+//...
+
+```
+
+#### Running tests
+- ensure docker is running
+- skaffold is running
+- forwarding the port `kubectl port-forward nats-depl-56bb68cdfd-82mxd 4222:4222`
+- nats-test is listening: nats-test/ `pnpm run listen`
+- RUN TEST -> tickets/ `pnpm run test`
+
+
 ### 349. Ensuring Mock Invocations
 ### 350. NATS Env Variables
 
