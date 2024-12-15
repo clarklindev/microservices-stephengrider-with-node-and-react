@@ -13528,6 +13528,39 @@ width='600'
 />
 
 ### 346. Redirecting Imports
+
+<img src='exercise_files/udemy-microservices-section15-346-moking-with-jest-process.png'
+alt='udemy-microservices-section15-346-moking-with-jest-process.png'
+width='600'
+/>
+
+- the file we want to fake is `tickets/src/nats-wrapper.ts`
+- create `__mocks__` folder: `tickets/src/__mocks__`
+- create an identical file inside `__mocks__`:  `tickets/src/__mocks__/nats-wrapper.ts`
+  - this file will fake the functionality of real nats-wrapper: `tickets/src/nats-wrapper.ts`
+  - the real nats-wrapper.ts file exports `natsWrapper` (essentially an object) a single instance of class `NatsWrapper`
+
+```ts
+//tickets/src/__mocks__/nats-wrapper.ts
+export const natsWrapper = {
+}
+```
+
+- the other tests that are referencing nats should use the `mock nats-wrapper`
+- in the files that you want to use the mock files, tell jest what file (`tickets/src/nats-wrapper.ts`) you want to mock:
+  - `tickets/src/routes/new.ts`
+  - `tickets/src/routes/update.ts`
+
+```ts
+//tickets/src/routes/new.ts
+//...
+jest.mock('../../nats-wrapper');
+
+```
+- jest will see that we want to mock this file and use the implementation inside `src/__mocks__/` with the same name
+
+
+
 ### 347. Providing a Mock Implementation
 ### 348. Test-Suite Wide Mocks
 ### 349. Ensuring Mock Invocations
