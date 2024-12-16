@@ -14075,7 +14075,49 @@ docker build -t clarklindev/orders .
   - `image: asia.gcr.io/golden-index-441407-u9/orders`
 - otherwise it should just be your dockerhub account: eg. `clarklindev/orders`
 
+```yaml
+# skaffold.yaml/
+#...
+    - image: asia.gcr.io/golden-index-441407-u9/orders
+      context: orders
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+#...
+
+```
+
 ### 354. Ingress Routing Rules
+- set up routing rules -> `infra/k8s/ingress-srv.yaml`
+- copy the tickets path and paste above the catch all entry (client-srv)
+- serving traffic to orders service..
+
+- orders api: 
+
+<img src='exercise_files/udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
+alt='udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
+width='600'
+/>
+
+```yaml
+# infra/k8s/ingress.srv.yaml
+
+#...
+  - path: /api/orders/?(.*)
+    pathType: ImplementationSpecific
+    backend:
+      service:
+        name: orders-srv
+        port: 
+          number: 3000
+#...
+```
+#### test deployment 
+- folder: section05-17-ticketing/ run: `skaffold dev`
+
 ### 355. Scaffolding a Few Route Handlers
 ### 356. Subtle Service Coupling
 ### 357. Associating Orders and Tickets
