@@ -14058,6 +14058,23 @@ docker build -t clarklindev/orders .
 ```
 
 ### 353. A Touch More Setup
+
+### step 4 - create kubernetes deployment
+- from infra/ `create orders-depl.yaml`
+- copy contents of `tickets-depl.yaml` and replace term `tickets` with `orders`
+- create `orders-mongo-depl.yaml`copy from `tickets-mongo-depl.yaml`
+
+#### test deployment 
+- folder: section05-17-ticketing/ run: `skaffold dev`
+
+### step 5 - set up file sync options in the skaffold.yaml file
+- `skaffold.yaml/`
+- copy the ticket service entry for file sync options
+- replace term `tickets` with `orders`
+- NOTE: the image path, if you're hosting in cloud should look like this: 
+  - `image: asia.gcr.io/golden-index-441407-u9/orders`
+- otherwise it should just be your dockerhub account: eg. `clarklindev/orders`
+
 ### 354. Ingress Routing Rules
 ### 355. Scaffolding a Few Route Handlers
 ### 356. Subtle Service Coupling
