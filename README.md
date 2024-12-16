@@ -14095,13 +14095,6 @@ docker build -t clarklindev/orders .
 - copy the tickets path and paste above the catch all entry (client-srv)
 - serving traffic to orders service..
 
-- orders api: 
-
-<img src='exercise_files/udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
-alt='udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
-width='600'
-/>
-
 ```yaml
 # infra/k8s/ingress.srv.yaml
 
@@ -14119,6 +14112,107 @@ width='600'
 - folder: section05-17-ticketing/ run: `skaffold dev`
 
 ### 355. Scaffolding a Few Route Handlers
+
+- orders api: 
+
+<img src='exercise_files/udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
+alt='udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
+width='600'
+/>
+
+#### API Routes:
+- GET `/api/orders` (AUTH)
+- GET `/api/orders/:id` (AUTH) - only owner can retrieve
+- POST `/api/orders` - body: {ticketId:string}
+- DELETE `/api/orders/:id`
+
+- create folder: `orders/src/routes`
+  - index.ts
+    ```ts
+    // orders/src/routes/index.ts
+    import express, { Request, Response } from 'express';
+
+    const router = express.Router();
+
+    router.get('/api/orders', async (req:Request, res:Response) => {
+      res.send({});
+    });
+
+    export { router as indexOrderRouter };
+      
+    ```
+  - new.ts
+    ```ts
+    // orders/src/routes/delete.ts
+
+    import express, { Request, Response } from 'express';
+
+    const router = express.Router();
+
+    router.post('/api/orders', async (req:Request, res:Response) => {
+      res.send({});
+    });
+
+    export { router as newOrderRouter };
+    ```
+  
+  - show.ts
+    ```ts
+    // orders/src/routes/delete.ts
+
+    import express, { Request, Response } from 'express';
+
+    const router = express.Router();
+
+    router.get('/api/orders/:orderId', async (req:Request, res:Response) => {
+      res.send({});
+    });
+
+    export { router as showOrderRouter };
+      
+    ```
+
+  - delete.ts
+    ```ts
+    // orders/src/routes/delete.ts
+
+    import express, { Request, Response } from 'express';
+
+    const router = express.Router();
+
+    router.delete('/api/orders/:orderId', async (req:Request, res:Response) => {
+      res.send({});
+    });
+
+    export { router as deleteOrderRouter };
+      
+    ```
+
+- update imports in `orders/src/app.ts`
+```ts
+//orders/src/app.ts
+import { newOrderRouter } from './routes/new';
+import { deleteOrderRouter } from './routes/delete';
+import { showOrderRouter } from './routes/show';
+import { indexOrderRouter } from './routes/index';
+
+//...
+
+app.use(newOrderRouter);
+app.use(deleteOrderRouter);
+app.use(showOrderRouter);
+app.use(indexOrderRouter);
+```
+
+#### test deployment 
+- folder: section05-17-ticketing/ run: `skaffold dev`
+- expected progress running skaffold:
+
+<img src='exercise_files/udemy-microservices-section17-355-expected-progress-running-skaffold.png'
+alt='udemy-microservices-section17-355-expected-progress-running-skaffold.png'
+width='600'
+/>
+
 ### 356. Subtle Service Coupling
 ### 357. Associating Orders and Tickets
 ### 358. Order Model Setup
