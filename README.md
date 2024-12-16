@@ -13975,7 +13975,7 @@ width='600'
 - paying for an order
   - lock down ticket
   - time limit to purchase until lockdown expires
-  
+
 <img src='exercise_files/udemy-microservices-section17-351-3-warning-countdown-notice-for-purchase.png'
 alt='udemy-microservices-section17-351-3-warning-countdown-notice-for-purchase.png'
 width='600'
@@ -14020,13 +14020,42 @@ alt='udemy-microservices-section17-352-orders-service-setup.png'
 width='600'
 />
 
-#### TODO's
-- duplicate `tickets` service
-- install dependencies
-- build an image out of the orders service (docker)
-- create a kubernetes deployment file
-- set up file sync options in the skaffold.yaml file
-- set up routing rules in the ingress service
+### TODO's
+step 1 - duplicate `tickets` service
+step 2 - install dependencies
+step 3 - build an image out of the orders service (docker)
+step 4 - create a kubernetes deployment file
+step 5 - set up file sync options in the skaffold.yaml file
+step 6 - set up routing rules in the ingress service
+
+### STEP 1 duplicate 'tickets' service
+- create `orders/`
+  - copy from `tickets/`:
+    - .dockerignore
+    - .gitignore
+    - Dockerfile
+    - package.json
+    - pnpm-lock.yaml
+- change references of `Tickets` to `Orders`
+  - package.json -> name: `orders`
+- create `orders/src`
+  - copy from `tickets/src`
+    - app.ts
+    - index.ts
+    - nats-wrapper.ts
+
+### STEP 2 - install dependencies
+```
+pnpm i
+```
+
+### step 3 - build an image out of the orders service (docker)
+- NOTE: Docker desktop /docker/kubernetes is running...
+- create the docker image
+- `orders/` folder (replace docker-id (with your own docker id)):
+```
+docker build -t clarklindev/orders .
+```
 
 ### 353. A Touch More Setup
 ### 354. Ingress Routing Rules
