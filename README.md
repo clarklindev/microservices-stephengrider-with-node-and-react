@@ -14402,8 +14402,64 @@ interface OrderAttrs{
 //...
 
 ```
-
 ### 360. Creating an Order Status Enum
+- in the `common` [repository](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
+- `common/src/events/types/order-status.ts`
+
+```ts
+//common/src/events/types/order-status.ts
+
+export enum OrderStatus {
+  // when the order has been created, but the ticket it is trying to order has not been reserved, note: race conditions..
+  Created = 'created',  
+
+  // the ticket the order is trying to reserve has already been reserved, 
+  // or when the user has cancelled the order
+  // or the order expires before payment
+  Cancelled = 'cancelled', 
+
+  //the order has successfully reserved the ticket
+  AwaitingPayment = 'awaiting:payment', 
+
+  //the order has reserved the ticket and the user has provided payment successfully
+  Complete = 'complete' 
+}
+```
+
+- update the common module 
+  - TROUBLESHOOT
+    - note: when you try update the common module and you run `pnpm run pub`, you have to be logged in [npm.js](https://www.npmjs.com/)
+    - otherwise it wont push up the update to npm, but your repo will be updated on github then you have to call commands individually
+
+- re-publish
+- ticketing/orders/ -> update common module: `pnpm update @clarklindev/common`
+
+#### usage of enum
+- note: 
+  - OrderAttrs interface and OrderDoc interface we update the type for status: `OrderStatus`
+  - the schema we add enum for `status` property to restrict the allowed values: `Object.values(OrderStatus)`
+  - we set `default: OrderStatus.Created` to have a default value
+
+```ts
+// orders/src/models/orders.ts
+//...
+import { OrderStatus } from '@clarklindev/common';
+
+interface OrderAttrs{
+  userId: string;
+  status: OrderStatus;
+  expiresAt: Date;
+  ticket: TicketDoc;
+}
+
+interface OrderDoc extends mongoose.Document{
+  userId: string;
+  status: OrderStatus;
+  expiresAt: Date;
+  ticket: TicketDoc;
+}
+```
+
 ### 361. More on Mongoose Refs
 ### 362. Defining the Ticket Model
 ### 363. Order Creation Logic
