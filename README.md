@@ -14301,7 +14301,7 @@ width='600'
 
 ### 358. Order Model Setup
 
-#### Reminder...
+#### Reminder of auth/...
 - reminder in auth/src/models/users.ts
 - we have a similar case where we create 3 interfaces in the `users` model
   - UserAttrs
@@ -14314,6 +14314,66 @@ width='600'
   - UserDoc
     - an interface that describes the properties that a user document has (after save to db)
 
+- TODO: create `orders/src/models/order.ts`
+- NOTE: the difference between `interface OrderAttrs` and `interface OrderDoc` is that OrderDoc is the properties AFTER saving to db which may end up being different to initial attributes in OrderAttrs.
+- NOTE: interfaces are typescript and types use lower case eg. `string` 
+- however the schema is javascript that's why the `String` is capitals
+
+```ts
+//orders/src/models/order.ts
+import mongoose from 'mongoose';
+
+interface OrderAttrs{
+  userId: string;
+  status: string;
+  expiresAt: Date;
+  ticket: TicketDoc;
+}
+
+interface OrderDoc extends mongoose.Document{
+  userId: string;
+  status: string;
+  expiresAt: Date;
+  ticket: TicketDoc;
+}
+
+interface OrderModel extends mongoose.Model<OrderDoc>{
+  build(attrs:OrderAttrs):OrderDoc;
+}
+
+const orderSchema = new mongoose.Schema({
+  useId: {
+    type:String,
+    required: true,
+  },
+  status:{
+    type:String,
+    required: true
+  },
+  expiresAt:{
+    type:mongoose.Schema.Types.Date
+  },
+  ticket:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Ticket'
+  }
+}, {
+  toJSON:{
+    transform(doc, ret){
+      ret.id = ret._id;
+      delete ret._id;
+    }
+  }
+});
+
+orderSchema.statics.build = (attrs:OrderAttrs) =>{
+  return new orderSchema(attrs);
+}
+
+const Order = mongoose.model<OrderDoc, OrderModel>('Order', orderSchema); 
+
+export {Order};
+```
 ### 359. The Need for an Enum
 ### 360. Creating an Order Status Enum
 ### 361. More on Mongoose Refs
