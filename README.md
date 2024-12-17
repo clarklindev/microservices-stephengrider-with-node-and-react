@@ -14225,7 +14225,7 @@ width='600'
 - validation checks, if we are checking that id is a mongo id, then we assume the ticket service is using mongodb database (which it might not...)
 - but we implement the check anyway (the id should be an mongodb id)
   - `.custom((input: string) => mongoose.Types.ObjectId.isValid(input))`
-  
+
 ```ts
 //orders/src/routes/new.ts
 import express, { Request, Response } from 'express';
@@ -14252,6 +14252,50 @@ export { router as newOrderRouter };
 ```
 
 ### 357. Associating Orders and Tickets
+- the purpose of create order route request handler is to take incoming info from body about ticket user is trying to purchase -> then create an `order record` and save an `order` to our mongodb database
+- the database will be a collection of tickets
+- when user tries to purchase ticket, the ticket needs to be marked as reserved / associated with an order
+
+- TODO: create a mongoose model
+
+### making relations with mongodb/mongoose
+- relating an order to a ticket: 
+- we choose strategy 2: population feature 
+
+#### strategy 1: embedding 
+- embedding information about 'ticket' in 'order'
+
+<img src='exercise_files/udemy-microservices-section17-357-associating-orders-and-tickets-strategy-1-embedding.png'
+alt='udemy-microservices-section17-357-associating-orders-and-tickets-strategy-1-embedding.png'
+width='600'
+/>
+
+#### CONS: 
+- when a user creates an order (with ticket embedded) it is difficult to query
+
+<img src='exercise_files/udemy-microservices-section17-357-associating-orders-and-tickets-strategy-1-con-1.png'
+alt='udemy-microservices-section17-357-associating-orders-and-tickets-strategy-1-con-1.png'
+width='600'
+/>
+
+- have to look at all orders -> look at ticket (embedded in the order) -> check its id -> ensure it is not the same id as incoming request
+  - if other orders have same id, it means `it is in use` 
+  - NOTE: i think it means there are also other order requests for the ticket that need to be processed in order
+- tricky to make sure ticket is not already reserved    
+- ticket service creates events like 'ticket created' and 'ticket updated'
+- but every ticket is not assigned an order and needs a database to store the tickets (cant just be a stand-by pool of tickets waiting for purchase orders)
+
+#### strategy 2: ref/population feature 
+- collection of documents for Order 
+- collection for tickets
+- collections related to each other using population feature
+- with every order, can have an option to reference a ticket (ticket collection)
+
+<img src='exercise_files/udemy-microservices-section17-357-associating-orders-and-tickets-strategy-2-mongoose-population-feature.png'
+alt='udemy-microservices-section17-357-associating-orders-and-tickets-strategy-2-mongoose-population-feature.png'
+width='600'
+/>
+
 ### 358. Order Model Setup
 ### 359. The Need for an Enum
 ### 360. Creating an Order Status Enum
