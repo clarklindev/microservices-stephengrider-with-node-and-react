@@ -36,6 +36,8 @@
 
 4. login gcloud
 
+NOTE: you have downloaded gcloud and installed gcloud cli -> `GoogleCloudSDKInstaller.exe`
+
 - ensure this is the correct google account...
 
 ```
