@@ -14375,6 +14375,34 @@ const Order = mongoose.model<OrderDoc, OrderModel>('Order', orderSchema);
 export {Order};
 ```
 ### 359. The Need for an Enum
+- status should be an enum:
+- Orders service, Expiration service, Payments service need a shared and exact definition of different statuses an order can have (enum)
+  - and no typos
+- TODO: create the enum in common library `enum OrderStatus` and share this with the services.
+
+<img
+src='exercise_files/udemy-microservices-section17-359-using-enum-for-shared-status-in-common-module.png'
+alt='udemy-microservices-section17-359-using-enum-for-shared-status-in-common-module.png'
+width=600
+/>
+
+- TODO: update OrderAttrs `status:OrderStatus` type
+
+```ts
+//orders/src/models/order.ts
+import mongoose from 'mongoose';
+
+interface OrderAttrs{
+  userId: string;
+  status: OrderStatus;
+  expiresAt: Date;
+  ticket: TicketDoc;
+}
+
+//...
+
+```
+
 ### 360. Creating an Order Status Enum
 ### 361. More on Mongoose Refs
 ### 362. Defining the Ticket Model
