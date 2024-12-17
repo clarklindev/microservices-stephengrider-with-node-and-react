@@ -8,6 +8,8 @@ const Signin = () => {
   const [password, setPassword] = useState('');
 
   //note: useRequest receives an object
+  //url is (nextjs look at folder structure): https://ticketing.dev/auth/signin
+
   const { doRequest, errors } = useRequest({
     url: '/api/users/signin',
     method: 'post',

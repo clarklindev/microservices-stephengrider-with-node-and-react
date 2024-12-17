@@ -3,6 +3,7 @@ import Router from 'next/router';
 
 import useRequest from '../../hooks/use-request'; //our custom reusable request hook :)
 
+//url is (nextjs look at folder structure): https://ticketing.dev/auth/signup
 const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -1,5 +1,6 @@
 import buildClient from '../api/build-client';
 
+  //url is (nextjs look at folder structure): https://ticketing.dev
 const LandingPage = ({ currentUser }) => {
   console.log('LANDING PAGE');
   return currentUser ? (
