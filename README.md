@@ -14461,6 +14461,58 @@ interface OrderDoc extends mongoose.Document{
 ```
 
 ### 361. More on Mongoose Refs
+- `TicketDoc` type in the interfaces
+- TODO: replicate all tickets in ticket service into order service as well
+- TODO: on Order document -> give a reference to a ticket (user is trying to purchase)
+- TODO: create a model for the ticket inside the order service
+- will access ticket via `populate` system in mongoose
+
+#### there is 3 thing need to do:
+- pseudo code below...
+
+1. associate existing Order and ticket together
+  - get ticket from db
+  - get order
+  - attach ticket to order
+  - save
+
+```ts
+const ticket = await Ticket.findOne({});
+const order = await Order.findOne({});
+
+order.ticket = ticket;
+await order.save();
+
+```
+
+2. associate an existing ticket with a 'new' order
+  - get ticket out of db
+  - create an Order via build -> asign `ticket` we just pulled from db
+
+```ts
+const ticket = await Ticket.findOne({});
+const order = Order.build({
+  ticket: ticket,
+  userId: '...',
+  status: OrderStatus.Created,
+  expiresAt: tomorrow
+})
+
+//save to db
+await order.save();
+```
+
+3. fetch an existing order from the database and ticket associated with it.
+  - .populate() puts the thing to populate as part of the caller object (the Order)
+  - access the ticket via the order eg. order.ticket.title
+
+```ts
+const ticket = await Ticket.findOne({});
+//...
+
+const order = await Order.findById('...').populate('ticket');
+```
+
 ### 362. Defining the Ticket Model
 ### 363. Order Creation Logic
 ### 364. Finding Reserved Tickets
