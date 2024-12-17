@@ -14253,8 +14253,10 @@ export { router as newOrderRouter };
 ```
 
 ### 357. Associating Orders and Tickets
-- the purpose of create order route request handler is to take incoming info from body about ticket user is trying to purchase -> then create an `order record` and save an `order` to our mongodb database
-- the database will be a collection of tickets
+
+- this lesson deals with options of relating a ticket to an order.
+- the purpose of create order route request handler is to take incoming info from body (info about ticket user is trying to purchase) -> then create an `order record` and save an `order` to our mongodb database `order collection`
+- the database will also have a collection of `tickets collection`
 - when user tries to purchase ticket, the ticket needs to be marked as reserved / associated with an order
 
 - TODO: create a mongoose model
@@ -14287,8 +14289,8 @@ width='600'
 - but every ticket is not assigned an order and needs a database to store the tickets (cant just be a stand-by pool of tickets waiting for purchase orders)
 
 #### strategy 2: ref/population feature 
-- collection of documents for Order 
-- collection for tickets
+- `collection of documents` for Order 
+- `collection for tickets`
 - collections related to each other using population feature
 - with every order, can have an option to reference a ticket (ticket collection)
 
@@ -14301,7 +14303,7 @@ width='600'
 
 #### Reminder...
 - reminder in auth/src/models/users.ts
-- we have a similar case where we create 3 interfaces in the model
+- we have a similar case where we create 3 interfaces in the `users` model
   - UserAttrs
     - an interface that describes the properties required to create a new User
 
