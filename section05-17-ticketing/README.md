@@ -16,6 +16,7 @@
 - NOTE: gcloud project has already been created
 - NOTE: gcloud kubernetes context already created (see readme)
 - NOTE: you already have a gcloud project id (configured in infra/k8s/ yaml files)
+- NOTE: you set the project id in gcloud cli - eg. `gcloud config set project golden-index-441407-u9`
 
 ### 122. kubernetes cluster creation
 
@@ -46,6 +47,8 @@ gcloud container clusters get-credentials ticketing-dev
 ```
 
 ### TROUBLESHOOT gcloud
+see `### 124. initializing GCloud Sdk`
+
 - ERROR: 
 `
 gcloud : File C:\Users\admin\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.ps1 cannot be loaded because running scripts is 
@@ -55,8 +58,9 @@ disabled on this system. For more information, see about_Execution_Policies at h
 `
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 `
-
 ---
+
+
 gcloud auth application-default login
 
 5. ensure cluster-admin permissions
