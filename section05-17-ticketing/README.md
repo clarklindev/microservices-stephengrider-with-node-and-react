@@ -45,6 +45,18 @@ gcloud container clusters get-credentials ticketing-dev
 
 ```
 
+### TROUBLESHOOT gcloud
+- ERROR: 
+`
+gcloud : File C:\Users\admin\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.ps1 cannot be loaded because running scripts is 
+disabled on this system. For more information, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
+`
+- FIX:
+`
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+`
+
+---
 gcloud auth application-default login
 
 5. ensure cluster-admin permissions
