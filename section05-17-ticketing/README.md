@@ -58,7 +58,16 @@ disabled on this system. For more information, see about_Execution_Policies at h
 `
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 `
+
+- Install required plugins:
+
+`
+gcloud components install gke-gcloud-auth-plugin
+gke-gcloud-auth-plugin --version
+`
+
 ---
+
 
 
 gcloud auth application-default login
@@ -101,10 +110,13 @@ gcloud console -> view all products -> networking -> network services -> load ba
 - c:\Windows\System32\drivers\etc\hosts
 
 eg.
+- NOTE: you need to get the ip address of the load balancer from gcloud
 
 ```
 34.80.20.175 ticketing.dev
 ```
+### troubleshoot
+- if windows/system32/drivers/etc/host is not setup, you will get redirected to `https://ticketing.dev/lander`
 
 #### REQUIRED -> ADD SECRET (env variables)
 

@@ -3545,6 +3545,7 @@ gcloud auth login
 
 - redirects you on browser to google login (same account as where we created gcloud project)
 - if successful, result message: you are now logged in as [email address] your current project is `[none]` you can change this setting by running: `gcloud config set project PROJECT_ID`
+eg. gcloud config set project golden-index-441407-u9
 
 ### configure project
 
@@ -3562,7 +3563,7 @@ Pick configuration to use:
 - select `project ID` (see google cloud dashboard -> projects)
 - select region -> YES
 - select region set when creating cluster (if you dont remember check google dashboard -> kubernetes engine)
-  - you can change region `gcloud config set compute/region NAME`
+  - you can change region `gcloud config set compute/region NAME`2
   - you can change zone `gcloud config set compute/zone NAME`
 
 #### TROUBLESHOOT - creating cluster
@@ -14297,6 +14298,20 @@ width='600'
 />
 
 ### 358. Order Model Setup
+
+#### Reminder...
+- reminder in auth/src/models/users.ts
+- we have a similar case where we create 3 interfaces in the model
+  - UserAttrs
+    - an interface that describes the properties required to create a new User
+
+  - UserModel
+    - an interface that describes the properties that a user model has (overall models collection properties)
+    - there is a build() method -> allows typescript to do typechecking of arguments used to create a new document
+
+  - UserDoc
+    - an interface that describes the properties that a user document has (after save to db)
+
 ### 359. The Need for an Enum
 ### 360. Creating an Order Status Enum
 ### 361. More on Mongoose Refs
