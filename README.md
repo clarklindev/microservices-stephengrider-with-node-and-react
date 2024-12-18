@@ -14590,7 +14590,76 @@ import { TicketDoc } from './ticket';
 ```
 
 ### 363. Order Creation Logic
-### 364. Finding Reserved Tickets
+- TODO: working on route implementation to `create` `new orders` for tickets (already inside db)
+  - import `src/models/tickets.ts`
+  - import `src/models/order.ts`
+- `orders/src/routes/new.ts`
+  - find the ticket the user is trying to order in the database
+
+  - make sure ticket is not already reserved (expiresAt - caters for high-traffic)
+
+  - calculate an expiration date for this order
+    - ensure orders expire after 15min set Order `expiresAt`
+
+  - build the order and save it to the database
+
+  - publish an event saying that an order was created
+    - common module -> create an event to handle order created
+    - orders/ project needs a publisher for order created
+  
+```ts
+//orders/src/routes/new.ts
+import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
+import {body} from 'express-validator';
+
+import { NotFoundError, requireAuth, validateRequest } from '@clarklindev/common';
+import { Ticket } from '../models/ticket';
+import { Order } from '../models/order';
+
+const router = express.Router();
+
+router.post('/api/orders',
+  requireAuth,
+  [
+    body('ticketId')
+      .not()
+      .isEmpty()
+      .custom((input: string) => mongoose.Types.ObjectId.isValid(input))
+      .withMessage('Ticket id must be provided')
+  ],
+  validateRequest,
+
+  async (req: Request, res: Response) => {
+    const {ticketId} = req.body;
+    //find the ticket the user is trying to order in the database
+    const ticket = await Ticket.findById(ticketId);
+    if(!ticket){
+      throw new NotFoundError();
+    }
+
+    //make sure ticket is not already reserved (expiresAt - caters for high-traffic)
+
+    //calculate an expiration date for this order
+
+    //build the order and save it to the database
+
+    //publish an event saying that an order was created
+    //  - common module -> create an event to handle order created
+    //  - orders/ project needs a publisher for order created
+
+    res.send({});
+  }
+);
+
+export { router as newOrderRouter };
+  
+```
+
+### 364. Finding Reserved Tickets  
+- see code at lesson 363.
+
+
 ### 365. Convenience Document Methods
 ### 366. Order Expiration Times
 ### 367. globalThis has no index signature TS Error
