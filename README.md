@@ -14659,6 +14659,57 @@ export { router as newOrderRouter };
 ### 364. Finding Reserved Tickets  
 - see code at lesson 363.
 
+#### A reserved ticket
+
+- for a ticket to be reserved, it has been associated with an order
+- AND order document MUST have a status of "not-cancelled"
+  - run query to look at all orders. 
+  - find an order where the ticket is the ticket we just found *and* the orders status is *not* cancelled.
+  - if we find an order - that mean the ticket *is* reserved
+
+<img src='exercise_files/udemy-microservices-section17-357-associating-orders-and-tickets-strategy-2-mongoose-population-feature.png'
+alt='udemy-microservices-section17-357-associating-orders-and-tickets-strategy-2-mongoose-population-feature.png'
+width='600'
+/>
+
+- look through orders, which has a ticket equal to the one we just found...
+- AND if it has a status that is one of the things IN the array: 
+  - `status: { $in: [OrderStatus.Created, OrderStatus.AwaitingPayment, OrderStatus.Complete ]}`
+- then it means it is already reserved and user making request should not be allowed to continue attempting to reserve the ticket
+- the logic is a lot for a route handler AND there may be other scenarios where we want to find out `if a ticket has been reserved` 
+  - TODO: refactor to own file..
+
+```ts
+//orders/src/routes/new.ts
+//...
+
+async (req: Request, res: Response) => {
+  const {ticketId} = req.body;
+
+  //find the ticket the user is trying to order in the database
+  const ticket = await Ticket.findById(ticketId);
+
+  if(!ticket){
+    throw new NotFoundError();
+  }
+
+  const existingOrder = await Order.findOne({
+    ticket: ticket,
+    status: {
+      $in: [
+        OrderStatus.Created,
+        OrderStatus.AwaitingPayment,
+        OrderStatus.Complete
+      ]
+    }
+  });
+
+  if(existingOrder) {
+    throw new BadRequestError('Ticket is already reserved');
+  }
+
+}
+```
 
 ### 365. Convenience Document Methods
 ### 366. Order Expiration Times
