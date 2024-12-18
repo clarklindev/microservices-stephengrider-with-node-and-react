@@ -14514,6 +14514,81 @@ const order = await Order.findById('...').populate('ticket');
 ```
 
 ### 362. Defining the Ticket Model
+- `orders/src/models/ticket.ts`
+- TODO: create a model for Ticket 
+- NOTE: 
+  - NB -> there seems to be code for `model/` in `tickets/src/models/tickets.ts` that looks re-usable for `orders/src/models/tickets.ts` 
+  - BUT it cant be re-used for `orders/` or shared between `orders` and `tickets service` because implementation is service specific
+- the only thing `orders/` service needs to know about a ticket is `title`, `price`, `version`, `ticket id` (not on diagram)
+
+<img
+src='exercise_files/udemy-microservices-section17-362-orders-service-interfaces.png'
+alt='udemy-microservices-section17-362-orders-service-interfaces.png'
+width=600
+/>
+
+- NOTE: when defining the mongoose model the collection is 'Ticket'
+  - `const Ticket = mongoose.model<TicketDoc, TicketModel>('Ticket', ticketSchema);`
+
+```ts
+//orders/src/models/ticket.ts
+import mongoose from 'mongoose';
+
+interface TicketAttrs{
+  title: string
+  price: number;
+}
+
+export interface TicketDoc extends mongoose.Document{
+  title: string;
+  price: number;
+}
+
+interface TicketModel extends mongoose.Model<TicketDoc>{
+  build(attrs: TicketAttrs): TicketDoc;
+}
+
+const ticketSchema = new mongoose.Schema({
+  title:{
+    type:String,
+    required: true
+  },
+  price:{
+    type:Number,
+    required:true,
+    min: 0
+  }
+}, 
+
+{
+  toJSON:{
+    transform(doc, ret){
+      ret.id = ret._id;
+      delete ret._id;
+    }
+  }
+}
+);
+
+ticketSchema.statics.build = (attrs:TicketAttrs) => {
+  return new Ticket(attrs);
+}
+
+//the collection is called `Ticket`
+const Ticket = mongoose.model<TicketDoc, TicketModel>('Ticket', ticketSchema);
+
+export {Ticket}
+```
+
+- `TicketDoc` needs to be `exported` as order.ts (will import TicketDoc) uses TicketDoc
+
+```ts
+//orders/src/models/order.ts
+import { TicketDoc } from './ticket';
+//...
+
+```
+
 ### 363. Order Creation Logic
 ### 364. Finding Reserved Tickets
 ### 365. Convenience Document Methods
