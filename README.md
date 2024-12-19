@@ -15027,7 +15027,42 @@ const mongo = await MongoMemoryServer.create({
     - but you can test by checking saved to db
 
 ### 373. Fetching a User's Orders
-### 374. A Slightly Complicated Testn
+
+<img
+src='exercise_files/udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
+alt='udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
+width=600
+/>
+
+- TODO: implement the orders route handers
+- NOTE: in the test file you can mark a test as todo with: `it.todo('emits an order created event');`
+
+- `orders/src/routes/index.ts`
+- `/api/orders` GET -> retrieve all active order of user making the request
+- required: authenticated (logged-in)
+
+```ts
+//orders/src/routes/index.ts
+import express, { Request, Response } from 'express';
+import { requireAuth } from '@clarklindev/common';
+import { Order } from '../models/order';
+
+const router = express.Router();
+
+router.get('/api/orders', requireAuth, async (req:Request, res:Response) => {
+
+  const orders = await Order.find({ 
+    userId: req.currentUser!.id
+  }).populate('ticket');
+
+  res.send(orders);
+});
+
+export { router as indexOrderRouter };
+  
+```
+
+### 374. A Slightly Complicated Test
 ### 375. Fetching Individual Orders
 ### 376. Does Fetching Work?
 ### 377. Cancelling an Order
