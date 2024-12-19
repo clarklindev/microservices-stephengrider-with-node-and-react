@@ -14891,7 +14891,23 @@ beforeEach(async () => {
 - run tests: orders/ `pnpm run test`
 
 ### 369. Small Update for "Value of type 'typeof ObjectId' is not callable"
+- when running tests -> TS error in your terminal along with a failed test:
+- `Value of type 'typeof ObjectId' is not callable. Did you mean to include 'new'?`
+- FIX: `new mongoose.Types.ObjectId();`
+- `orders/src/routes/__test__/new.test.ts`
+
+```ts
+//orders/src/routes/__test__/new.test.ts
+//...
+it("returns an error if the ticket does not exist", async () => {
+  const ticketId = new mongoose.Types.ObjectId();
+  //...
+});
+```
+
 ### 370. Asserting Tickets Exist
+
+
 ### 371. Asserting Reserved Tickets
 ### 372. Testing the Success Case
 ### 373. Fetching a User's Orders
