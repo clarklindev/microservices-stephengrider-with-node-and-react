@@ -14859,8 +14859,31 @@ router.post('/api/orders',
 ### 366. Order Expiration Times
 - see code above (calculate expiration time)
 
+### 367. 'globalThis has no index signature' TS Error
+- this error may occur in `test/setup.ts`
+- Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.ts(7017)
+- UPDATED FIX:
 
-### 367. globalThis has no index signature TS Error
+```ts
+//orders/src/test/setup.ts
+
+//...
+declare global {
+  var signin: () => string[];
+}
+
+//...
+beforeEach(async () => {
+  if (mongoose.connection.db) {
+    const collections = await mongoose.connection.db.collections();
+ 
+    for (let collection of collections) {
+      await collection.deleteMany({});
+    }
+  }
+});
+```
+
 ### 368. Test Suite Setup
 ### 369. Small Update for "Value of type 'typeof ObjectId' is not callable"
 ### 370. Asserting Tickets Exist
