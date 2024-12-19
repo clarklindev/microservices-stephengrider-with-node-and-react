@@ -14930,9 +14930,10 @@ it("returns an error if the ticket does not exist", async () => {
 
 ```ts
 //orders/src/routes/__test__/new.test.ts
-
+//...
 import request from 'supertest';
 import {app} from '../../app';
+import { Order, OrderStatus } from '../../models/order';
 
 it('returns an error if the ticket does not exist', async ()=>{
   const ticketId = new mongoose.Types.ObjectId();
@@ -14945,6 +14946,32 @@ it('returns an error if the ticket does not exist', async ()=>{
 });
 
 it('returns an error if the ticket is already reserved', async ()=>{
+  // 1. create a ticket
+  const ticket = Ticket.build({
+    title: 'concert',
+    price: 20
+  });
+  
+  // 2. save to database
+  await ticket.save();
+
+  // 3. create an order
+  const order = Order.build({
+    ticket,
+    userId: 'sdfksdfldsjf',
+    status: OrderStatus.Created,
+    expiresAt: new Date()
+  })
+  
+  // 4. save to database 
+  await order.save();
+
+  // 5. then make the request
+  await request(app)
+    .post('/api/orders')
+    .set('Cookie', global.signin())
+    .send({ticketId: ticket.id})
+    .expect(400);
 
 });
 
@@ -14981,6 +15008,16 @@ const mongo = await MongoMemoryServer.create({
 ```
 
 ### 371. Asserting Reserved Tickets
+- a ticket is reserved if:
+  1. there is an order in database (with the we looking for) 
+  2. and has a status of `Created`, `AwaitingPayment`, `Complete`
+- setting up for the test:
+  1. create a ticket
+  2. save to database
+  3. create an order
+  4. save to database
+  5. then make the request
+
 ### 372. Testing the Success Case
 ### 373. Fetching a User's Orders
 ### 374. A Slightly Complicated Testn
