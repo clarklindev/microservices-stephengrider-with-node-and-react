@@ -14813,28 +14813,53 @@ ticketSchema.statics.isReserved = async function(){
 ```ts
 //orders/src/routes/new.ts
 //...
+const EXPIRATION_WINDOW_SECONDS = 15 * 60;
+
+//...
+
 router.post('/api/orders',
   //...
   //...
   async (req: Request, res: Response) => {
-      const {ticketId} = req.body;
-      //find the ticket the user is trying to order in the database
-      const ticket = await Ticket.findById(ticketId);
-      if(!ticket){
-        throw new NotFoundError();
-      }
+    const {ticketId} = req.body;
+    //find the ticket the user is trying to order in the database
+    const ticket = await Ticket.findById(ticketId);
+    if(!ticket){
+      throw new NotFoundError();
+    }
 
-      const isReserved = await ticket.isReserved();
-      if(isReserved) {
-        throw new BadRequestError('Ticket is already reserved');
-      }
+    const isReserved = await ticket.isReserved();
+    if(isReserved) {
+      throw new BadRequestError('Ticket is already reserved');
+    }
 
-    //...
+    //calculate an expiration date for this order
+    const expiration = new Date();
+    expiration.setSeconds(expiration.getSeconds() + EXPIRATION_WINDOW_SECONDS);
+
+    //build the order and save it to the database
+    const order = Order.build({
+      userId: req.currentUser!.id,
+      status: OrderStatus.Created,
+      expiresAt: expiration,
+      ticket
+    })
+
+    await order.save();
+
+    //publish an event saying that an order was created
+    //  - common module -> create an event to handle order created
+    //  - orders/ project needs a publisher for order created
+
+    res.status(201).send(order);
   }
 }
 ```
 
 ### 366. Order Expiration Times
+- see code above (calculate expiration time)
+
+
 ### 367. globalThis has no index signature TS Error
 ### 368. Test Suite Setup
 ### 369. Small Update for "Value of type 'typeof ObjectId' is not callable"
