@@ -45,7 +45,7 @@ beforeAll(async ()=>{
 });
 
 beforeEach(async () => {
-  // jest.clearAllMocks();
+  jest.clearAllMocks();
   
   if(mongoose.connection.db){
     const collections = await mongoose.connection.db.collections();
@@ -57,10 +57,12 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.connection.close();
+  
   if (mongo) {
     await mongo.stop();
   }
+
+  await mongoose.connection.close();
 });
 
 //get cookie

@@ -15019,6 +15019,13 @@ const mongo = await MongoMemoryServer.create({
   5. then make the request
 
 ### 372. Testing the Success Case
+- setting up for the test:
+  1. create a ticket
+  2. save to database
+  3. make a request to attempt to reserve ticket
+    - expect 201
+    - but you can test by checking saved to db
+
 ### 373. Fetching a User's Orders
 ### 374. A Slightly Complicated Testn
 ### 375. Fetching Individual Orders

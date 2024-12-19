@@ -42,7 +42,8 @@ ticketSchema.statics.build = (attrs:TicketAttrs) => {
   return new Ticket(attrs);
 }
 
-ticketSchema.statics.isReserved = async function(){
+//lesson 365.
+ticketSchema.methods.isReserved = async function(){
   //this === the ticket document that we just called `isReserved` on
   //make sure ticket is not already reserved (expiresAt - caters for high-traffic)
 

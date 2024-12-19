@@ -23,7 +23,7 @@ interface OrderModel extends mongoose.Model<OrderDoc>{
 }
 
 const orderSchema = new mongoose.Schema({
-  useId: {
+  userId: {
     type:String,
     required: true,
   },
