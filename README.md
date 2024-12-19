@@ -14885,6 +14885,11 @@ beforeEach(async () => {
 ```
 
 ### 368. Test Suite Setup
+#### setting up Orders tests...
+- copy `tickets/src/test/setup.ts` to `orders/src/test/setup.ts`
+- copy `tickets/src/__mocks__` to `orders/src/__mocks__`
+- run tests: orders/ `pnpm run test`
+
 ### 369. Small Update for "Value of type 'typeof ObjectId' is not callable"
 ### 370. Asserting Tickets Exist
 ### 371. Asserting Reserved Tickets
