@@ -15063,6 +15063,84 @@ export { router as indexOrderRouter };
 ```
 
 ### 374. A Slightly Complicated Test
+- `orders/src/routes/__test__/index.test.ts`
+- TODO: 
+  1. create three tickets
+  2. create one order as User #1
+  3. create 2x orders as User #2
+  4. make request to fetch all orders for User #2
+
+```ts
+//orders/src/routes/__test__/index.test.ts
+import request from 'supertest';
+import { app } from '../../app';
+import { Order } from '../../models/order';
+import { Ticket } from '../../models/ticket';
+
+const buildTicket = async () => {
+
+  const ticket = Ticket.build({
+    title: 'concert',
+    price: 20
+  });
+  await ticket.save();
+
+  return ticket;
+}
+
+it('fetches order for a particular user', async ()=>{
+  //create three tickets
+  const ticketOne = await buildTicket();
+  const ticketTwo = await buildTicket();
+  const ticketThree = await buildTicket();
+
+  const userOne = global.signin();
+  const userTwo = global.signin();
+
+  //create one order as User #1
+  await request(app)
+    .post('/api/orders')
+    .set('Cookie', userOne)
+    .send({ticketId: ticketOne.id})
+    .expect(201);
+
+  //create 2x orders as User #2
+  await request(app)
+    .post('/api/orders')
+    .set('Cookie', userTwo)
+    .send({ticketId: ticketTwo.id})
+    .expect(201);
+
+  await request(app)
+    .post('/api/orders')
+    .set('Cookie', userTwo)
+    .send({ticketId: ticketThree.id})
+    .expect(201);      
+    
+  //make request to fetch all orders for User #2
+  const response = await request(app)
+    .get('/api/orders')
+    .set('Cookie', userTwo)
+    .expect(200);
+
+  console.log(response.body);
+  
+  //make sure we only got the orders for User #2
+  expect(response.body.length).toEqual(2);
+  
+});
+
+```
+
+- orders/ `pnpm run test` 
+- NOTE: notice the embedded ticket information from calling `populate()`
+
+<img
+src='exercise_files/udemy-microservices-section17-374-a-slightly-complicated-test-console-log-response-body.png'
+alt='udemy-microservices-section17-374-a-slightly-complicated-test-console-log-response-body.png'
+width=600
+/>
+
 ### 375. Fetching Individual Orders
 ### 376. Does Fetching Work?
 ### 377. Cancelling an Order
