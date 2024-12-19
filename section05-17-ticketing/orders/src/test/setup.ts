@@ -32,6 +32,8 @@ beforeAll(async ()=>{
   //OLD WAY
   // const mongo = new MongoMemoryServer();
   // const mongoUri = await mongo.getUri();
+
+  
   mongo = await MongoMemoryServer.create();
   const mongoUri = mongo.getUri();
 
@@ -43,10 +45,10 @@ beforeAll(async ()=>{
 });
 
 beforeEach(async () => {
-  jest.clearAllMocks();
+  // jest.clearAllMocks();
   
   if(mongoose.connection.db){
-    const collections = await mongoose.connection.db?.collections();
+    const collections = await mongoose.connection.db.collections();
   
     for(let collection of collections){
       await collection.deleteMany({});
@@ -55,10 +57,10 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
+  await mongoose.connection.close();
   if (mongo) {
     await mongo.stop();
   }
-  await mongoose.connection.close();
 });
 
 //get cookie

@@ -14853,7 +14853,7 @@ router.post('/api/orders',
 
     res.status(201).send(order);
   }
-}
+)
 ```
 
 ### 366. Order Expiration Times
@@ -14906,7 +14906,79 @@ it("returns an error if the ticket does not exist", async () => {
 ```
 
 ### 370. Asserting Tickets Exist
+- `orders/src/routes/__test__/new.test.ts`
+- 2nd and 3rd test, we have to ensure valid ticket in db (manually save ticket into db) before test runs..
+- NOTE: the body validation in `orders/src/routes/new.ts will still be called via the test so a valid mongodb id needs to be provided...
 
+- recall we call `signin()` from `orders/src/test/setup.ts` to get a cookie which we will use to set cookie header in our request.
+- run tests: orders/ `pnpm run test`
+
+
+```ts
+//orders/src/routes/new.ts
+  //...
+  [
+    body('ticketId')
+      .not()
+      .isEmpty()
+      .custom((input: string) => mongoose.Types.ObjectId.isValid(input))
+      .withMessage('Ticket id must be provided')
+  ],
+  validateRequest,
+  //...
+```
+
+```ts
+//orders/src/routes/__test__/new.test.ts
+
+import request from 'supertest';
+import {app} from '../../app';
+
+it('returns an error if the ticket does not exist', async ()=>{
+  const ticketId = new mongoose.Types.ObjectId();
+
+  await request(app)
+    .post('/api/orders')
+    .set('Cookie', global.signin())
+    .send({ticketId})
+    .expect(404);
+});
+
+it('returns an error if the ticket is already reserved', async ()=>{
+
+});
+
+it('reserves a ticket', async ()=>{
+
+});
+```
+
+#### TROUBLESHOOT - problems running tests...
+- package.json -> with `mongo-memory-server`, it installs modules that are required, it requires mongodb (500+ mb download)
+- ERROR -> timeout
+  - FIX: update the jest `"testTimeout": 600000` properties -> will take a while to download and dont want it to timeout
+
+```json
+"jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "./src/test/setup.ts"
+    ],
+    "testTimeout": 600000
+  },
+
+```
+- this should be a once off thing..you can tell MongoMemoryServer to stick to a specific version in `orders/src/test/setup.ts` beforeAll()
+
+```ts
+//orders/src/test/setup.ts
+const mongo = await MongoMemoryServer.create({
+  binary: {
+    version: '7.0.14',  // Specify the desired version of MongoDB
+  },
+});
+```
 
 ### 371. Asserting Reserved Tickets
 ### 372. Testing the Success Case
