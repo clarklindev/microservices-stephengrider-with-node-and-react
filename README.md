@@ -14677,7 +14677,7 @@ width='600'
   - `status: { $in: [OrderStatus.Created, OrderStatus.AwaitingPayment, OrderStatus.Complete ]}`
 - then it means it is already reserved and user making request should not be allowed to continue attempting to reserve the ticket
 - the logic is a lot for a route handler AND there may be other scenarios where we want to find out `if a ticket has been reserved` 
-  - TODO: refactor to own file..
+  - TODO: refactor to own file.. `orders/src/models/ticket.ts`
 
 ```ts
 //orders/src/routes/new.ts
@@ -14711,7 +14711,129 @@ async (req: Request, res: Response) => {
 }
 ```
 
+---
+### about exclaimation mark
+- summary -> just know that `!!` makes anything a boolean
+
+- `!!existingOrder` coerces existingOrder `to a boolean value`, ensuring the result is either true or false, depending on whether existingOrder is truthy or falsy.
+
+- The `first` ! is the one `immediately next to existingOrder`, which is the first negation applied to the value of existingOrder.
+- The `second` ! is the one that `negates the result` of the first negation.
+- The expression `!!existingOrder` explicitly converts a value to a boolean (true or false). 
+
+#### the first !
+- First ! (Logical NOT): The first ! converts the value of existingOrder into its opposite boolean value. 
+  - If existingOrder is truthy (e.g., true, an object, non-empty string, number other than 0, etc.), it becomes false. 
+  - If existingOrder is falsy (e.g., null, undefined, 0, NaN, an empty string, or false itself), it becomes true.
+
+#### the second !
+- Second ! (Logical NOT): The second ! negates the result of the first ! (opposite to whatever the result of first ! was)
+  - This converts the result back to a boolean: 
+    - if the first ! gave false, the second ! makes it true; 
+    - if the first ! gave true, the second ! makes it false.
+
+### Example 1: When existingOrder is null (falsy)
+- First !: !existingOrder → !null → true (because null is falsy).
+- Second !: !!existingOrder → !true → false.
+
+```ts
+let existingOrder = null;
+
+console.log(!existingOrder);  // First negation: !null -> true
+console.log(!!existingOrder); // Second negation: !true -> false
+```
+
+### Example 2: When existingOrder is an empty object (truthy)
+- First !: !existingOrder → !{} → false (because an empty object is truthy).
+- Second !: !!existingOrder → !false → true.
+
+```ts
+let existingOrder = {};  // Truthy value
+
+console.log(!existingOrder);  // First negation: !{} -> false
+console.log(!!existingOrder); // Second negation: !false -> true
+```
+
+## why?
+- why would we want to negate something? because the function is called `.isReserved()` and `existingOrder` needs to relate to isReserved.
+  - if there is an exisiting order -> isReserved() is true
+  - if there is NOT an existing order -> isReserved() is false
+---
+
 ### 365. Convenience Document Methods
+
+- TODO: extracting logic from route `orders/src/routes/new.ts` to a new method of orders' ticket model: 
+  - `orders/src/models/ticket.ts` -> `TicketDoc()`
+- to add a static method to the model itself, use `ticketScheme.statics.[method name]` syntax
+- to get information about the ticket document we are working on, we have to refer to `this` 
+- we use `function` syntax and not use arrow functions (which messes with scope of `this`)
+- the ticket is going to be 'this'
+- NOTE: this updated code via static method `isReserved()` is easier to understand compared to `orders/src/routes/new.ts` in [364. Finding Reserved Tickets](#364-finding-reserved-tickets) 
+
+```ts
+//orders/src/models/ticket.ts
+import { Order } from './order';
+import { OrderStatus } from '@clarklindev/common';
+
+//...
+export interface TicketDoc extends mongoose.Document{
+  title: string;
+  price: number;
+  isReserved() : Promise<boolean>;
+}
+//...
+
+ticketSchema.statics.isReserved = async function(){
+  //return true or false
+  //this === the ticket document that we just called `isReserved` on
+  //make sure ticket is not already reserved (expiresAt - caters for high-traffic)
+  
+  //run query to look at all orders. find an order where the ticket is the ticket we just found *and* the orders status is *not* cancelled.
+  //if we find an order - that mean the ticket *is* reserved
+  const existingOrder = await Order.findOne({
+    ticket: this,
+    status: {
+      $in: [
+        OrderStatus.Created,
+        OrderStatus.AwaitingPayment,
+        OrderStatus.Complete
+      ]
+    }
+  });
+
+  return !!existingOrder; //return existingOrder as a boolean
+  // so if existingOrder is true, first ! (closest to existingOrder) makes it boolean (false), 
+  // the next ! negates that... which results true...
+  // meaning isReserved is true
+}
+```
+
+#### using Tickets' static .isReserved() method
+
+```ts
+//orders/src/routes/new.ts
+//...
+router.post('/api/orders',
+  //...
+  //...
+  async (req: Request, res: Response) => {
+      const {ticketId} = req.body;
+      //find the ticket the user is trying to order in the database
+      const ticket = await Ticket.findById(ticketId);
+      if(!ticket){
+        throw new NotFoundError();
+      }
+
+      const isReserved = await ticket.isReserved();
+      if(isReserved) {
+        throw new BadRequestError('Ticket is already reserved');
+      }
+
+    //...
+  }
+}
+```
+
 ### 366. Order Expiration Times
 ### 367. globalThis has no index signature TS Error
 ### 368. Test Suite Setup
