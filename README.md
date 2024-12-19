@@ -15105,13 +15105,17 @@ it('fetches order for a particular user', async ()=>{
     .expect(201);
 
   //create 2x orders as User #2
-  await request(app)
+  //desctruct the returned object from request 
+  //AND automatically rename as orderOne
+  const {body: orderOne} = await request(app)
     .post('/api/orders')
     .set('Cookie', userTwo)
     .send({ticketId: ticketTwo.id})
     .expect(201);
 
-  await request(app)
+  //desctruct the returned object from request 
+  //AND automatically rename as orderTwo
+  const {body: orderTwo} = await request(app)
     .post('/api/orders')
     .set('Cookie', userTwo)
     .send({ticketId: ticketThree.id})
@@ -15124,12 +15128,16 @@ it('fetches order for a particular user', async ()=>{
     .expect(200);
 
   console.log(response.body);
-  
+
   //make sure we only got the orders for User #2
   expect(response.body.length).toEqual(2);
-  
-});
+  expect(response.body[0].id).toEqual(orderOne.id);
+  expect(response.body[1].id).toEqual(orderTwo.id);
 
+  //testing the ticket by id
+  expect(response.body[0].ticket.id).toEqual(ticketTwo.id);
+  expect(response.body[1].ticket.id).toEqual(ticketThree.id);
+});
 ```
 
 - orders/ `pnpm run test` 
@@ -15142,6 +15150,10 @@ width=600
 />
 
 ### 375. Fetching Individual Orders
+- api route: `/api/orders:id` GET -> getting information about a specific order
+- only authenticated users can access this route
+- users can only access their own orders
+
 ### 376. Does Fetching Work?
 ### 377. Cancelling an Order
 ### 378. Can We Cancel?
