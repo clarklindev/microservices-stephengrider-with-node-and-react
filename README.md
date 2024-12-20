@@ -15231,6 +15231,51 @@ export { router as deleteOrderRouter };
 ```
 
 ### 378. Can We Cancel?
+- `orders/src/routes/__test__/new.delete.ts`
+- check -> order to delete exists
+- check -> deleting an order that doesnt exist returns a 404
+- successful call route only if authenticated
+- ensure :orderId param in api call is valid
+- ensure user is owner of ticket
+ 
+- TODO: ensure test can be created -> and then deleted
+
+```ts
+//orders/src/routes/__test__/new.delete.ts
+import request from 'supertest';
+import { app } from '../../app';
+import { Ticket } from '../../models/ticket';
+import {Order, OrderStatus} from '../../models/order';
+
+it('marks an order as cancelled', async()=>{
+    //creates a ticket with a ticket model
+    const ticket = Ticket.build({
+        title:'concert',
+        price: 20
+    });
+    await ticket.save();
+    const user = global.signin();
+    //make a request to create an order
+    const {body: order} = await request(app)
+        .post('/api/orders')
+        .set('Cookie', user)
+        .send({ticketId: ticket.id})
+        .expect(201);
+
+    //make a request to cancel the order
+    await request(app)
+        .delete(`/api/orders/${order.id}`)
+        .set('Cookie', user)
+        .send()
+        .expect(204);
+    
+    //expectation: make sure the thing is cancelled
+    const updatedOrder = await Order.findById(order.id);
+    expect(updatedOrder!.status).toEqual(OrderStatus.Cancelled)
+})
+
+it.todo('emits an order cancelled event');
+```
 ---
 
 ## section 18 - understanding event flow (30min)
