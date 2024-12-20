@@ -15485,7 +15485,36 @@ router.post('/api/orders',
 ```
 
 ### 383. Publishing Order Cancellation
+- orders/src/routes/delete.ts
+- note: when we get information about order, we also populate the ticket:
+  - `const order = await Order.findById(orderId).populate('ticket');`
+
+```ts
+import { OrderCancelledPublisher } from '../events/publishers/order-cancelled-publisher';
+import { natsWrapper } from '../nats-wrapper';
+
+//...
+router.delete('/api/orders/:orderId', requireAuth, async (req:Request, res:Response) => {
+  const {orderId} = req.params;
+  const order = await Order.findById(orderId).populate('ticket');
+
+  //...
+  //publish an event saying this was cancelled
+  new OrderCancelledPublisher(natsWrapper.client).publish({
+    id: order.id,
+    ticket:{
+      id: order.ticket.id
+    }
+  });
+
+  //...
+});
+
+```
+
 ### 384. Testing Event Publishing
+- testing our event publishers are working
+- 
 
 ---
 
