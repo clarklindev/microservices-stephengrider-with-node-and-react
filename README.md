@@ -15150,11 +15150,46 @@ width=600
 />
 
 ### 375. Fetching Individual Orders
+- test is `orders/src/routes/__test__/show.test.ts`
 - api route: `/api/orders:id` GET -> getting information about a specific order
 - only authenticated users can access this route
 - users can only access their own orders
 
 ### 376. Does Fetching Work?
+- test by creating a user and then 2 requests, 
+- with second using a different user (`global.signin()`)
+
+- test is `orders/src/routes/__test__/show.test.ts`
+```ts
+//...
+
+
+it('returns an error if one user tries to fetch another users order', async ()=>{
+  //create a ticket
+  const ticket = Ticket.build({
+    title:'concert',
+    price: 20
+  });
+
+  await ticket.save();
+  const user = global.signin();
+
+  //make a request to build an order with this ticket
+  const {body: order} = await request(app)
+    .post('/api/orders')
+    .set('Cookie', user)
+    .send({ticketId: ticket.id})
+    .expect(201);
+  
+  //make request to fetch the order with a new user
+  await request(app)
+    .get(`/api/orders/${order.id}`)
+    .set('Cookie', global.signin())
+    .send()
+    .expect(401);
+
+});
+```
 ### 377. Cancelling an Order
 ### 378. Can We Cancel?
 ---
