@@ -15328,9 +15328,120 @@ width=600
     - payment service will also handle refends
 
 ### 380. Creating the Events
-- common repository: `common/`
+- common [repository](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git) 
+- `common/src/events/subjects.ts`
+
+```ts
+//common/src/events/subjects.ts
+export enum Subjects{
+  TicketCreated = 'ticket:created',
+  TicketUpdated = 'ticket:updated',
+
+  OrderCreated = 'order:created',
+  OrderCancelled = 'order:cancelled',
+  OrderUpdated = 'order:updated',
+}
+```
+
+- src/events/order-created-event.ts
+
+```ts
+import {Subjects} from './subjects';
+import { OrderStatus } from './types/order-status';
+
+// information each service needs
+// Ticket service
+  // - ticketId
+
+//Payment service
+  // - userId (payer)
+  // - price of ticket
+
+//Expiration service
+  // - order expires at time
+  // - order id
+
+//ticket status
+export interface OrderCreatedEvent{ 
+  subject: Subjects.OrderCreated;
+  data: {
+    id: string;
+    status: OrderStatus;
+    userId: string;
+    expiresAt: string;
+    ticket:{
+      id:string;
+      price: number;
+    }
+  }
+}
+```
+
+- src/events/order-cancelled-event.ts
+
+```ts
+import { Subjects } from "./subjects";
+
+// information each service needs
+// TicketService 
+//  - what ticket to unreserve (ticket id)
+
+// PaymentService
+//  - told do not receive payments (order id)
+
+export interface OrderCancelledEvent {
+  subject: Subjects.OrderCancelled;
+  data:{
+    id:string;
+    ticket:{
+      id: string;
+    }
+  }
+}
+
+
+```
+
+#### event events in index.ts
+```ts
+//src/events/index.ts
+//...
+export * from './events/order-created-event';
+export * from './events/order-cancelled-event';
+
+```
+
+#### republish
+- `pnpm run pub` 
+
+#### update main project repo
+- orders service -> `pnpm update @clarklindev/common`
 
 ### 381. Implementing the Publishers
+- TODO: ensure events are emitted when orders are created or cancelled
+- orders/src/events/publishers/order-created-publisher.ts
+```ts
+//orders/src/events/publishers/order-created-publisher.ts
+import { Publisher, OrderCreatedEvent, Subjects } from "@clarklindev/common";
+/*
+// USAGE:
+new OrderCreatedPublisher(natsClient).publish({id, userId, status, expiresAt, ticket, price})
+*/
+export class OrderCreatedPublisher extends Publisher<OrderCreatedEvent>{
+  readonly subject = Subjects.OrderCreated;
+}
+
+```
+- orders/src/events/publishers/order-cancelled-publisher.ts
+```ts
+//orders/src/events/publishers/order-cancelled-publisher.ts
+import {Subjects, Publisher, OrderCancelledEvent} from '@clarklindev/common';
+
+export class OrderCancelledPublisher extends Publisher<OrderCancelledEvent>{
+  readonly subject = Subjects.OrderCancelled
+}
+```
+
 ### 382. Publishing the Order Creation
 ### 383. Publishing Order Cancellation
 ### 384. Testing Event Publishing
