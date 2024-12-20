@@ -15190,7 +15190,46 @@ it('returns an error if one user tries to fetch another users order', async ()=>
 
 });
 ```
+
 ### 377. Cancelling an Order
+- when deleteing an order, not removing from database 
+- TODO: just marking it as cancelled (OrderStatus.Cancelled)
+
+- `orders/src/routes/delete.ts`
+- `api/order/:id` -> DELETE (should maybe be PUT or PATCH)
+- ensure user is authenticated
+- find order in database
+- user in request also owns this order
+
+```ts
+//orders/src/routes/delete.ts
+import express, { Request, Response } from 'express';
+import { NotAuthorizedError, NotFoundError, requireAuth } from '@clarklindev/common';
+import { Order, OrderStatus } from '../models/order';
+
+const router = express.Router();
+
+router.delete('/api/orders/:orderId', requireAuth, async (req:Request, res:Response) => {
+  const {orderId} = req.params;
+
+  const order = await Order.findById(orderId);
+
+  if(!order){
+    throw new NotFoundError();
+  }
+  if(order.userId !== req.currentUser!.id){
+    throw new NotAuthorizedError();
+  }
+  order.status = OrderStatus.Cancelled;
+  await order.save();
+
+  res.status(204).send(order);
+});
+
+export { router as deleteOrderRouter };
+  
+```
+
 ### 378. Can We Cancel?
 ---
 
