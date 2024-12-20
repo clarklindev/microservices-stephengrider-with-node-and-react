@@ -15582,6 +15582,10 @@ it('emits an order cancelled event', async () => {
 ---
 ## section 19 - listening for events and handling concurrency issues (4hr13min)
 ### 385. Heads Up Regarding Some Mongoose TS Errors
+- in the tests: 
+- error - `a Value of type 'typeof ObjectId' is not callable. Did you mean to include 'new'? error` is caused by mongoose library (v6) updates
+- fix: add `const orderId = new mongoose.Types.ObjectId().toHexString();`
+
 ### 386. Time for Listeners!
 ### 387. Reminder on Listeners
 ### 388. Blueprint for Listeners
@@ -15606,7 +15610,7 @@ it('emits an order cancelled event', async () => {
 ### 407. Applying a Version Query
 ### 408. Did it Work?
 ### 409. Abstracted Query Method
-### 410. [Optional] Versioning Without Update-If-Current
+### 410. (Optional) Versioning Without Update-If-Current
 ### 411. Testing Listeners
 ### 412. A Complete Listener Test
 ### 413. Testing the Ack Call
