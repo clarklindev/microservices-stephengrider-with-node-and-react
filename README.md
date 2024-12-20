@@ -15279,8 +15279,57 @@ it.todo('emits an order cancelled event');
 ---
 
 ## section 18 - understanding event flow (30min)
+
 ### 379. Orders Service Events
+
+- events published by each service
+
+<img
+src='exercise_files/udemy-microservices-section18-379-events-published-by-each-service.png'
+alt='udemy-microservices-section18-379-events-published-by-each-service.png'
+width=600
+/>
+
+## the orders service events
+### order:created event
+
+<img
+src='exercise_files/udemy-microservices-section18-379-order-created.png'
+alt='udemy-microservices-section18-379-order-created.png'
+width=600
+/>
+
+  - `payment service` needs this info from event:
+    - id of order
+    - and the order needs to be paid
+    - how much order costs (gets this from ticket inside order)
+
+  - `expiration service`
+    - the expiration timer (expiration time from order 'expiresAt')
+
+  - `ticket service`
+    - ticket service needs to know when order has been created (lockdown and prevent editing)
+    - this is because once ticket has been reserved the seller cant adjust ticket price
+    - locked until ticket paid for or cancelled
+
+### order:cancelled event
+
+<img
+src='exercise_files/udemy-microservices-section18-379-order-cancelled.png'
+alt='udemy-microservices-section18-379-order-cancelled.png'
+width=600
+/>
+
+  - `ticket service`
+    - unreserving a ticket (ticket can be reserved again -> ticket owner can update ticket details (price, title, etc))
+
+  - `payment service`
+    - payment service will know incoming payments for this service should be cancelled
+    - payment service will also handle refends
+
 ### 380. Creating the Events
+- common repository: `common/`
+
 ### 381. Implementing the Publishers
 ### 382. Publishing the Order Creation
 ### 383. Publishing Order Cancellation
