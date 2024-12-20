@@ -15514,10 +15514,72 @@ router.delete('/api/orders/:orderId', requireAuth, async (req:Request, res:Respo
 
 ### 384. Testing Event Publishing
 - testing our event publishers are working
-- 
+- REMINDER: 
+  - nats-wrapper has code we dont want to execute in test environment (because it connects to real nats server)
+  - we created a `__mocks__/` directory and jest will `redirect` import statements to the `nats-wrapper.ts` file to: `orders/src/__mocks__/nats-wrapper.ts`
+- the `__mocks__/nats-wrapper.ts` is what we use for testing..
+- NOTE: the import, imports the real natsWrapper, but jest swops this out for the test natsWrapper
+
+- `orders/src/routes/__test__/new.test.ts`
+```ts
+// orders/src/routes/__test__/new.test.ts
+//...
+import { natsWrapper } from '../../nats-wrapper';
+
+//...
+it('emits an order created event', async () => {
+  // 1. create a ticket
+  const ticket = Ticket.build({
+    title: 'concert',
+    price: 20
+  });
+
+  // 2. save to database
+  await ticket.save();
+
+  // 3. make a request to attempt to reserve ticket
+  await request(app)
+    .post('/api/orders')
+    .set('Cookie', global.signin())
+    .send({ticketId: ticket.id})
+    .expect(201);
+
+  expect(natsWrapper.client.publish).toHaveBeenCalled();
+
+});
+```
+- `orders/src/routes/__test__/delete.test.ts`
+```ts
+import { natsWrapper } from '../../nats-wrapper';
+
+//...
+it('emits an order cancelled event', async () => {
+  //creates a ticket with a ticket model
+  const ticket = Ticket.build({
+    title: 'concert',
+    price: 20,
+  });
+  await ticket.save();
+  const user = global.signin();
+  //make a request to create an order
+  const { body: order } = await request(app)
+    .post('/api/orders')
+    .set('Cookie', user)
+    .send({ ticketId: ticket.id })
+    .expect(201);
+
+  //make a request to cancel the order
+  await request(app)
+    .delete(`/api/orders/${order.id}`)
+    .set('Cookie', user)
+    .send()
+    .expect(204);
+
+  expect(natsWrapper.client.publish).toHaveBeenCalled()
+});
+```
 
 ---
-
 ## section 19 - listening for events and handling concurrency issues (4hr13min)
 ### 385. Heads Up Regarding Some Mongoose TS Errors
 ### 386. Time for Listeners!
