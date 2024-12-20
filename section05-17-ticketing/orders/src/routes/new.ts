@@ -5,6 +5,8 @@ import {body} from 'express-validator';
 import { BadRequestError, NotFoundError, OrderStatus, requireAuth, validateRequest } from '@clarklindev/common';
 import { Ticket } from '../models/ticket';
 import { Order } from '../models/order';
+import { OrderCreatedPublisher } from '../events/publishers/order-created-publisher';
+import { natsWrapper } from '../nats-wrapper';
 
 const router = express.Router();
 
@@ -51,6 +53,16 @@ router.post('/api/orders',
     //publish an event saying that an order was created
     //  - common module -> create an event to handle order created
     //  - orders/ project needs a publisher for order created
+    new OrderCreatedPublisher(natsWrapper.client).publish({
+      id: order.id,
+      status: order.status,
+      userId: order.userId,
+      expiresAt: order.expiresAt.toISOString(),
+      ticket:{
+        id: ticket.id,
+        price: ticket.price
+      }
+    });
 
     res.status(201).send(order);
   }

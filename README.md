@@ -15443,6 +15443,47 @@ export class OrderCancelledPublisher extends Publisher<OrderCancelledEvent>{
 ```
 
 ### 382. Publishing the Order Creation
+- the routes have to publish an event saying an order was created/deleted:
+  - orders/src/routes/new.ts
+  - orders/src/routes/delete.ts
+- to publish an event, we need the `publisher`, and an `active nats client` (`orders/src/nats-wrapper.ts`)
+- NOTE: the timestamp we use a `string`..is usually a `Date()` 
+  - we use a `string` because it should be standard format across our services (UCT time format)
+  - the Date() reflects current timezone you are living in.
+
+```ts
+//orders/src/routes/new.ts
+//...
+import { OrderCreatedPublisher } from '../events/publishers/order-created-publisher';
+import { natsWrapper } from '../nats-wrapper';
+
+//..
+
+router.post('/api/orders',
+  //...,
+  //...,
+  //...
+  async (req: Request, res: Response) => {
+    //...
+    await order.save();
+
+    //publish an event saying that an order was created
+    //  - common module -> create an event to handle order created
+    //  - orders/ project needs a publisher for order created
+    new OrderCreatedPublisher(natsWrapper.client).publish({
+      id: order.id,
+      status: order.status,
+      userId: order.userId,
+      expiresAt: order.expiresAt.toISOString(),
+      ticket:{
+        id: ticket.id,
+        price: ticket.price
+      }
+    });
+  }
+);
+```
+
 ### 383. Publishing Order Cancellation
 ### 384. Testing Event Publishing
 
