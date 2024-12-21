@@ -15587,6 +15587,80 @@ it('emits an order cancelled event', async () => {
 - fix: add `const orderId = new mongoose.Types.ObjectId().toHexString();`
 
 ### 386. Time for Listeners!
+## Publishers
+
+- we currently have 'tickets' service publishers 
+- and 'orders' service publishers
+
+- TODO: adding listeners for 'tickets' and 'orders' services
+
+- diagram of events and their services
+
+<img
+src='exercise_files/udemy-microservices-section18-379-events-published-by-each-service.png'
+alt='udemy-microservices-section18-379-events-published-by-each-service.png'
+width=600
+/>
+
+## Ticket service
+### publish event `ticket:created`
+  - USED BY -> `Orders service` Listeners
+    - orders needs to know the valid tickets that can be purchased
+    - orders need to know the price of each ticket
+
+<img
+src='exercise_files/udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-created.png'
+alt='udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-created.png'
+width=600
+/>
+
+### publish event `ticket: updated`:
+  - USED BY -> `Orders service` Listeners
+    - orders service needs to know when the price of a ticket has changed
+    - orders service needs to know when a ticket has successfully been reserved
+
+<img
+src='exercise_files/udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-updated.png'
+alt='udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-updated.png'
+width=600
+/>
+
+## Orders service 
+### publish event `order:created`
+  - USED BY -> `Ticket service` listeners
+    - ticket service needs to be told that once of its tickets has been reserved, and no further edits to that ticket should be allowed.
+  - USED BY -> `Payment service` listeners
+    - payment service needs to know there is a new order that a user might submit a payment for.
+  - USED BY ->  `Experiration service` listeners
+    - expiration service needs to start a 15 min timer to eventually time out this order
+
+<img
+src='exercise_files/udemy-microservices-section18-379-order-created.png'
+alt='udemy-microservices-section18-379-order-created.png'
+width=600
+/>
+
+### publish event `order:cancelled`
+  - USED BY -> `Ticket Service` listeners
+    - tickets service should unreserve a ticket if the corresponding order has been cancelled so this ticket can be edited again.
+  - USED BY -> `Payments Service` listeners
+    - payments should know that any incoming payments for this order should be rejected.
+
+<img
+src='exercise_files/udemy-microservices-section18-379-order-cancelled.png'
+alt='udemy-microservices-section18-379-order-cancelled.png'
+width=600
+/>
+
+- REMINDER - our solution to solving concurrency issues was to add a version number on tickets so processing order can be maintained
+
+<img
+src='exercise_files/udemy-microservices-section19-386-ticket-versioning.png'
+alt='udemy-microservices-section19-386-ticket-versioning.png'
+width=600
+/>
+
+
 ### 387. Reminder on Listeners
 ### 388. Blueprint for Listeners
 ### 389. A Few More Reminders
