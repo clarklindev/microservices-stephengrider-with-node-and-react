@@ -15662,6 +15662,17 @@ width=600
 
 
 ### 387. Reminder on Listeners
+- in common module (repo) 
+  - base `Listener` class (abstract class) - `src/events/base-listener.ts`
+  - in subclass `extend Listener` and plug in event to listen for..
+    - subject
+    - queueGroupName
+    - onMessage(data, msg)
+    - provide a NATS client 
+    - listen()
+      - subscription = this.client.subscribe()
+      - subscription.on('message', (msg:Message)=>{})
+
 ### 388. Blueprint for Listeners
 ### 389. A Few More Reminders
 ### 390. Simple onMessage Implementation
