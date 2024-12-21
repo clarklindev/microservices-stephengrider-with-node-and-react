@@ -15674,6 +15674,24 @@ width=600
       - subscription.on('message', (msg:Message)=>{})
 
 ### 388. Blueprint for Listeners
+- `orders/src/events/listeners/ticket-created-listener.ts`
+- Listener is a generic so we must provide a type
+- and the type is the type of event we want to listen for 'TicketCreatedEvent'
+- `onMessage` will receive 2 arguments, `data` from our event, and the `message` from Node NATS Streaming library
+
+```ts
+//orders/src/events/listeners/ticket-created-listener.ts
+import {Message} from 'node-nats-streaming';
+import {Subjects, Listener, TicketCreatedEvent } from '@clarklindev/common';
+import { Ticket } from '../../models/ticket';
+
+export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
+  readonly subject = Subjects.TicketCreated;
+  queueGroupName = 'orders-service';
+  onMessage(data: TicketCreatedEvent['data'], msg: Message){}
+}
+```
+
 ### 389. A Few More Reminders
 ### 390. Simple onMessage Implementation
 ### 391. ID Adjustment
