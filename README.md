@@ -15679,20 +15679,42 @@ width=600
 - and the type is the type of event we want to listen for 'TicketCreatedEvent'
 - `onMessage` will receive 2 arguments, `data` from our event, and the `message` from Node NATS Streaming library
 
+- `orders/src/events/listeners/queue-group-name.ts`
+```ts
+export const queueGroupName = 'orders-service';
+```
+
 ```ts
 //orders/src/events/listeners/ticket-created-listener.ts
 import {Message} from 'node-nats-streaming';
 import {Subjects, Listener, TicketCreatedEvent } from '@clarklindev/common';
 import { Ticket } from '../../models/ticket';
+import { queueGroupName } from './queue-group-name';
 
 export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
   readonly subject = Subjects.TicketCreated;
-  queueGroupName = 'orders-service';
+  queueGroupName = queueGroupName;
   onMessage(data: TicketCreatedEvent['data'], msg: Message){}
 }
 ```
 
 ### 389. A Few More Reminders
+
+<img
+src='exercise_files/udemy-microservices-section19-389-publisher-event.png'
+alt='udemy-microservices-section19-389-publisher-event.png'
+width=600
+/> 
+
+- the diagram inside our listeners:
+  - publisher -> event `ticket:created`
+  - 2x `orders service` instances (in queue group `orders-service`) 
+  - `queue group` ensures event from NATS to listener will only go to ONE of the queue group member
+    - queue group (NATS) needs to be unique identifier for subscribers
+  - the orders services are listening to a channel `orders-service` on NATS streaming for `ticket:created`
+- service `TicketCreatedListener` listening for `TicketCreatedEvent` (acessed event via `data` property)
+- onMessage(data, msg:Message) - `msg:Message` has an `ack()` method which we call once we are `sucessfully` done with processing the message
+
 ### 390. Simple onMessage Implementation
 ### 391. ID Adjustment
 ### 392. Ticket Updated Listener Implementation
