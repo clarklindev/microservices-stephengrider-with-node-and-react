@@ -15938,6 +15938,41 @@ width=600
 />
 
 ### 395. Clear Concurrency Issues
+
+#### without using ticket versioning 
+- the demo lesson starts with stephan talking about running a script that runs into concurrency issues 
+- each update set (create, update, update) occurs in series
+  1. create ticket price 5
+  2. update ticket price 10
+  3. update ticket price 15
+- the script performs this set of actions all in parallel x200
+
+<img
+src='exercise_files/udemy-microservices-section19-395-test-script-concurrency-issues.png'
+alt='udemy-microservices-section19-395-test-script-concurrency-issues.png'
+width=600
+/>
+
+- the process of one set (create, update, update)
+- flow diagram: 
+  1. ticket created 
+  2. tickets service (saved to database) 
+  3. event sent to NATS chanel 
+  4. one of the (orders service listeners) handles event
+  5. saves to orders database
+
+<img
+src='exercise_files/udemy-microservices-section19-395-flow-diagram-1-ticket-created.png'
+alt='udemy-microservices-section19-395-flow-diagram-1-ticket-created.png'
+width=600
+/>
+
+- so we expect ticket service to execute updates in-order, but orders service might not...
+- because of how many events are being serviced. in some cases the update to 15 happens before update to 10.
+- he runs a check to see how many of the database have value of 10. and there is a lot out of sync ( 7 out of 200)
+
+
+
 ### 396. Reminder on Versioning Records
 ### 397. Optimistic Concurrency Control
 ### 398. Mongoose Update-If-Current
