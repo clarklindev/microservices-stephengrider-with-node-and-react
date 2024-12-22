@@ -15854,6 +15854,46 @@ export class TicketUpdatedListener extends Listener<TicketUpdatedEvent>{
 -TODO: make sure the 2x listeners we created are used in the orders services
 
 ### 393. Initializing the Listeners
+- create instance of listeners (need to provide it an instance of (Stan) NATS server client)
+- will call listen() method
+- `orders/src/index.ts`
+  - import the listeners 
+  - initialize the listeners passing the natsWrapper.client
+- manually test the listeners by triggering `TicketCreatedEvent` and `TicketUpdatedEvent`
+  - TODO: create ticket/update ticket using POSTMAN
+  
+```ts
+//orders/src/index.ts
+import { TicketCreatedListener } from './events/listeners/ticket-created-listener';
+import { TicketUpdatedListener } from './events/listeners/ticket-updated-listener';
+
+//...
+const start = async () => {
+
+   try {
+    await natsWrapper.connect(
+      process.env.NATS_CLUSTER_ID,
+      process.env.NATS_CLIENT_ID,
+      process.env.NATS_URL
+    );
+
+    natsWrapper.client.on('close', () => {
+      console.log('NATS connection closed!');
+      process.exit();
+    });
+    process.on('SIGINT', () => natsWrapper.client.close());
+    process.on('SIGTERM', () => natsWrapper.client.close());
+    
+    // initialize listeners
+    new TicketCreatedListener(natsWrapper.client).listen();
+    new TicketUpdatedListener(natsWrapper.client).listen();
+    
+    //...
+
+  }
+}
+```
+
 ### 394. A Quick Manual Test
 ### 395. Clear Concurrency Issues
 ### 396. Reminder on Versioning Records
