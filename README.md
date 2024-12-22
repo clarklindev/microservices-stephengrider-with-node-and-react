@@ -15807,8 +15807,52 @@ ticketSchema.statics.build = (attrs:TicketAttrs) => {
 
 ```
 
-```
 ### 392. Ticket Updated Listener Implementation
+- NOTE: currently there is concurrency issues that will be fixed
+
+## Ticket service
+### publish event `ticket: updated`:
+  - USED BY -> `Orders service` Listeners
+    - orders service needs to know when the price of a ticket has changed
+    - orders service needs to know when a ticket has successfully been reserved
+
+<img
+src='exercise_files/udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-updated.png'
+alt='udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-updated.png'
+width=600
+/>
+
+- `orders/src/events/listeners/ticket-updated-listener.ts`
+```ts
+//orders/src/events/listeners/ticket-updated-listener.ts
+import { Message } from "node-nats-streaming";
+
+import { Subjects, Listener, TicketUpdatedEvent } from "@clarklindev/common";
+import { Ticket } from "../../models/ticket";
+import { queueGroupName } from "./queue-group-name";
+
+export class TicketUpdatedListener extends Listener<TicketUpdatedEvent>{
+  readonly subject = Subjects.TicketUpdated;
+  queueGroupName = queueGroupName;
+
+  async onMessage(data:TicketUpdatedEvent['data'], msg:Message){
+    const ticket = await Ticket.findById(data.id);
+
+    if(!ticket){
+      throw new Error('Ticket not found');
+    }
+
+    const {title, price} = data;
+    ticket.set({title, price});
+    await ticket.save();
+   
+    msg.ack();
+  }
+
+}
+```
+-TODO: make sure the 2x listeners we created are used in the orders services
+
 ### 393. Initializing the Listeners
 ### 394. A Quick Manual Test
 ### 395. Clear Concurrency Issues
