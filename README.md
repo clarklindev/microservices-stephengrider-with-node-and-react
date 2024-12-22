@@ -15861,7 +15861,7 @@ export class TicketUpdatedListener extends Listener<TicketUpdatedEvent>{
   - initialize the listeners passing the natsWrapper.client
 - manually test the listeners by triggering `TicketCreatedEvent` and `TicketUpdatedEvent`
   - TODO: create ticket/update ticket using POSTMAN
-  
+
 ```ts
 //orders/src/index.ts
 import { TicketCreatedListener } from './events/listeners/ticket-created-listener';
@@ -15895,6 +15895,48 @@ const start = async () => {
 ```
 
 ### 394. A Quick Manual Test
+- TESTING WITH POSTMAN
+  - ensure still signed in: `GET https://ticketing.dev/api/users/currentuser` 
+  - to signup: `POST https://ticketing.dev/api/users/signup` 
+    - body -> raw -> JSON -> `{"email": 'test@test.com', "password": "password"}` 
+
+#### creating a ticket
+- `POST https://ticketing.dev/api/tickets`
+  - body -> raw -> JSON -> `{ "title": "movie", "price": 999 }`
+  - expect status 201
+
+- console.logs after POSTMAN creating a user
+  - expect: console message: `Event published to subject ticket:created`
+  - expect: console message: `message received: ticket:created / orders-service`
+
+<img
+src='exercise_files/udemy-microservices-section19-394-a-quick-manual-test.png'
+alt='udemy-microservices-section19-394-a-quick-manual-test.png'
+width=600
+/>
+
+#### updating a ticket
+- ticketId -> id from the ticket we just created
+- `POST https://ticketing.dev/api/tickets/ticketId`
+  - body -> raw -> JSON -> `{ "title": "movie", "price": 10 }`
+  - expect status 200
+
+<img
+src='exercise_files/udemy-microservices-section19-394-a-quick-manual-test-ticket-update.png'
+alt='udemy-microservices-section19-394-a-quick-manual-test-ticket-update.png'
+width=600
+/>
+
+- console.logs after POSTMAN updating a user
+  - expect: console message: `Event published to subject ticket:updated`
+  - expect: console message: `message received: ticket:updated / orders-service`
+
+<img
+src='exercise_files/udemy-microservices-section19-394-a-quick-manual-test-ticket-updated.png'
+alt='udemy-microservices-section19-394-a-quick-manual-test-ticket-updated.png'
+width=600
+/>
+
 ### 395. Clear Concurrency Issues
 ### 396. Reminder on Versioning Records
 ### 397. Optimistic Concurrency Control
