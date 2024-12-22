@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Order, OrderStatus} from './order';
 
 interface TicketAttrs{
+  id: string;
   title: string;
   price: number;
 }
@@ -39,7 +40,11 @@ const ticketSchema = new mongoose.Schema({
 );
 
 ticketSchema.statics.build = (attrs:TicketAttrs) => {
-  return new Ticket(attrs);
+  const { id, ...rest } = attrs; // Extract 'id' and keep the rest of the properties
+  return new Ticket({
+    _id: id,  // Assign 'id' to '_id'
+    ...rest,  // Spread the rest of the properties
+  });
 }
 
 //lesson 365.

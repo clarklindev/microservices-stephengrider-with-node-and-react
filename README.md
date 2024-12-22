@@ -15716,7 +15716,98 @@ width=600
 - onMessage(data, msg:Message) - `msg:Message` has an `ack()` method which we call once we are `sucessfully` done with processing the message
 
 ### 390. Simple onMessage Implementation
+- reminder:
+
+## Ticket service
+### publish event `ticket:created`
+  - USED BY -> `Orders service` Listeners
+    - orders needs to know the valid tickets that can be purchased
+    - orders need to know the price of each ticket
+
+<img
+src='exercise_files/udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-created.png'
+alt='udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-created.png'
+width=600
+/>
+- TODO: order service listening for `ticket:created` - to save information about ticket in local collection (data replication between services) 
+-... so that when orders service needs to know information about a ticket, it does not need to do synchronous communication over to ticket service to fetch tickets available.
+
+- `orders/src/events/listeners/ticket-created-listener.ts`
+```ts
+//orders/src/events/listeners/ticket-created-listener.ts
+
+import {Message} from 'node-nats-streaming';
+import {Subjects, Listener, TicketCreatedEvent } from '@clarklindev/common';
+import { Ticket } from '../../models/ticket';
+import { queueGroupName } from './queue-group-name';
+
+export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
+  readonly subject = Subjects.TicketCreated;
+  queueGroupName = queueGroupName;
+  async onMessage(data: TicketCreatedEvent['data'], msg: Message){
+    
+    const {title, price} = data;
+    
+    const ticket = Ticket.build({
+      title, price
+    });
+
+    await ticket.save();
+
+    msg.ack();
+  }
+}
+```
 ### 391. ID Adjustment
+- `TicketCreatedListener` is taking the (title, price) from event message and saving it directly to ticket db 
+- when saved to db mongodb assigns a random id 
+- but the `order service` ticket id is now inconsistent with `ticket service` ticket id
+
+<img
+src='exercise_files/udemy-microservices-section19-391-id-adjustment-mongodb-assigns-random-id.png'
+alt='udemy-microservices-section19-391-id-adjustment-mongodb-assigns-random-id.png'
+width=600
+/>
+
+- from image example, ensure that the order service will have same ticket id as ticket service ticket's `id:'ABC'`
+- FIX: the Orders' `Ticket.build()` function does not expect to receive id (see `TicketAttrs`)
+- TODO: adjust `TicketAttrs` interface
+
+- `orders/src/models/tickets.ts`
+
+```ts
+//orders/src/models/tickets.ts
+interface TicketAttrs{
+  id: string;
+  title: string;
+  price: number;
+}
+
+```
+- the problem is when we we store records with mongodb it stores it with `_id` property
+- when the record is loaded into TicketService it still has `_id`
+- only when record is converted to JSON to be transmitted over an event, does `_id` get converted to `id`
+- so in Orders service it receives event of {id: '123', title: 'concert'}
+- but when saving with mongoose, it sees `id` and not an `_id` and assigns randomly generated id
+- so then you end up with both the `id:'123'` and random generated `id` eg. `{id: '123', title: 'concert', _id:'adgfdgfufd0'}`
+- FIX: manually build the attrs object passed into Ticket
+
+- `orders/src/models/tickets.ts`
+
+```ts
+//orders/src/models/tickets.ts
+ticketSchema.statics.build = (attrs:TicketAttrs) => {
+  const { id, ...rest } = attrs; // Extract 'id' and keep the rest of the properties
+  return new Ticket({
+    _id: id,  // Assign 'id' to '_id'
+    ...rest,  // Spread the rest of the properties
+  });
+}
+
+
+```
+
+```
 ### 392. Ticket Updated Listener Implementation
 ### 393. Initializing the Listeners
 ### 394. A Quick Manual Test
