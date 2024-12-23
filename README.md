@@ -16132,6 +16132,33 @@ width=600
 - TODO: install `mongoose-update-if-current` 
 
 ### 399. Implementing OCC with Mongoose
+- we just installed `mongoose-update-if-current` in `tickets/` service
+- TODO: wire it up to ticket model
+- TODO: `ticketSchema.set('versionKey', 'version');` - tell mongoose to track the version using `version` instead of `__v` (default): 
+- TODO: call `ticketSchema.plugin(updateIfCurrentPlugin);`
+- with this update, make adjustment to interface `TicketDoc` 
+- `TicketDoc` lists all properties (eg. a tickets properties) of an document instance 
+- one of the properties of Document is `__v`
+- but we set the `versionKey` and the ticket document doesnt reflect this, so update TicketDoc interface 
+  with `version`
+
+- `tickets/src/models/tickets.ts`
+
+```ts
+// tickets/src/models/tickets.ts
+import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
+
+interface TicketDoc extends mongoose.Document{
+  //...
+  version: number
+}
+
+//...
+ticketSchema.set('versionKey', 'version');
+ticketSchema.plugin(updateIfCurrentPlugin);
+
+```
+
 ### 400. Test functions cannot both take a 'done' callback and return something Error
 ### 401. Testing OCC
 ### 402. One More Test
