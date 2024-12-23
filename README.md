@@ -16197,6 +16197,13 @@ it('implements optimistic concurrency control', async () => {
   ```
 
 - we expect the test of 2nd instance save to fail -> the id matches (but the version doesnt - it has outdated version)
+
+<img
+src='exercise_files/udemy-microservices-section19-401-expected-failure-secondInstance-save-fail-no-matching-id-and-version.png'
+alt='udemy-microservices-section19-401-expected-failure-secondInstance-save-fail-no-matching-id-and-version.png'
+width=600
+/>
+
 - so if it fails it will throw an error (catch(err)) and return
 - so if the 2nd save does not throw an error, it will skip the catch() and there is a failsafe `throw new Error('Should not reach this point')` which will cause the test to fail.
 - if code in catch() is called, the test should pass.
@@ -16243,7 +16250,34 @@ it('implements optimistic concurrency control', async () => {
 ```
 
 ### 402. One More Test
+- currently we dont have proof that when a document gets saved, the version number gets incremented
+- TODO: test that if we save, fetching the ticket, the version number should increment by one
+  - create a new ticket, save it. expect the saved ticket to have version of 0
+  - and ever time the ticket is saved, the version updates by 1
+
+```ts
+//tickets/src/models/__test__/ticket.test.ts
+
+it('increments the version number on multiple saves', async ()=>{
+  //create an instance of a ticket
+  const ticket = Ticket.build({
+    title:'concert',
+    price: 5,
+    userId: '123'
+  });
+
+  await ticket.save();
+  expect(ticket.version).toEqual(0);
+  await ticket.save();
+  expect(ticket.version).toEqual(1);
+  await ticket.save();
+  expect(ticket.version).toEqual(2);
+})
+```
+
 ### 403. Who Updates Versions?
+- make update to common module - ensure that events communicate the `version` number with the message/event
+
 ### 404. Including Versions in Events
 ### 405. Updating Tickets Event Definitions
 ### 406. Property 'version' is missing TS Errors After Running Skaffold
