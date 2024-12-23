@@ -16276,7 +16276,47 @@ it('increments the version number on multiple saves', async ()=>{
 ```
 
 ### 403. Who Updates Versions?
-- make update to common module - ensure that events communicate the `version` number with the message/event
+- make update to common module (repo) 
+- ensure that events communicate the `version` number with the message/event
+
+- [common module](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
+
+- microservices-stephengrider-with-node-and-react-common/src/events/ticket-created-event.ts
+- microservices-stephengrider-with-node-and-react-common/src/events/ticket-updated-event.ts
+
+- TODO: add in the version number to events
+
+#### when should we increment or include the 'version' number of a record with an event
+
+- RULE - `increment` the 'version' number whenever the `primary service responsible` for a record `emits an event` to describe a `create`/`update`/`destroy` to a record
+- NOTE: the other services can include the version number but should not update it
+
+<img
+src='exercise_files/udemy-microservices-section19-403-version-update-by-primary-service-responsible-for-a-record-emits-event-for-create-update-delete.png'
+alt='udemy-microservices-section19-403-version-update-by-primary-service-responsible-for-a-record-emits-event-for-create-update-delete.png'
+width=600
+/>
+
+### revisiting section01-04-blog/
+#### correct version updates
+- so with this diagram, only primary service responsible for record (common service) should update version number
+- the moderation service should not update the version number when sending message/event 
+
+<img
+src='exercise_files/udemy-microservices-section19-403-common-service-responsible-for-event-only-it-should-update-version.png'
+alt='udemy-microservices-section19-403-common-service-responsible-for-event-only-it-should-update-version.png'
+width=600
+/>
+
+#### incorrect version updates
+- this is an example of when version numbers are added by non-primary services (eg. moderation which is NOT primary service responsible for a record)
+- the query service receives wrong version (version 2) when the next sequence should be 1 (but this never got processed by query service it got processed by moderation service)... which causes it not to be processed until it receives version 1 (which it will never...)
+
+<img
+src='exercise_files/udemy-microservices-section19-403-incorrect-version-updates-by-moderation-service.png'
+alt='udemy-microservices-section19-403-incorrect-version-updates-by-moderation-service.png'
+width=600
+/>
 
 ### 404. Including Versions in Events
 ### 405. Updating Tickets Event Definitions
