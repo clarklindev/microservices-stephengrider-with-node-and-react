@@ -16069,6 +16069,46 @@ width=600
 ---
 
 ### 397. Optimistic Concurrency Control
+- finding out how mongoose and mongodb collaborate to handle versioning 
+
+### without version flag
+
+- find the record with ID 'CZQ' and set its price to 10
+
+<img
+src='exercise_files/udemy-microservices-section19-397-mongoose-mongodb-normal-record-updates.png'
+alt='udemy-microservices-section19-397-mongoose-mongodb-normal-record-updates.png'
+width=600
+/>
+
+### with version tracking
+- 1min 28sec
+- how mongodb collaborates to handle version tracking
+- record updates with optimistic concurrency control strategy
+- this strategy is applicable with other databases as well
+- find the record with ID 'CZQ' AND a version of x (eg. version 1) and set its price
+- mongo doesnt compare versions, it looks for entry with the particular id AND the specific version
+
+<img
+src='exercise_files/udemy-microservices-section19-397-mongoose-mongodb-record-updates-with-optimistic-concurrency-control.png'
+alt='udemy-microservices-section19-397-mongoose-mongodb-record-updates-with-optimistic-concurrency-control.png'
+width=600
+/>
+
+---
+
+- in the case that we are updating records and event v2 has not been processed but v3 is next to be processed...
+  - mongodb will look through all records in Tickets database and look for ticket with same id AND version 2
+  - if no record with (id 'CZQ' and v2) found in tickets database
+  - v3's update would then fail and return to application to be handled 
+
+<img
+src='exercise_files/udemy-microservices-section19-397-ticket-v3-processing-before-v2.png'
+alt='udemy-microservices-section19-397-ticket-v3-processing-before-v2.png'
+width=600
+/>
+
+
 ### 398. Mongoose Update-If-Current
 ### 399. Implementing OCC with Mongoose
 ### 400. Test functions cannot both take a 'done' callback and return something Error
