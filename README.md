@@ -16319,6 +16319,82 @@ width=600
 />
 
 ### 404. Including Versions in Events
+- common/ module 
+- [microservices-stephengrider-with-node-and-react-common/](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
+- updating events in common module: `/src/events/` to include prop: `version: number;`
+- NOTE: after these updates: 
+  1. republish the common module
+  2. update the common module package used inside `tickets` and `orders`
+
+- `src/events/order-cancelled-events.ts`
+```ts
+//src/events/order-cancelled-events.ts
+import { Subjects } from "./subjects";
+export interface OrderCancelledEvent {
+  subject: Subjects.OrderCancelled;
+  data: {
+    id:string;
+    version: number;
+    ticket:{
+      id: string;
+    }
+  }
+}
+```
+
+- `order-created-event.ts`
+```ts
+//src/events/order-created-events.ts
+import {Subjects} from './subjects';
+import { OrderStatus } from './types/order-status';
+export interface OrderCreatedEvent{ 
+  subject: Subjects.OrderCreated;
+  data: {
+    id: string;
+    version:number;
+    status: OrderStatus;
+    userId: string;
+    expiresAt: string;
+    ticket:{
+      id: string;
+      price: number;
+    }
+  }
+}
+```
+
+- `src/events/ticket-created-event.ts`
+```ts
+//src/events/ticket-created-event.ts
+import { Subjects } from "./subjects";
+export interface TicketCreatedEvent{
+  subject: Subjects.TicketCreated;
+  data: {
+    id: string;
+    version: number;
+    title: string;
+    price: number;
+    userId: string;
+  }
+}
+```
+
+- `src/events/ticket-updated-event.ts`
+```ts
+//src/events/ticket-updated-event.ts
+import { Subjects } from './subjects';
+export interface TicketUpdatedEvent {
+  subject: Subjects.TicketUpdated,
+  data: {
+    id: string;
+    version: number;
+    title: string;
+    price: number;
+    userId: string;
+  }
+}
+```
+
 ### 405. Updating Tickets Event Definitions
 ### 406. Property 'version' is missing TS Errors After Running Skaffold
 ### 407. Applying a Version Query
