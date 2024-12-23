@@ -16110,6 +16110,27 @@ width=600
 
 
 ### 398. Mongoose Update-If-Current
+- tickets service
+  - TODO: adding the versioning to tickets service
+  - TODO: and the version numbers get reflected in events
+- orders service
+  - TODO: also use the ticket versioning
+
+- new package: [mongoose-update-if-current](https://www.npmjs.com/package/mongoose-update-if-current) 
+  - handles the versioning
+
+- note: mongodb document has a property `__v` which it implements by default (but we arent using it yet)
+- we will rename `__v` and use `version` instead
+
+<img
+src='exercise_files/udemy-microservices-section19-398-mongoose-update-if-current-using-__v.png'
+alt='udemy-microservices-section19-398-mongoose-update-if-current-using-__v.png'
+width=600
+/>
+
+- `tickets/` service folder
+- TODO: install `mongoose-update-if-current` 
+
 ### 399. Implementing OCC with Mongoose
 ### 400. Test functions cannot both take a 'done' callback and return something Error
 ### 401. Testing OCC
