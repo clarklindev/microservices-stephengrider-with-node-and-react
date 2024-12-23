@@ -16172,6 +16172,8 @@ ticketSchema.plugin(updateIfCurrentPlugin);
 
 - FIX: 
 ```ts
+//tickets/src/models/__test__/ticket.test.ts
+
 //...
 it('implements optimistic concurrency control', async () => {
   ///...
@@ -16184,7 +16186,62 @@ it('implements optimistic concurrency control', async () => {
   //...
 });
 ```
+
 ### 401. Testing OCC
+- when we saved the ticket, the `mongoose-update-if-current` plugin should have assigned a `version`
+
+- we create 2 references to the ticket (at this point they have the same id and version)
+  ```ts
+    const firstInstance = await Ticket.findById(ticket.id);
+    const secondInstance = await Ticket.findById(ticket.id);
+  ```
+
+- we expect the test of 2nd instance save to fail -> the id matches (but the version doesnt - it has outdated version)
+- so if it fails it will throw an error (catch(err)) and return
+- so if the 2nd save does not throw an error, it will skip the catch() and there is a failsafe `throw new Error('Should not reach this point')` which will cause the test to fail.
+- if code in catch() is called, the test should pass.
+- when we save a record, we can be sure. if it saves sucessfully, it is saving in the correct order and processing in correct order
+
+
+```ts
+//tickets/src/models/__test__/ticket.test.ts
+
+import {Ticket} from '../ticket';
+
+it('implements optimistic concurrency control', async () => {
+  //create an instance of a ticket
+  const ticket = Ticket.build({
+    title:'concert',
+    price: 5,
+    userId: '123'
+  });
+  
+  //save the ticket to the database
+  await ticket.save();  
+
+  //fetch the ticket twice
+  const firstInstance = await Ticket.findById(ticket.id);
+  const secondInstance = await Ticket.findById(ticket.id);
+  
+  //make two separate changes to the tickets we fetched
+  firstInstance!.set({price: 10});
+  secondInstance!.set({price: 15});
+
+  //save the first fetched ticket
+  await firstInstance!.save();
+
+  //save the second fetched ticket and expect an error
+  try {
+    await secondInstance!.save();
+  } catch (err) {
+    return;
+  }
+
+  throw new Error('Should not reach this point');
+});
+
+```
+
 ### 402. One More Test
 ### 403. Who Updates Versions?
 ### 404. Including Versions in Events
