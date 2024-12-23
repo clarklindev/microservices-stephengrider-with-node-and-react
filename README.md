@@ -16160,6 +16160,30 @@ ticketSchema.plugin(updateIfCurrentPlugin);
 ```
 
 ### 400. Test functions cannot both take a 'done' callback and return something Error
+- if you are using a later version of jest...may get this error
+
+- the error:
+
+```console
+  implements optimistic concurrency control
+  Test functions cannot both take a 'done' callback and return something. Either use a 'done' callback, or return a promise.
+  Returned value: Promise {}
+```
+
+- FIX: 
+```ts
+//...
+it('implements optimistic concurrency control', async () => {
+  ///...
+  // save the second fetched ticket and expect an error
+  try {
+    await secondInstance!.save();
+  } catch (err) {
+    return;
+  }
+  //...
+});
+```
 ### 401. Testing OCC
 ### 402. One More Test
 ### 403. Who Updates Versions?
