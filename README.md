@@ -15974,6 +15974,100 @@ width=600
 
 
 ### 396. Reminder on Versioning Records
+- NOTE: the outcome is we find out that mongoose can handle all the versioning for us..
+
+#### using ticket versioning
+- ticket service saves to database, entry has versioning (first time initates to 1)
+
+<img
+src='exercise_files/udemy-microservices-section19-396-flow-diagram-1-ticket-created-with-versioning.png'
+alt='udemy-microservices-section19-396-flow-diagram-1-ticket-created-with-versioning.png'
+width=600
+/>
+
+---
+
+- always update ticket version - order 2
+
+<img
+src='exercise_files/udemy-microservices-section19-396-flow-diagram-2-always-update-ticket-version-order2.png'
+alt='udemy-microservices-section19-396-flow-diagram-2-always-update-ticket-version-order2.png'
+width=600
+/>
+
+---
+- at 2min 17sec
+- order with price 15 is also processed and updated in ticket database with version now 3.
+- along with ticket database updates: 2 seperate events are also emitted
+
+<img
+src='exercise_files/udemy-microservices-section19-396-flow-diagram-3-two-separate-events-emitted.png'
+alt='udemy-microservices-section19-396-flow-diagram-3-two-separate-events-emitted.png'
+width=600
+/>
+
+---
+
+### processing these events in correct order 
+- at 2min:30sec
+- NOTE: we have to update the ticket events (to include ticket version) in the model (common module)
+
+#### processing 2nd event
+- an instance of order service will process the next event (CZQ)
+- order service is going to look into the database AND FIND `CZQ`
+- orders database has will look for `CZQ` and look at its version and see it has a version of 1
+- because 1 is processed and incoming is version is 2 
+- there is no missing versions and order service processes the event
+- the price is set to 10, increment our version to 2
+
+<img
+src='exercise_files/udemy-microservices-section19-396-flow-diagram-4-correct-order-processed-v2-event.png'
+alt='udemy-microservices-section19-396-flow-diagram-4-correct-order-processed-v2-event.png'
+width=600
+/>
+
+---
+
+#### processing 3rd event
+- next event to be processed (same as above)
+- search database find ID `CZQ` sees its version 2
+- this is version 3
+- no missed versions, order is processed
+- price updated to 15 and a version to 3.
+
+<img
+src='exercise_files/udemy-microservices-section19-396-flow-diagram-5-correct-order-processed-v3-event.png'
+alt='udemy-microservices-section19-396-flow-diagram-5-processed-v3-event.png'
+width=600
+/>
+
+---
+
+### processing these events in incorrect order
+- at 3min 35sec
+- out of order -> first processing event with version 3 (the update to 15)
+- but because of missing v2 the listener times out (did not call ack() and event was not acknowledged, NATS will re-submit )
+- then during the timeout window, we hope that the correct version shows up (v2)
+- v2 in the mean time does show up and is processed
+
+<img
+src='exercise_files/udemy-microservices-section19-396-flow-diagram-6-incorrect-order-processing-v2-while-v3-is-timedout.png'
+alt='udemy-microservices-section19-396-flow-diagram-6-incorrect-order-processing-v2-while-v3-is-timedout.png'
+width=600
+/>
+
+---
+
+- then v3 eventually processes because v2 has been processed
+
+<img
+src='exercise_files/udemy-microservices-section19-396-flow-diagram-7-incorrect-order-processing-v3.png'
+alt='udemy-microservices-section19-396-flow-diagram-7-incorrect-order-processing-v3.png'
+width=600
+/>
+
+---
+
 ### 397. Optimistic Concurrency Control
 ### 398. Mongoose Update-If-Current
 ### 399. Implementing OCC with Mongoose
