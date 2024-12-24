@@ -16680,9 +16680,17 @@ width=600
 
 ---
 
-
-
 ### 408. Did it Work?
+- testing with the updated code
+- events processed out-of-order are retried 
+- testing by checking final price of `tickets in orders` with `15` count is same as `tickets in final` price tickets count
+
+<img
+src='exercise_files/udemy-microservices-section19-408-expect-same-results.png'
+alt='udemy-microservices-section19-408-expect-same-results.png'
+width=600
+/>
+
 ### 409. Abstracted Query Method
 ### 410. (Optional) Versioning Without Update-If-Current
 ### 411. Testing Listeners
