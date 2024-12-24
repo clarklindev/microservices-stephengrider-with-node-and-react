@@ -16692,6 +16692,72 @@ width=600
 />
 
 ### 409. Abstracted Query Method
+- currently `Ticket.findOne({_id:data.id, version:data.version-1})` but `_id` and `-1` bit is not ideal, refactor
+- TODO: in orders Ticket model - create a wrapper method for the data received by the listener (hide implementation)
+  - create `findByEvent() in TicketModel`
+  - add to ticketSchema.statics: `ticketSchema.statics.findByEvent = (event: {id:string, version:number}) => {}`
+
+```ts
+// orders/src/models/ticket.ts
+interface TicketModel extends mongoose.Model<TicketDoc>{
+  build(attrs: TicketAttrs): TicketDoc;
+  findByEvent(event:{id:string, version:number}):Promise<TicketDoc | null>;
+}
+
+//...
+
+ticketSchema.statics.findByEvent = (event: {id:string, version:number}) => {
+  return Ticket.findOne({
+    _id: event.id,
+    version: event.version - 1
+  })
+}
+
+ticketSchema.statics.build = (attrs:TicketAttrs) => {
+  //...
+}
+```
+- update to use TicketModel: `orders/src/events/listeners/ticket-updated-listener.ts`
+
+```ts
+//orders/src/events/listeners/ticket-updated-listener.ts
+//...
+async onMessage(data:TicketUpdatedEvent['data'], msg:Message){
+  const ticket = await Ticket.findByEvent(data);
+
+  if(!ticket){
+    throw new Error('Ticket not found');
+  }
+  
+  //...
+}
+```
+
+### test with postman
+- NOTE: you are authenticated
+- DOCKER is running
+- testing with postman:
+  - create ticket
+  - make update 
+  - make update
+
+#### create ticket 
+- create ticket POST `https://ticketing.dev/api/tickets/` -> {"title": "movie", "price":15}
+- note the returned data from api call -> id eg. `5reotjrotietuoertof9c9c9c9`
+
+#### update ticket 
+- TODO: get the `id` from returned data from create ticket (eg. `5reotjrotietuoertof9c9c9c9`)
+- PUT `http://ticketing.dev/api/tickets/5reotjrotietuoertof9c9c9c9` -> {"title": "movie", "price":999}
+
+#### test results
+- no concurrency issues
+
+<img
+src='exercise_files/udemy-microservices-section19-409-no-concurrency-issues.png'
+alt='udemy-microservices-section19-409-no-concurrency-issues.png'
+width=600
+/>
+
 ### 410. (Optional) Versioning Without Update-If-Current
 ### 411. Testing Listeners
 ### 412. A Complete Listener Test
