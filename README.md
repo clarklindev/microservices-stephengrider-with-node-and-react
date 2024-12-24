@@ -16324,7 +16324,7 @@ width=600
 - updating events in common module: `/src/events/` to include prop: `version: number;`
 - NOTE: after these updates: 
   1. republish the common module
-  2. update the common module package used inside `tickets` and `orders`
+  2. update the common module package used inside (auth, nats-test, orders, tickets)
 
 - `src/events/order-cancelled-events.ts`
 ```ts
@@ -16396,6 +16396,157 @@ export interface TicketUpdatedEvent {
 ```
 
 ### 405. Updating Tickets Event Definitions
+
+- update tickets service and orders service
+- at this point the publishers' `.publish()` (eg `TicketCreatedPublisher extends Publisher<TicketCreatedEvent>`) needs an event type `TicketCreatedEvent`
+- it shows an error on vscode ide (this is because the event model updated (common/src/events) specifically `TicketCreatedEvent`'s interface has updated with a `version` property and needs to be passed when creating TicketUpdatePublisher)
+
+<img
+src='exercise_files/udemy-microservices-section19-405-updated-common-module-event-interface-warns-missing-props.png'
+alt='udemy-microservices-section19-405-updated-common-module-event-interface-warns-missing-props.png'
+width=600
+/>
+
+## Tickets service
+- TODO: checking `tickets/` service for where we publish events to include version number
+  - `tickets/src/routes/new.ts` and
+  - `tickets/src/routes/update.ts`
+
+- TEST: restart test from `microservices-stephengrider-with-node-and-react/section05-19-ticketing/tickets/`: `run pnpm run test`
+
+  ```ts
+  //tickets/src/routes/new.ts
+  import express, { Request, Response } from 'express';
+  import {body} from 'express-validator';
+
+  import { requireAuth, validateRequest} from '@clarklindev/common';
+  import { Ticket } from '../models/ticket';
+  import { TicketCreatedPublisher } from '../events/publishers/ticket-created-publisher';
+  import { natsWrapper } from '../nats-wrapper';
+
+  const router = express.Router();
+
+  router.post('/api/tickets',
+    requireAuth,
+    [
+      body('title')
+        .not()
+        .isEmpty()
+        .withMessage('Title is required'),
+      
+      body('price')
+        .isFloat({ gt: 0})
+        .withMessage('Price must be greater than 0')
+    ],
+    validateRequest,
+
+    async (req: Request, res: Response) => { 
+      const { title, price } = req.body;
+
+      const ticket = Ticket.build({
+        title,
+        price,
+        userId: req.currentUser!.id
+      });
+
+      await ticket.save();
+
+      await new TicketCreatedPublisher(natsWrapper.client).publish({
+        id: ticket.id,
+        title: ticket.title,
+        price: ticket.price,
+        userId: ticket.userId,
+        version: ticket.version
+      });
+
+      res.status(201).send(ticket);
+    }
+  );
+
+  export {router as createTicketRouter }
+  ```
+
+  ```ts
+  //tickets/src/routes/update.ts
+  import express, { Request, Response } from 'express';
+  import { body } from 'express-validator';
+
+  import {
+    validateRequest,
+    NotFoundError,
+    requireAuth,
+    NotAuthorizedError
+  } from '@clarklindev/common';
+
+  import { Ticket } from '../models/ticket';
+  import { TicketUpdatedPublisher } from '../events/publishers/ticket-updated-publisher';
+  import { natsWrapper } from '../nats-wrapper';
+  const router = express.Router();
+
+  router.put('/api/tickets/:id',
+    requireAuth,
+    [
+      body('title')
+        .not()
+        .isEmpty()
+        .withMessage('Title is required'),
+      body('price')
+        .isFloat({gt: 0})
+        .withMessage('Price must be provided and greater than 0')
+    ],
+    validateRequest,
+    async (req: Request, res: Response) => {
+      const ticket = await Ticket.findById(req.params.id);
+
+      if(!ticket){
+        throw new NotFoundError();
+      }
+
+      if(ticket.userId !== req.currentUser!.id){
+        throw new NotAuthorizedError();
+      }
+
+      //apply update 
+      ticket.set({
+        title: req.body.title,
+        price: req.body.price
+      })
+
+      await ticket.save();  //ticket is now updated
+
+      new TicketUpdatedPublisher(natsWrapper.client).publish({
+        id: ticket.id,
+        title: ticket.title,
+        price: ticket.price,
+        userId: ticket.userId
+        version: ticket.version
+      });
+
+      //sending back ticket will have the updated data
+      res.send(ticket);
+    }
+  );
+
+  export {router as updateTicketRouter}
+  ```
+
+---
+
+## Orders service
+- 2min 12sec
+- `orders/src/models/ticket.ts`
+- TODO: update orders' `ticket model` (this replicated version of ticket model) which should now include property `version`
+- we add the version so that the orders can be processed in the correct order
+- `tickets database producing` the version number and `orders service/orders database that consume` these version numbers
+
+<img
+src='exercise_files/udemy-microservices-section19-405-reminder-orders-service-orders-database.png'
+alt='udemy-microservices-section19-405-reminder-orders-service-orders-database.png'
+width=600
+/> 
+
+---
+
 ### 406. Property 'version' is missing TS Errors After Running Skaffold
 ### 407. Applying a Version Query
 ### 408. Did it Work?
