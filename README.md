@@ -16601,6 +16601,87 @@ new OrderCreatedPublisher(natsWrapper.client).publish({
 ```
 
 ### 407. Applying a Version Query
+- STATUS: events now have version numbers
+
+#### Orders service:
+- `section05-19-ticketing/orders/` 
+
+- orders/src/models/order.ts
+  - TODO: add `mongoose-update-if-current` node module
+
+- orders/src/models/ticket.ts
+  - install `pnpm i mongoose-update-if-current`
+  - `orders/src/models/ticket.ts`
+  - TODO: initialize -> `ticketSchema.plugin(updateIfCurrentPlugin);`
+  - TODO: add `version` to TicketDoc interface
+  - TODO: tell ticketSchema to use `version` instead of `__v`
+
+
+```ts
+//orders/src/models/ticket.ts
+import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
+
+export interface TicketDoc extends mongoose.Document{
+  //...
+  version:number;
+}
+
+//...
+const ticketSchema = new mongoose.Schema({
+  //...
+});
+
+ticketSchema.set('versionKey', `version`);
+ticketSchema.plugin(updateIfCurrentPlugin);
+
+//...
+
+```
+
+#### listener
+- `orders/src/events/listeners/ticket-updated-listener.ts`
+  - @ 2min 40sec
+  - TODO: make listener work
+    - ticket update listener will receive events
+    - find ticket in db (with same id AND incoming event's version minus 1)
+    - apply updates to database and the version gets automatically updated in db
+
+```ts
+export class TicketUpdatedListener extends Listener<TicketUpdatedEvent>{
+  //UPDATE:
+  const ticket = await Ticket.findOne({
+    _id: data.id,
+    version: data.version - 1
+  });
+  //...
+}
+```
+
+### test with postman
+- NOTE: you are authenticated
+- DOCKER is running
+- testing with postman
+
+#### create ticket 
+- create ticket POST `https://ticketing.dev/api/tickets/` -> {"title": "movie", "price":15}
+- note the returned data from api call -> id eg. `5reotjrotietuoertof9c9c9c9`
+
+#### update ticket 
+- TODO: get the `id` from returned data from create ticket (eg. `5reotjrotietuoertof9c9c9c9`)
+- PUT `http://ticketing.dev/api/tickets/5reotjrotietuoertof9c9c9c9` -> {"title": "movie", "price":999}
+
+#### run test...
+
+<img
+src='exercise_files/udemy-microservices-section19-407-successfully-create-and-update-ticket.png'
+alt='udemy-microservices-section19-407-successfully-create-and-update-ticket.png'
+width=600
+/>
+
+---
+
+
+
 ### 408. Did it Work?
 ### 409. Abstracted Query Method
 ### 410. (Optional) Versioning Without Update-If-Current

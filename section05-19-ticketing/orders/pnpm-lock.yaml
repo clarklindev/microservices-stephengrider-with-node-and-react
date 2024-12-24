@@ -44,6 +44,9 @@ importers:
       mongoose:
         specifier: ^8.8.1
         version: 8.8.3
+      mongoose-update-if-current:
+        specifier: ^1.4.0
+        version: 1.4.0(mongoose@8.8.3)
       node-nats-streaming:
         specifier: ^0.3.2
         version: 0.3.2
@@ -704,6 +707,9 @@ packages:
   cookies@0.9.1:
     resolution: {integrity: sha512-TG2hpqe4ELx54QER/S3HQ9SRVnQnGBtKUz5bLQWtYAQ+o6GpgMs6sYUvaiJjVxb+UXwhRhAEP3m7LbsIZ77Hmw==}
     engines: {node: '>= 0.8'}
+
+  core-js@3.39.0:
+    resolution: {integrity: sha512-raM0ew0/jJUqkJ0E6e8UDtl+y/7ktFivgWvqw8dNSQeNWoSDLvQ1H/RN3aPXB9tBd4/FhyR4RDPGhsNIMsAn7g==}
 
   create-jest@29.7.0:
     resolution: {integrity: sha512-Adz2bdH0Vq3F53KEMJOoftQFutWCukm6J24wbPWRO4k1kMY7gS7ds/uoJkNuV8wDCtWWnuwGcJwpWcih+zEW1Q==}
@@ -1459,6 +1465,12 @@ packages:
       socks:
         optional: true
 
+  mongoose-update-if-current@1.4.0:
+    resolution: {integrity: sha512-Rau2nvdiLExqXrSOwMMgDYQgf/fwTJQpPidTcT7C9UMQ282gTKXjDuh5vrjVvVQpfuvkiPis0tGHdXffaD54bg==}
+    engines: {node: '>=8.0.0'}
+    peerDependencies:
+      mongoose: '>=5.0.0'
+
   mongoose@8.8.3:
     resolution: {integrity: sha512-/I4n/DcXqXyIiLRfAmUIiTjj3vXfeISke8dt4U4Y8Wfm074Wa6sXnQrXN49NFOFf2mM1kUdOXryoBvkuCnr+Qw==}
     engines: {node: '>=16.20.1'}
@@ -1639,6 +1651,9 @@ packages:
   readdirp@3.6.0:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
+
+  regenerator-runtime@0.13.11:
+    resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
 
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
@@ -2822,6 +2837,8 @@ snapshots:
       depd: 2.0.0
       keygrip: 1.1.0
 
+  core-js@3.39.0: {}
+
   create-jest@29.7.0(@types/node@22.10.1)(ts-node@10.9.2(@types/node@22.10.1)(typescript@5.7.2)):
     dependencies:
       '@jest/types': 29.6.3
@@ -3725,6 +3742,13 @@ snapshots:
       bson: 6.10.1
       mongodb-connection-string-url: 3.0.1
 
+  mongoose-update-if-current@1.4.0(mongoose@8.8.3):
+    dependencies:
+      core-js: 3.39.0
+      kareem: 2.6.3
+      mongoose: 8.8.3
+      regenerator-runtime: 0.13.11
+
   mongoose@8.8.3:
     dependencies:
       bson: 6.10.1
@@ -3894,6 +3918,8 @@ snapshots:
   readdirp@3.6.0:
     dependencies:
       picomatch: 2.3.1
+
+  regenerator-runtime@0.13.11: {}
 
   require-directory@2.1.1: {}
 
