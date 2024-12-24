@@ -16548,6 +16548,58 @@ width=600
 ---
 
 ### 406. Property 'version' is missing TS Errors After Running Skaffold
+- upcoming lessons -> TS errors when re-running skaffold dev to test our services with Postman
+
+- the error:
+```
+[orders] Compilation error in /app/src/routes/delete.ts
+[orders] [ERROR] 23:45:07 ⨯ Unable to compile TypeScript:
+[orders] src/routes/delete.ts(31,61): error TS2345: Argument of type '{ id: any; ticket: { id: any; }; }' is not assignable to parameter of type '{ id: string; version: number; ticket: { id: string; }; }'.
+[orders]   Property 'version' is missing in type '{ id: any; ticket: { id: any; }; }' but required in type '{ id: string; version: number; ticket: { id: string; }; }'
+
+```
+- TODO FIXES: need to add a version property to the Order model interface:
+
+```ts
+//orders/src/models/order.ts
+interface OrderDoc extends mongoose.Document {
+  userId: string;
+  status: OrderStatus;
+  expiresAt: Date;
+  ticket: TicketDoc;
+  version: number;
+}
+```
+- update `delete` and `new` routes (include version):
+  - orders/src/routes/delete.ts
+  - orders/src/routes/new.ts
+  
+```ts
+//orders/src/routes/delete.ts
+new OrderCancelledPublisher(natsWrapper.client).publish({
+  id: order.id,
+  version: order.version,
+  ticket: {
+    id: order.ticket.id,
+  },
+});
+```
+
+```ts
+//orders/src/routes/new.ts
+new OrderCreatedPublisher(natsWrapper.client).publish({
+  id: order.id,
+  version: order.version,
+  status: order.status,
+  userId: order.userId,
+  expiresAt: order.expiresAt.toISOString(),
+  ticket: {
+    id: ticket.id,
+    price: ticket.price,
+  },
+});
+```
+
 ### 407. Applying a Version Query
 ### 408. Did it Work?
 ### 409. Abstracted Query Method
