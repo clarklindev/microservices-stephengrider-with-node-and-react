@@ -16881,6 +16881,22 @@ width=600
 />
 
 ### 413. Testing the Ack Call
+- `orders/src/events/listeners/__test__/ticket-created-listener.ts`
+
+```ts
+//orders/src/events/listeners/__test__/ticket-created-listener.ts
+
+it('acks the message', async ()=>{
+  const {listener, data, msg} = await setup();
+  
+  //call the onMessage function with the data object + message object
+  await listener.onMessage(data, msg);
+
+  //write assertions to make sure ack function is called
+  expect(msg.ack).toHaveBeenCalled();
+});
+```
+
 ### 414. Testing the Ticket Updated Listener
 ### 415. Success Case Testing
 ### 416. Out-Of-Order Events
