@@ -18,6 +18,12 @@ export class TicketUpdatedListener extends Listener<TicketUpdatedEvent>{
       throw new Error('Ticket not found');
     }
 
+    //custom implementation of `mongoose-update-if-current`
+    // const {title, price, version} = data;
+    // ticket.set({title, price, version});
+    // await ticket.save();
+
+    //using `mongoose-update-if-current` (no need for version)
     const {title, price} = data;
     ticket.set({title, price});
     await ticket.save();

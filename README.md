@@ -16759,6 +16759,94 @@ width=600
 />
 
 ### 410. (Optional) Versioning Without Update-If-Current
+- tracking versions without using the `mongoose-update-if-current` module by building it
+- NOTE: the changes from this lesson will be reverted 
+
+## mongoose-update-if-current behaviors
+- these are the behaviors we need to replace to use our own version update behavior
+
+1. updates version number before save 
+
+  ### other db versioning
+  - both services use this module and has common version semantics
+  - however, we assume that version number is incremented by 1 when version updates as we know where the events are coming from and that they have the same version semantics (format/increment) but other information stores might not have exact same version semantics as `mongoose-update-if-current` module. ie. other db might have different version tracking eg timestamp
+
+  ### without mongoose-update-if-current behaviors
+  - note: events all have versions included...from 
+  - and we were updating order records in database using event version
+  - to do this with code...we destruct the version from the event data  
+
+  ```ts
+  //orders/src/events/listeners/ticket-udpated-listener.ts
+    async onMessage(data:TicketUpdatedEvent['data'], msg:Message) {
+      // const ticket = await Ticket.findById(data.id);
+
+      //UPDATE:
+      const ticket = await Ticket.findByEvent(data);
+
+      if(!ticket){
+        throw new Error('Ticket not found');
+      }
+
+      //also get version from data (event)
+      const {title, price, version} = data;
+      ticket.set({title, price, version});
+      await ticket.save();
+    
+      msg.ack();
+    }
+  ```
+
+2. customizes find-and-update (save) to look for the correct version
+- mongoose -> the Model class has a `.$where` property 
+  - `.$where` -> additional properties to attach to the query when calling `save()` and `IsNew` is false
+  - ie. use `.$where` when querying, to not only search by id, but also some additional properties
+
+- `orders/src/models/ticket.ts`
+- we comment out using the plugin: `// ticketSchema.plugin(updateIfCurrentPlugin);`
+- calling `.pre('save', function(done){})` will run this function before save
+- `done()` should be called once we have done what we needed.
+
+#### @10min.23sec
+- TODO: we overwrite by dynamically (on the fly) re-assign the `$where` property, putting additional criteria on 'save' operation
+- Notice how we reference the current document with `this.` because we used function() call instead of arrow function (which would change execution context)
+- we add `//@ts-ignore` above `this.$where` because typescript doesnt pickup this from mongoose type definitions.
+- this change ensures that when we save this record to mongodb...it will find record with the id AND a version equal current version minus 1
+
+- `orders/src/models/ticket.ts`
+
+```ts
+//orders/src/models/ticket.ts
+
+ticketSchema.set('versionKey', `version`);
+// ticketSchema.plugin(updateIfCurrentPlugin);
+
+ticketSchema.pre('save', function(done){
+  //@ts-ignore
+  this.$where = {
+    version: this.get('version') - 1
+  }
+
+  done();
+})
+
+```
+### Confirmation of saved data
+- `kubectl get pods`
+- to look inside orders service -> `order-mongo-depl-xxxxxxx`: 
+
+#### running commands in mongodb database
+- open up mongo shell -> `kubectl exec -it orders-mongo-depl-xxxxxxx mongo`
+- list all dbs -> `show dbs;`
+- select orders database -> `use orders;`
+- `tickets` collection in orders database -> `db.tickets`
+- db.tickets.find({price: 2000}) -> note the version updated (incremented by 1)
+
+TODO -> reverse the removing of the `mongoose-update-if-current` plugin
+- uncomment: `ticketSchema.plugin(updateIfCurrentPlugin);`
+- remove middleware: `ticketSchema.pre('save', function(done){}`
+- in listener: `orders/src/events/listeners/ticket-updated-listener.ts` remove reference to version
+
 ### 411. Testing Listeners
 ### 412. A Complete Listener Test
 ### 413. Testing the Ack Call
