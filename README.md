@@ -16848,6 +16848,22 @@ TODO -> reverse the removing of the `mongoose-update-if-current` plugin
 - in listener: `orders/src/events/listeners/ticket-updated-listener.ts` remove reference to version
 
 ### 411. Testing Listeners
+- TODO: writing tests around the listeners
+  - `orders/src/events/listeners/TicketCreatedListener`
+  - create an instance of the listener
+  - fabricate fake data object 
+  - fabricate fake msg object
+  - pass them into the listener
+  - should result in eg. valid ticket
+  - and we should call msg.ack();
+
+- created this folder: `orders/src/events/listeners/__test__/`
+
+```ts
+//orders/src/events/listeners/__test__/ticket-created-listener.test.ts
+
+```
+
 ### 412. A Complete Listener Test
 ### 413. Testing the Ack Call
 ### 414. Testing the Ticket Updated Listener
