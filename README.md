@@ -16898,7 +16898,63 @@ it('acks the message', async ()=>{
 ```
 
 ### 414. Testing the Ticket Updated Listener
+
+- `orders/src/events/listeners/__test__/ticket-updated-listener.ts`
+
+```ts
+//orders/src/events/listeners/__test__/ticket-updated-listener.ts
+import mongoose from 'mongoose';
+import { Message } from 'node-nats-streaming';
+
+import { TicketUpdatedEvent } from '@clarklindev/common';
+import { TicketUpdatedListener } from "../ticket-updated-listener";
+import { natsWrapper } from "../../../nats-wrapper";
+import { Ticket } from "../../../models/ticket";
+
+const setup = async () => {
+  //create a listener
+  const listener = new TicketUpdatedListener(natsWrapper.client);
+
+  //create and save a ticket
+  const ticket = Ticket.build({
+    id: new mongoose.Types.ObjectId().toHexString(),
+    title: 'concert',
+    price: 20
+  });
+
+  await ticket.save();
+
+  //create a fake data object
+  const data: TicketUpdatedEvent['data'] = {
+    id: ticket.id,
+    version: ticket.version + 1,
+    title: 'new concert',
+    price: 999,
+    userId: 'asdasdasdafsdf'
+  }
+
+  //create a fake msg object
+  //@ts-ignore
+  const msg: Message = {
+    ack: jest.fn()
+  }
+
+  //return all of this stuff
+  return {msg, data, ticket, listener};
+}
+
+it('finds, updates, and saves a ticket', async ()=>{
+
+});
+
+it('acks the message', async ()=>{
+
+});
+
+```
 ### 415. Success Case Testing
+- see code at lesson 414
+
 ### 416. Out-Of-Order Events
 ### 417. The Next Few Videos
 ### 418. Fixing a Few Tests
