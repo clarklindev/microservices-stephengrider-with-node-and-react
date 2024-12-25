@@ -16858,6 +16858,8 @@ TODO -> reverse the removing of the `mongoose-update-if-current` plugin
   - and we should call msg.ack();
 
 - created this folder: `orders/src/events/listeners/__test__/`
+- in the listener, import the TicketCreatedListener
+- import `nats-wrapper.ts` which we use for tests to privide fake NATS client
 
 ```ts
 //orders/src/events/listeners/__test__/ticket-created-listener.test.ts
@@ -16865,6 +16867,19 @@ TODO -> reverse the removing of the `mongoose-update-if-current` plugin
 ```
 
 ### 412. A Complete Listener Test
+- the fake `data` needs to satisfy the `TicketCreatedEvent`'s data interface
+- with fake `msg`, create a fake mock function which you can track if it was called
+- call the onMessage function with the data object + message object
+- writing a query to find a ticket in db with id and then assert ticket exists 
+
+- expect -> passing test
+
+<img
+src='exercise_files/udemy-microservices-section19-412-expect-passing-test.png'
+alt='udemy-microservices-section19-412-expect-passing-test.png'
+width=600
+/>
+
 ### 413. Testing the Ack Call
 ### 414. Testing the Ticket Updated Listener
 ### 415. Success Case Testing
