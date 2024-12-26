@@ -16995,9 +16995,44 @@ it('does not call ack if the event has a skipped version number', async () => {
 
 ```
 
-
-
 ### 417. The Next Few Videos
+
+<img
+src='exercise_files/udemy-microservices-section19-417-next-couple-videos.png'
+alt='udemy-microservices-section19-417-next-couple-videos.png'
+width=600
+/>
+
+- TODO:
+  - add 'mongoose-update-if-current' module into Orders model
+    - we want version system for orders (just like tickets) 
+    - will publish emit events over time and want them processed in correct order
+  - FIX some tests
+    - currently creating tickets in the `orders/` service without IDs
+  - FIX some route handlers
+    - currently `orders/` publishing events for orders (version not included)
+
+### starts updates - @2min 14sec
+- `orders/src/models/order.ts`
+
+```ts
+//orders/src/models/order.ts
+import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
+
+interface OrderDoc extends mongoose.Document{
+  //...
+  version:number
+}
+//...
+orderSchema.set('versionKey', 'version');
+orderSchema.plugin(updateIfCurrentPlugin);
+
+orderSchema.statics.build = (attrs:OrderAttrs) =>{
+  return new Order(attrs);
+}
+
+```
+
 ### 418. Fixing a Few Tests
 ### 419. Listeners in the Tickets Service
 ### 420. Building the Listener
