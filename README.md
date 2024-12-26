@@ -16944,7 +16944,16 @@ const setup = async () => {
 }
 
 it('finds, updates, and saves a ticket', async ()=>{
+  const {msg, data, ticket, listener} = await setup();
+  
+  await listener.onMessage(data, msg);
 
+  const updatedTicket = await Ticket.findById(ticket.id);
+
+  expect(updatedTicket!.title).toEqual(data.title);
+  expect(updatedTicket!.price).toEqual(data.price);
+  expect(updatedTicket!.version).toEqual(data.version);
+  
 });
 
 it('acks the message', async ()=>{
@@ -16953,9 +16962,41 @@ it('acks the message', async ()=>{
 
 ```
 ### 415. Success Case Testing
-- see code at lesson 414
+- see code at lesson 414: `it('finds, updates, and saves a ticket', async ()=>{});`
 
 ### 416. Out-Of-Order Events
+- TODO:
+  - create an instance of listener
+  - create data event
+  - give it a version far in future (accidentally process event that's NOT the next version order)
+  - then make sure we throw an error or do NOT call ack() function (nats will retry event again in the future)
+
+- `orders/src/events/listeners/__test__/ticket-updated-listener.test.ts`
+
+```ts
+//orders/src/events/listeners/__test__/ticket-updated-listener.test.ts
+
+it('acks the message', async ()=>{
+  const {msg, data, listener} = await setup();
+  await listener.onMessage(data, msg);
+  expect(msg.ack).toHaveBeenCalled();
+});
+
+it('does not call ack if the event has a skipped version number', async () => {
+  const {msg, data, listener, ticket} = await setup();
+  data.version = 10;  //give version futher away from the immediate next version number
+  try{
+    await listener.onMessage(data, msg);
+  }
+  catch(err){
+  }
+  expect(msg.ack).not.toHaveBeenCalled();
+})
+
+```
+
+
+
 ### 417. The Next Few Videos
 ### 418. Fixing a Few Tests
 ### 419. Listeners in the Tickets Service

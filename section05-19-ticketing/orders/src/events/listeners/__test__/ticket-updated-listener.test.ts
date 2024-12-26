@@ -52,5 +52,18 @@ it('finds, updates, and saves a ticket', async ()=>{
 });
 
 it('acks the message', async ()=>{
-
+  const {msg, data, listener} = await setup();
+  await listener.onMessage(data, msg);
+  expect(msg.ack).toHaveBeenCalled();
 });
+
+it('does not call ack if the event has a skipped version number', async () => {
+  const {msg, data, listener, ticket} = await setup();
+  data.version = 10;  //give version futher away from the immediate next version number
+  try{
+    await listener.onMessage(data, msg);
+  }
+  catch(err){
+  }
+  expect(msg.ack).not.toHaveBeenCalled();
+})
