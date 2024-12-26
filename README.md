@@ -17034,6 +17034,71 @@ orderSchema.statics.build = (attrs:OrderAttrs) =>{
 ```
 
 ### 418. Fixing a Few Tests
+- Fixing some tests (see lesson 417 TODO)
+
+## UPDATE: Adding 'id' to passed-in object when calling Ticket.build()
+- TODO: when creating tickets have to include id with event
+- FIX: use mongoose to generate random id and pass with event to `Ticket.build({})`
+- in all the tests...where you call `Ticket.build()`
+- add id property: `Ticket.build({ id: new mongoose.Types.ObjectId().toHexString() })`
+- NOTE: we use mongoose to generate random id
+
+- `orders/src/routes/__test__/delete.test.ts`
+
+  ```ts
+  //orders/src/routes/__test__/delete.test.ts
+
+  import mongoose from 'mongoose';
+  //...
+
+  //...
+  it('', async () => {
+    const ticket = Ticket.build({
+      id: new mongoose.Types.ObjectId().toHexString(),
+      title: 'concert',
+      price: 20,
+    });
+  });
+  ```
+- `orders/src/routes/__test__/index.test.ts`
+- `orders/src/routes/__test__/new.test.ts`
+- `orders/src/routes/__test__/show.test.ts`
+
+## UPDATE: Adding 'version' to where we publishing events (routes)
+- TODO: need to add version property when publishing events
+- the version flag is primary means for concurrency control
+- `orders/src/routes/delete.ts`
+- NOTE: this update was mentioned earlier in git commit (lesson 406. Property 'version' is missing TS Errors After Running Skaffold)
+
+```ts
+//orders/src/routes/delete.ts
+//...
+
+new OrderCancelledPublisher(natsWrapper.client).publish({
+  id: order.id,
+  version: order.version,
+  ticket:{
+    id: order.ticket.id
+  }
+});
+```
+
+```ts
+//orders/src/routes/new.ts
+new OrderCreatedPublisher(natsWrapper.client).publish({
+  id: order.id,
+  version: order.version,
+  status: order.status,
+  userId: order.userId,
+  expiresAt: order.expiresAt.toISOString(),
+  ticket:{
+    id: ticket.id,
+    price: ticket.price
+  }
+});
+
+```
+
 ### 419. Listeners in the Tickets Service
 ### 420. Building the Listener
 ### 421. Strategies for Locking a Ticket
