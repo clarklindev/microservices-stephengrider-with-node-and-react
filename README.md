@@ -17157,6 +17157,15 @@ width=600
 ```
 
 ### 420. Building the Listener
+- `ticket/` service
+- tickets/src/events/listeners
+- `tickets/src/events/listeners/order-created-listener.ts`
+
+```ts
+//tickets/src/events/listeners/order-created-listener.ts
+
+
+```
 
 ### 421. Strategies for Locking a Ticket
 ### 422. Reserving a Ticket
