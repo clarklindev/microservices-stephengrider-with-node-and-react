@@ -17100,7 +17100,64 @@ new OrderCreatedPublisher(natsWrapper.client).publish({
 ```
 
 ### 419. Listeners in the Tickets Service
+- revisiting `tickets/` service
+- TODO: ensure we reserve tickets properly (user cannot edit ticket's title or price while reserved)
+
+# Orders Service
+- up to now, `orders service` is wired up to `listen` to `ticket:created` event and `ticket:updated` event
+
+### LISTENING
+#### ticket:created
+#### ticket:updated
+
+### CREATING
+#### order:created
+<img
+src='exercise_files/udemy-microservices-section19-419-orders-service-publish-order-created.png'
+alt='udemy-microservices-section19-419-orders-service-publish-order-created.png'
+width=600
+/>
+
+#### order:cancelled
+<img
+src='exercise_files/udemy-microservices-section19-419-orders-service-publish-order-cancelled.png'
+alt='udemy-microservices-section19-419-orders-service-publish-order-cancelled.png'
+width=600
+/>
+
+# Ticket service
+
+### CREATING
+#### ticket:created
+<img
+src='exercise_files/udemy-microservices-section19-419-orders-service-listens-ticket-created.png'
+alt='udemy-microservices-section19-419-orders-service-listens-ticket-created.png'
+width=600
+/>
+
+#### ticket:updated
+<img
+src='exercise_files/udemy-microservices-section19-419-orders-service-listens-ticket-updated.png'
+alt='udemy-microservices-section19-419-orders-service-listens-ticket-updated.png'
+width=600
+/>
+
+### LISTENING
+- TODO - ticket service needs to listen for events that Order service creates  
+  - `order:created` -> once ticket has been reserved -> ticket service needs to listen so it can set something to lock down ticket (prevent price change while it is reserved)
+  - `order:cancelled` -> unlock and allow editting
+
+#### order:created
+```ts
+//...
+```
+#### order:cancelled
+```ts
+//...
+```
+
 ### 420. Building the Listener
+
 ### 421. Strategies for Locking a Ticket
 ### 422. Reserving a Ticket
 ### 423. Setup for Testing Reservation
