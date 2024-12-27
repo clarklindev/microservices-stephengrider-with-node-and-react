@@ -17168,6 +17168,33 @@ width=600
 ```
 
 ### 421. Strategies for Locking a Ticket
+- TODO: lock down a ticket when order is created for a ticket (order-created-listener is called)
+
+#### locking with boolean
+- using a boolean doesnt give sufficient information
+<img
+src='exercise_files/udemy-microservices-section19-421-strategies-for-locking-down-a-ticket-downside-to-locking-with-just-a-boolean.png'
+alt='udemy-microservices-section19-421-strategies-for-locking-down-a-ticket-downside-to-locking-with-just-a-boolean.png'
+width=600
+/>
+
+#### locking with order id 
+- using order id as lock, you can get `status` of ticket a lot easier
+- orderid will be used as a lock to prevent editing
+- default orderid will be null (allow edits) , when orderid is NOT null, (DO NOT allow edits)
+- NOTE: technically can just use ticketid and create endpoint to return information associated with ticket
+
+<img
+src='exercise_files/udemy-microservices-section19-421-strategies-for-locking-down-a-ticket-locking-with-order-id.png'
+alt='udemy-microservices-section19-421-strategies-for-locking-down-a-ticket-locking-with-order-id.png'
+width=600
+/>
+
+- in code -> when OrderCreatedListener receives a message `onMessage()`
+- the `data.id` is order id and we also have `data.ticket.id` (see OrderCreatedEvent)
+- use ticket id to fetch the ticket out ticket collection
+- then on model -> ticket document, we will store the `order id` (we get this from OrderCreatedEvent['data'])
+
 ### 422. Reserving a Ticket
 ### 423. Setup for Testing Reservation
 ### 424. Test Implementation
