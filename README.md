@@ -17196,6 +17196,61 @@ width=600
 - then on model -> ticket document, we will store the `order id` (we get this from OrderCreatedEvent['data'])
 
 ### 422. Reserving a Ticket
+
+#### Ticket model updates
+- TODO: add order id to ticket (schema)
+- `tickets/src/models/ticket.ts`
+- add Schema property orderId: `orderId:{ type:String }` NOTE: not required as it starts off `null`
+- `interface TicketDoc` -> add orderId as optional: `orderId?: string`
+
+```ts
+//tickets/src/models/ticket.ts
+//properties that a Ticket has
+interface TicketDoc extends mongoose.Document{
+  title: string;
+  price: number;
+  userId: string;
+  version: number;
+  orderId?: string;
+}
+```
+
+#### ticket listener (order created listener)
+- `tickets/src/events/listeners/order-created-listener.ts`
+- reach into ticket collection and find ticket order is reserving
+- if no ticket throw an error
+- mark ticket as reserved setting 'orderId' property
+- save the ticket
+- ack the message
+
+```ts
+//tickets/src/events/listeners/order-created-listener.ts
+import { Message } from 'node-nats-streaming';
+import {Listener, Subjects, OrderCreatedEvent} from '@clarklindev/common';
+import { queueGroupName } from './queue-group-name';
+import { Ticket } from '../../models/ticket';
+
+export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
+  readonly subject = Subjects.OrderCreated;
+  queueGroupName = queueGroupName;
+  
+  async onMessage(data:OrderCreatedEvent['data'], msg:Message){
+    //find ticket order is reserving
+    const ticket = await Ticket.findById(data.ticket.id);
+    //if no ticket throw error
+    if(!ticket){
+      throw new Error('Ticket not found');
+    }
+    //mark ticket as reserved setting 'orderId' property
+    ticket.set({orderId: data.id});
+    //save the ticket
+    await ticket.save();
+    //ack the message
+    msg.ack();
+  }
+}
+```
+
 ### 423. Setup for Testing Reservation
 ### 424. Test Implementation
 ### 425. Missing Update Event
