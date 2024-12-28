@@ -17252,6 +17252,7 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
 ```
 
 ### 423. Setup for Testing Reservation
+- this is the setup for the tests
 - `tickets/src/events/listeners/__test__/order-created-listener.ts`
 
 #### testing
@@ -17305,6 +17306,46 @@ const setup = async () => {
 ```
 
 ### 424. Test Implementation
+- writing tests for the `order-created-listener`
+- the goal of what we trying to do is set ticket prop `orderId` to the `order id` of the received `data:OrderCreatedEvent['data']` object
+- look in db
+- find ticket that has been updated (NOTE: we fetch the ticket using id instead of initial constructed ticket)
+- Updated ticket -> tests using initial tickets' id and finding the updated version from Ticket collection
+- make sure that ticket has its `orderId` property set (expect...)
+- expect msg.ack to have been called
+
+```ts
+//order-created-listener.test.ts
+
+//create and save a ticket
+const setup = async () => {
+  //...
+
+  const ticket = Ticket.build({
+    title: 'concert',
+    price: 99,
+    userId: 'asdg'
+  });
+  await ticket.save();
+  //...
+}
+
+//tests using initial setup tickets' id and finding the updated version from Ticket collection
+it('sets the userId of the ticket', async () => {
+  const {listener, ticket, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+  const updatedTicket = await Ticket.findById(ticket.id); 
+  expect(updatedTicket!.orderId).toEqual(data.id);
+});
+
+it('acks the message', async () => {
+  const {listener, ticket, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+  expect(msg.ack).toHaveBeenCalled();
+});
+```
+
+
 ### 425. Missing Update Event
 ### 426. Private vs Protected Properties
 ### 427. Publishing While Listening

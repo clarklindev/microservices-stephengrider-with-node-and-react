@@ -5,6 +5,7 @@ import { OrderCreatedListener } from "../order-creacted-listener";
 import { natsWrapper } from "../../../nats-wrapper";
 import { Ticket } from "../../../models/ticket";
 import { Message } from "node-nats-streaming";
+
 const setup = async () => {
   //create an instance of the listener
   const listener = new OrderCreatedListener(natsWrapper.client);
@@ -38,3 +39,18 @@ const setup = async () => {
 
   return {listener, ticket, data, msg};
 }
+
+it('sets the userId of the ticket', async ()=>{
+  const {listener, ticket, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+  const updatedTicket = await Ticket.findById(ticket.id); 
+  expect(updatedTicket!.orderId).toEqual(data.id);
+
+});
+
+it('acks the message', async ()=>{
+  const {listener, ticket, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+  expect(msg.ack).toHaveBeenCalled();
+
+});
