@@ -17252,6 +17252,58 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
 ```
 
 ### 423. Setup for Testing Reservation
+- `tickets/src/events/listeners/__test__/order-created-listener.ts`
+
+#### testing
+- create an instance of the listener
+- create and save a ticket
+- create the fake data event (order created event)
+- note: `msg:Message` for tests, its tellling typscript to ignore (`//@ts-ignore`) because we only need to mock the ack function. 
+
+```ts
+//tickets/src/events/listeners/__test__/order-created-listener.ts
+import { OrderCreatedEvent, OrderStatus } from "@clarklindev/common";
+import mongoose from 'mongoose';
+
+import { OrderCreatedListener } from "../order-creacted-listener";
+import { natsWrapper } from "../../../nats-wrapper";
+import { Ticket } from "../../../models/ticket";
+const setup = async () => {
+  //create an instance of the listener
+  const listener = new OrderCreatedListener(natsWrapper.client);
+
+  //create and save a ticket
+  const ticket = Ticket.build({
+    title: 'concert',
+    price: 99,
+    userId: 'asdg'
+  });
+
+  await ticket.save();
+
+  //create the fake data event (order created event)
+  const data:OrderCreatedEvent['data'] = {
+    id: new mongoose.Types.ObjectId().toHexString(),
+    version: 0,
+    status: OrderStatus.Created,
+    userId: 'adsdasdqew',
+    expiresAt: 'string',
+    ticket: {
+      id: ticket.id,
+      price: ticket.price
+    }
+  };
+
+  
+  //@ts-ignore
+  const msg:Message = {
+    ack: jest.fn()
+  }
+
+  return {listener, ticket, data, msg};
+}
+```
+
 ### 424. Test Implementation
 ### 425. Missing Update Event
 ### 426. Private vs Protected Properties
