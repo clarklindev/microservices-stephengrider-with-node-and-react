@@ -17395,6 +17395,47 @@ width=600
 
 
 ### 426. Private vs Protected Properties
+- `tickets/src/events/listeners/order-created-listener.ts`
+- `order-created-listener` create an event after ticket was saved - emit event that says ticket was just updated
+
+- in `tickets/src/events/publishers/`
+- we will use - `tickets/src/events/publishers/ticket-updated-publisher.ts`
+- to publish event -> create an instance: `new TicketUpdatedPublisher(natsWrapper.client).publish({})`
+  - pass in nats-client
+  - ticket should also have `orderId` property
+  - when we update a ticket, want to also tell other services if the ticket is reserved (via `orderId`)
+- TODO: add `orderId` to event definition (`TicketUpdatedEvent`) in `common/` 
+- usage: `new TicketUpdatedPublisher(natsWrapper.client).publish({});`
+
+- in `tickets/src/events/listeners/order-created-listener.ts`
+
+### option1 - providing nats client
+
+<img
+src='exercise_files/'
+alt=''
+width=600
+/>
+
+```ts
+//tickets/src/events/listeners/order-created-listener.ts
+import { natsWrapper } from '../../nats-wrapper';
+import {TicketUpdatedPublisher} from '../publishers/ticket-updated-publisher';
+export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
+  //...
+  async onMessage(data:OrderCreatedEvent['data'], msg:Message){
+    await ticket.save();
+    new TicketUpdatedPublisher(natsWrapper.client);
+  }
+}
+```
+
+### option2 - OrderCreatedListener is subclass of Listener
+- its a subclass of listener and has a nats client already (but its marked as private so subclasses cant access this)
+- FIX: mark the Listener base class `client` property as `protected`, 
+- TODO: TicketUpdatedEvent needs an `orderId` property
+- TODO: in `common/src/events/base-listener` mark client as protected
+
 ### 427. Publishing While Listening
 ### 428. Mock Function Arguments
 ### 429. Order Cancelled Listener
