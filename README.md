@@ -17345,8 +17345,55 @@ it('acks the message', async () => {
 });
 ```
 
-
 ### 425. Missing Update Event
+#### summary 
+- ticket updated with version but doesnt emit event to get picked up by orders service
+- FIX: emit event to get picked up by orders service when any changes to ticket (`order created event` or `order cancelled`)
+
+---
+
+- initial event
+
+<img
+src='exercise_files/udemy-microservices-section19-425-missing-update-event-inconsistent-data-slide-1-order-created.png'
+alt='udemy-microservices-section19-425-missing-update-event-inconsistent-data-slide-1-order-created.png'
+width=600
+/>
+
+---
+
+- cancel event would remove order id from ticket
+- version is incremented to 2
+
+<img
+src='exercise_files/udemy-microservices-section19-425-missing-update-event-inconsistent-data-slide-2-order-cancelled.png'
+alt='udemy-microservices-section19-425-missing-update-event-inconsistent-data-slide-2-order-cancelled.png'
+width=600
+/>
+
+---
+
+- ticket updated...
+- ticket version updated to 3 
+
+<img
+src='exercise_files/udemy-microservices-section19-425-missing-update-event-inconsistent-data-slide-3-ticket-updated.png'
+alt='udemy-microservices-section19-425-missing-update-event-inconsistent-data-slide-3-ticket-updated.png'
+width=600
+/>
+
+---
+
+- ticket on v3
+- orders service ticket on v0
+
+<img
+src='exercise_files/udemy-microservices-section19-425-missing-update-event-inconsistent-data-slide-4-ticket-service-ticket-v3-orders-service-ticket-v0.png'
+alt='udemy-microservices-section19-425-missing-update-event-inconsistent-data-slide-4-ticket-service-ticket-v3-orders-service-ticket-v0.png'
+width=600
+/>
+
+
 ### 426. Private vs Protected Properties
 ### 427. Publishing While Listening
 ### 428. Mock Function Arguments
