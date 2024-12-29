@@ -17450,7 +17450,66 @@ width=600
 - FIX: mark the Listener base class `client` property as `protected`, 
 
 ### 427. Publishing While Listening
+- common/ repo
+- `common/src/events/base-listener.ts`
+  - change client to `protected` modifier
+- `common/src/events/base-publisher.ts`
+  - change client to `protected` modifier
+
+- `common/src/events/ticket-updated-event.ts`
+  - add `orderId?: string;`
+  - NOTE: `ticket-created-event.ts` `orderId` is not necessary because it will always be null/undefined when ticket is created
+
+#### common repo
+- TODO: 
+  - commit changes
+  - republish common/ module to npm 
+
+#### main project/tickets/
+- TODO:
+  - `pnpm update @clarklindev/common`
+
+#### main project/orders/
+- TODO:
+  - `pnpm update @clarklindev/common`
+
+---
+
+#### using our updates
+- now that client is `protected` 
+- now that there is an `.orderId` in common repo `/src/events/ticket-updated-event.ts`
+- UPDATE: `tickets/src/events/listeners/order-created-listener.ts`
+- and because `OrderCreatedListener` extends `Listener` and we have updated the client modifier to `protected` we have access to client on `OrderCreatedListener`
+- this is an example of how a listener can publish its own events
+
+```ts
+// import { natsWrapper } from '../../nats-wrapper';
+import {TicketUpdatedPublisher} from '../publishers/ticket-updated-publisher';
+
+//...
+export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
+  //...
+  async onMessage(data:OrderCreatedEvent['data'], msg:Message){
+    //...
+    //save the ticket
+    await ticket.save();
+    new TicketUpdatedPublisher(this.client).publish({
+      id: ticket.id,
+      price: ticket.price,
+      title: ticket.title,
+      userId: ticket.userId,
+      orderId: ticket.orderId,
+      version: ticket.version
+    });
+
+    msg.ack();
+  }
+}
+```
+
 ### 428. Mock Function Arguments
+- TODO: we have added a publisher inside a listener, testing that TicketUpdatedPublisher is working
+ 
 ### 429. Order Cancelled Listener
 ### 430. A Lightning-Quick Test
 ### 431. Don't Forget to Listen!
