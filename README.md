@@ -17395,6 +17395,12 @@ width=600
 
 
 ### 426. Private vs Protected Properties
+#### lesson outcome
+- TODO: TicketUpdatedEvent needs an `orderId` property
+- TODO: in `common/src/events/base-listener` mark client as protected
+
+---
+
 - `tickets/src/events/listeners/order-created-listener.ts`
 - `order-created-listener` create an event after ticket was saved - emit event that says ticket was just updated
 
@@ -17412,8 +17418,8 @@ width=600
 ### option1 - providing nats client
 
 <img
-src='exercise_files/'
-alt=''
+src='exercise_files/udemy-microservices-section19-426-option1.png'
+alt='udemy-microservices-section19-426-option1.png'
 width=600
 />
 
@@ -17430,11 +17436,18 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
 }
 ```
 
-### option2 - OrderCreatedListener is subclass of Listener
-- its a subclass of listener and has a nats client already (but its marked as private so subclasses cant access this)
+### option2 (better) - OrderCreatedListener is subclass of Listener
+
+- updated (UPDATE modifier: `protected`) client property on base Listener class allowing subclasses access
+
+<img
+src='exercise_files/udemy-microservices-section19-426-option2-updated-base-class-modifier-protected-client.png'
+alt='udemy-microservices-section19-426-option2-updated-base-class-modifier-protected-client.png'
+width=600
+/>
+
+- OrderCreatedListener is a subclass of `Listener` class which has a nats client already (but its marked as private so subclasses cant access this)
 - FIX: mark the Listener base class `client` property as `protected`, 
-- TODO: TicketUpdatedEvent needs an `orderId` property
-- TODO: in `common/src/events/base-listener` mark client as protected
 
 ### 427. Publishing While Listening
 ### 428. Mock Function Arguments
