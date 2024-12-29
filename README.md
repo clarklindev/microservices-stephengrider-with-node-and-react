@@ -17565,6 +17565,39 @@ width=600
 - `(natsWrapper.client.publish as jest.Mock).mock.calls[0][1];`
 
 ### 429. Order Cancelled Listener
+- `tickets/src/events/listeners/order-cancelled-listener.ts`
+- order service will at some point emit `order:cancelled` event
+- our aim is to remove the orderId from the ticket (unreserve)
+- we set `orderId` to `undefined`
+- then we save
+- then we issue an event (`TicketUpdatedPublisher`) to say ticket has been updated
+
+<img
+src='exercise_files/udemy-microservices-section19-429-cancelled-order-event.png'
+alt='udemy-microservices-section19-429-cancelled-order-event.png'
+width=600
+/>
+
+```ts
+//tickets/src/events/listeners/order-cancelled-listener.ts
+import { TicketUpdatedPublisher } from "../publishers/ticket-updated-publisher";
+
+async onMessage(data, msg){
+  //...
+  await ticket.save();
+  await new TicketUpdatePublisher(this.client).publish({
+    id: ticket.id,
+    orderId: ticket.orderId,
+    userId: ticket.userId,
+    price: ticket.price,
+    title: ticket.title,
+    version: ticket.version
+  });
+
+  msg.ack();
+}
+```
+
 ### 430. A Lightning-Quick Test
 ### 431. Don't Forget to Listen!
 ### 432. Rejecting Edits of Reserved Tickets
