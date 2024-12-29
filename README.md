@@ -17681,10 +17681,77 @@ const start = async () => {
 ```
 
 ### 432. Rejecting Edits of Reserved Tickets
+- `tickets/src/routes/update.ts`
 - TODO: prevent user from editing ticket currently in lock-down
+- look at ticket user is trying to update 
+  - if reserved (currently in lockdown) -> reject the update request (throw BadRequestError)
+    
+```ts
+//tickets/src/routes/update.ts
+
+//...
+const router = express.Router();
+
+router.put('/api/tickets/:id',
+  //...
+  async (req: Request, res: Response) => {
+    const ticket = await Ticket.findById(req.params.id);
+
+    if(!ticket){
+      throw new NotFoundError();
+    }
+
+    if(ticket.orderId){
+      throw new BadRequestError('Cannot edit a reserved ticket');
+    }
+  }
+
+```
+
+#### test 
+- `tickets/src/routes/__test__/update.test.ts`
+- create a cookie (user)
+- create a ticket
+  - find ticket (Ticket)
+- edit ticket
+  - add orderId to ticket (mongoose generate random id)
+- try edit/update ticket 
+- expect follow to result in error (BadRequestError)
+
+```ts
+//tickets/src/routes/__test__/update.test.ts
+
+//...
+
+it('rejects updates if ticket is reserved', async ()=>{
+  const cookie = global.signin();
+
+  //create a ticket
+  const response = await request(app)
+  .post(`/api/tickets`)
+  .set('Cookie', cookie)
+  .send({
+    title: 'sfddsfsd',
+    price: 20
+  });
+
+  const ticket = await Ticket.findById(response.body.id);
+  ticket!.set({orderId: new mongoose.Types.ObjectId().toHexString()});
+  await ticket!.save();
+
+  //update ticket
+  await request(app)
+    .put(`/api/tickets/${response.body.id}`)
+    .set('Cookie', cookie)
+    .send({
+      title: 'new title',
+      price: 100
+    })
+    .expect(400);
+});
+```
 
 ---
-
 ## section 20 - worker services (1hr36min)
 ### 433. The Expiration Service
 ### 434. Expiration Options

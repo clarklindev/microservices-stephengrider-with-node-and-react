@@ -5,7 +5,8 @@ import {
   validateRequest,
   NotFoundError,
   requireAuth,
-  NotAuthorizedError
+  NotAuthorizedError,
+  BadRequestError
 } from '@clarklindev/common';
 
 import { Ticket } from '../models/ticket';
@@ -30,6 +31,10 @@ router.put('/api/tickets/:id',
 
     if(!ticket){
       throw new NotFoundError();
+    }
+
+    if(ticket.orderId){
+      throw new BadRequestError('Cannot edit a reserved ticket');
     }
 
     if(ticket.userId !== req.currentUser!.id){
