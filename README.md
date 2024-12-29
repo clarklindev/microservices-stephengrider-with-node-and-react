@@ -17509,7 +17509,61 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
 
 ### 428. Mock Function Arguments
 - TODO: we have added a publisher inside a listener, testing that TicketUpdatedPublisher is working
- 
+- in setup() we create an instance of `OrderCreatedListener(natswrapper.client)` 
+  - natswrapper.client is using the mock client in the tests: `tickets/src/__mocks__/nats-wrapper.ts`
+  - specifically, it calls the client.publish that is a jest mock function
+  - we should be able to test that .publish was invoked
+
+- `tickets/src/events/listeners/__test__/order-created-listener.test.ts`
+
+```ts
+//tickets/src/events/listeners/__test__/order-created-listener.test.ts
+
+//...
+it('publishes a ticket updated event', async ()=>{
+  const {listener, ticket, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+
+  expect(natsWrapper.client.publish).toHaveBeenCalled();
+  
+});
+```
+
+#### TROUBLESHOOT
+
+<img
+src='exercise_files/udemy-microservices-section19-428-mock-function-test-troubleshoot-error.png'
+alt='udemy-microservices-section19-428-mock-function-test-troubleshoot-error.png'
+width=600
+/>
+
+- if the error comes up `property client is private...` 
+  - this is because jest doesnt always detect updates to npm dependencies
+- FIX: restart the tests
+
+---
+
+#### continued...Mock Function Arguments 
+- we can also look into the properties being passed into the publish method 
+  - `common/src/events/base-publisher.ts`
+    - `publish` receives these arguments: subject, JSON of data passed, callback
+    - NOTE: the natsWrapper client is the mock natsWrapper (`tickets/src/__mocks__/nats-wrapper.ts`)
+    - using `console.log(natsWrapper.client.publish.mock.calls);`
+    - check that ticket id is correct
+    - check that order id is correct
+    ```
+      [
+        [
+          'ticket:updated',
+          '{"id":"6770c55adf42c07b70ee5e3b","price":99,"title":"concert","userId":"asdg","orderId":"6770c55adf42c07b70ee5e3d","version":1}',       
+          [Function (anonymous)]
+        ]
+      ]
+    ```
+
+### tell typescript something is a mock function instead of using //@ts-ignore
+- `(natsWrapper.client.publish as jest.Mock).mock.calls[0][1];`
+
 ### 429. Order Cancelled Listener
 ### 430. A Lightning-Quick Test
 ### 431. Don't Forget to Listen!
