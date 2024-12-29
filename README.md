@@ -17599,6 +17599,62 @@ async onMessage(data, msg){
 ```
 
 ### 430. A Lightning-Quick Test
+- `tickets/src/events/listeners/__test__/order-cancelled-listener.test.ts`
+- testing order cancelled listener
+
+```ts
+//tickets/src/events/listeners/__test__/order-cancelled-listener.test.ts
+
+import mongoose from "mongoose";
+import { OrderCancelledEvent } from "@clarklindev/common";
+import { Message } from "node-nats-streaming";
+
+import { natsWrapper } from "../../../nats-wrapper";
+import { OrderCancelledListener } from "../order-cancelled-listener";
+import { Ticket } from "../../../models/ticket";
+
+const setup = async ()=>{
+  const listener = new OrderCancelledListener(natsWrapper.client);
+  const orderId = new mongoose.Types.ObjectId().toHexString();
+
+  const ticket = Ticket.build({
+    title: 'concert',
+    price: 20,
+    userId: 'asdf',
+  });
+  ticket.set({orderId});
+  await ticket.save();
+
+  const data: OrderCancelledEvent['data'] = {
+    id: orderId,
+    version: 0,
+    ticket: {
+      id: ticket.id
+    }
+  };
+
+  //@ts-ignore
+  const msg:Message = {
+    ack: jest.fn()
+  }
+
+  return {msg, data, ticket, orderId, listener};
+}
+
+it('updates the ticket, publishes an event, and acks the message', async ()=>{
+  const {msg, data, ticket, orderId, listener} = await setup();
+
+  await listener.onMessage(data, msg);
+
+  const updatedTicket = await Ticket.findById(ticket.id);
+  expect(updatedTicket!.orderId).not.toBeDefined();
+
+  expect(msg.ack).toHaveBeenCalled();
+  expect(natsWrapper.client.publish).toHaveBeenCalled();
+  
+});
+```
+
 ### 431. Don't Forget to Listen!
 ### 432. Rejecting Edits of Reserved Tickets
 ---
