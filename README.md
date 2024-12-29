@@ -17656,7 +17656,33 @@ it('updates the ticket, publishes an event, and acks the message', async ()=>{
 ```
 
 ### 431. Don't Forget to Listen!
+- TODO: `tickets/` listen for incoming events
+- `tickets/src/index.ts`
+- import listeners and pass nats-wrapper-client to both
+- instantiate listeners and pass in client and call .listen(): 
+  - `new OrderCreatedListener(natsWrapper.client).listen();`
+  - `new OrderCancelledListener(natsWrapper.client).listen();`
+- the listeners can now lockdown and unlock a ticket 
+- TODO: we dont prevent ticket from editing while being locked-down
+
+```ts
+//tickets/src/index.ts
+
+import { OrderCreatedListener } from './events/listeners/order-created-listener';
+import { OrderCancelledListener } from './events/listeners/order-cancelled-listener';
+
+const start = async () => {
+  //...
+  //after nats stuff...
+  new OrderCreatedListener(natsWrapper.client).listen();
+  new OrderCancelledListener(natsWrapper.client).listen();
+  //..
+}
+```
+
 ### 432. Rejecting Edits of Reserved Tickets
+- TODO: prevent user from editing ticket currently in lock-down
+
 ---
 
 ## section 20 - worker services (1hr36min)
