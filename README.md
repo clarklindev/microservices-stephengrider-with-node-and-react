@@ -17754,7 +17754,30 @@ it('rejects updates if ticket is reserved', async ()=>{
 ---
 ## section 20 - worker services (1hr36min)
 ### 433. The Expiration Service
+- orders / tickets is done (listeners, publishers, route handlers)
+- rest of this course is backend with minor frontend code
+- TODO: expiring an order
+- expiration service is a listener/ publisher
+- job is to watch (listen) for `order:created`
+
+<img
+src='exercise_files/udemy-microservices-section20-433-expiration-service.png'
+alt='udemy-microservices-section20-433-expiration-service.png'
+width=600
+/>
+
+- it will then emit/publish `expiration:complete`
+- the expiration service's SOLE PURPOSE is to start/stop timer
+
+<img
+src='exercise_files/udemy-microservices-section20-433-expiration-complete.png'
+alt='udemy-microservices-section20-433-expiration-complete.png'
+width=600
+/>
+
 ### 434. Expiration Options
+- TODO: keeping track of timer and ensuring event is emitted after 15min
+
 ### 435. Initial Setup
 ### 436. Skaffold errors - Expiration Image Can't be Pulled
 ### 437. A Touch of Kubernetes Setup
