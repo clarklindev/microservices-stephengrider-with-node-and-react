@@ -17776,7 +17776,63 @@ width=600
 />
 
 ### 434. Expiration Options
+
+- expiration service in isolation
+
+<img
+src='exercise_files/udemy-microservices-section20-434-expiration-service-in-isolation.png'
+alt='udemy-microservices-section20-434-expiration-service-in-isolation.png'
+width=600
+/>
+
+- NOTE: the orders' `expiresAt` property `orders/src/routes/new.ts` is set when calling `new OrderCreatedPublisher()`
+  - this `expiresAt` is a timestamp, and we say it 'expired' if the timestamp goes from `future` to the `past`.
+  - once expired, we emit `expiration:complete`
+
 - TODO: keeping track of timer and ensuring event is emitted after 15min
+- 4 options:
+
+  #### OPTION 1 
+  - `setTimeout` stores timer in memory, if expiration service restarts, all timers are lost and events will not send.
+  
+  #### OPTION 2 
+  - rely on NATS redelivery mechanism
+  - setup listener for `order:created` 
+  - every time event comes in, see if `expiresAt` time is in the past  (rely on `NATS redelivery mechanism` 5 seconds in the future - retry)
+  - if it is in the past, emit `expiration:complete` 
+  - if it is NOT in past, just dont ack() the msg
+
+  - CONS (3min 27sec) 
+    - the downside is we may track events that fail constantly in our app - and track the number of times they get redelivered
+      - ie. we may have events we have trouble processing, after trying 5,6,7,8,9 times...throw error
+    - and if this redelivery mechanism for logging purpose AND is mixed with business logic wont work well together (confusing)
+
+  #### OPTION 3 
+  - scheduled event/message (not supported by NATS)
+
+  <img
+  src='exercise_files/udemy-microservices-section20-434-expiration-options-3-scheduled-event.png'
+  alt='udemy-microservices-section20-434-expiration-options-3-scheduled-event.png'
+  width=600
+  />
+
+  - this implementation (not NATS but other event bus): once receiving `order:created` event 
+  - immediately send out the `expiration:complete` event and tell event bus to not send out for 15min (delayed/scheduled message)
+
+  #### OPTION 4 (OUR CHOICE)
+  - Bull.js - js library that allows long-lived timers, and give-self notifications
+  - general purpose framework (store data, processing, scheduling)
+  - bulljs stores theses reminders to do something inside redis server (in-memory db)
+  - redis stores a list of jobs (scheduled events)
+  - after 15min bulljs receives reminder from redis that timer has elapsed
+  - then lastly experation service emits `expiration:complete`
+  
+  <img
+  src='exercise_files/udemy-microservices-section20-434-expiration-options-4-bulljs.png'
+  alt='udemy-microservices-section20-434-expiration-options-4-bulljs.png'
+  width=600
+  />
+
 
 ### 435. Initial Setup
 ### 436. Skaffold errors - Expiration Image Can't be Pulled
