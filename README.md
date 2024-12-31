@@ -18039,6 +18039,58 @@ width=600
 />
 
 ### 441. Creating a Queue
+- NOTE: code related to Bull
+- jobs should contain `orderId` so when job expires we know which order expired
+- `expiration/src/queues/expiration-queue.ts`
+- steps: 
+  - step 1 -> receive `order:created` event
+  - step 2 -> use expirationQueue (defined in expiration-queue.ts) to queue a job/publish a job 
+  - step 3 -> job is sent to redis server (list of jobs with a specific type eg. `order:expiration`)  
+    - job should contain `orderId`
+  - step 4 -> jobs are stored in redis-server until 15min lapsed
+  - step 5 -> expirationQueue should process incoming job, should emit `expiration:complete` (job that has lapsed after 15min) 
+    - the `expiration:complete` event should store the `orderId`
+
+<img
+src='exercise_files/udemy-microservices-section20-441-expiration-queue-jobs-flow.png'
+alt='udemy-microservices-section20-441-expiration-queue-jobs-flow.png'
+width=600
+/>
+
+- `expirationQueue` is what will allow us to publish and process jobs
+- Queue() arguments: 
+  - first is queue name ('channel') (bucket where we want to store this job in redis)
+  - second is a options object 
+    - configuration that tells queue we want to connect to instance of redis server 
+    - redis server is running in pod (infra/k8s/expiration-depl.yaml -> `env: REDIS_HOST`) 
+    - tell queue we want to use redis: `redis:{ }` 
+- create an interface (`interface Payload`) for job that describes what information is being sent.
+- can create a function to process the notification we receive back from complete job 
+- the received prop is job (which wraps the data and includes other information relating to job)
+- can access the orderId via: `job.data.orderId`
+- `export {expirationQueue};`
+
+```ts
+//expiration/src/queues/expiration-queue.ts
+import Queue from 'bull';
+
+interface Payload{
+  orderId: string;
+}
+
+const expirationQueue = new Queue<Payload>('order:expiration', {
+  redis: {
+    host: process.env.REDIS_HOST
+  }
+});
+
+expirationQueue.process(async (job) => {
+  console.log('publish an `expiration:conplete` event for orderId', job.data.orderId);
+});
+
+export {expirationQueue};
+```
+
 ### 442. Queueing a Job on Event Arrival
 ### 443. Testing Job Processing
 ### 444. Delaying Job Processing
