@@ -17835,6 +17835,94 @@ width=600
 
 
 ### 435. Initial Setup
+
+<img
+src='exercise_files/udemy-microservices-section20-435-create-expiration-from-tickets.png'
+alt='udemy-microservices-section20-435-create-expiration-from-tickets.png'
+width=600
+/>
+
+- `expiration/` directory
+- copy from `tickets/`
+
+- update the expiration package.json dependencies (keep these): 
+  - dependencies
+    - `@clarklindev/common`
+    - `node-nats-streaming`
+    - `ts-node-dev`
+    - `typescript`
+  - dev dependencies
+    - `@types/jest`
+    - `jest`
+    - `ts-jest`
+
+```json
+//...
+  "dependencies": {
+    "@clarklindev/common": "^1.0.25",
+    "node-nats-streaming": "^0.3.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.5.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5"
+  }
+//...
+```
+
+### adding dependencies
+```
+pnpm i bull @types/bull
+```
+
+### updated expiration/index
+```ts
+//expiration/index.ts
+import { natsWrapper } from './nats-wrapper';
+
+
+const start = async () => {
+  if (!process.env.NATS_URL) {
+    throw new Error('NATS_URL must be defined');
+  }  
+  if (!process.env.NATS_CLUSTER_ID) {
+    throw new Error('NATS_CLUSTER_ID must be defined');
+  }  
+  if (!process.env.NATS_CLIENT_ID) {
+    throw new Error('NATS_CLIENT_ID must be defined');
+  }  
+
+  try {
+    await natsWrapper.connect(
+      process.env.NATS_CLUSTER_ID,
+      process.env.NATS_CLIENT_ID,
+      process.env.NATS_URL
+    );
+
+    natsWrapper.client.on('close', () => {
+      console.log('NATS connection closed!');
+      process.exit();
+    });
+    process.on('SIGINT', () => natsWrapper.client.close());
+    process.on('SIGTERM', () => natsWrapper.client.close());
+
+  } catch (err) {
+    console.error(err);
+  }
+
+
+};
+
+start();
+
+```
+
+### TROUBLESHOOT
+- `tickets/src/nats-wrapper.ts` errors -> refresh cscode window: `CTRL + SHIFT + P` -> `reload window`
+- OR restart cscode
+
 ### 436. Skaffold errors - Expiration Image Can't be Pulled
 ### 437. A Touch of Kubernetes Setup
 ### 438. File Sync Setup
