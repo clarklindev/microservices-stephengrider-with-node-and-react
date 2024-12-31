@@ -17932,6 +17932,7 @@ start();
 - FIX: `skaffold.yaml` - add the Expiration service to the bottom of the `skaffold.yaml`
 
 ```yaml
+#skaffold.yaml
 #...
   - image: YOUR_USERNAME/expiration
       context: expiration
@@ -17944,7 +17945,48 @@ start();
 
 ```
 ### 437. A Touch of Kubernetes Setup
+- step1: TODO: create Docker image + push to dockerhub
+- step2: kubernetes config files
+- step3: load up as deployment into kubernetes cluster
+- step4: load up instance of redis (in-memory db) 
+
+## step1
+### Docker /Dockerhub
+- from expiration/ folder
+- NOTE: steps to ensure successful push to docker hub
+  - see section05-20-ticketing/README.md
+  - 1. `docker login`
+  - 2. ensure correct kubernetes context selected (docker desktop rightclick select context)
+  - 3. kubernetes cluster exists
+  - 4. ensure secret `kubectl create secret generic jwt-secret --from-literal=JWT_KEY=asdf` eg. `asdf` secret key
+
+```bash
+docker build -t clarklindev/expiration .
+
+docker push clarklindev/expiration
+```
+
+## step2
+### kubernetes config
+- `infra/k8s/expiration-redis-depl.yaml`
+- `expiration-redis-depl.yaml` 
+  - similar to any of the mongodb deployments .yaml
+  - spec -> containers -> image -> `redis` (dockerhub)
+  - redis default port `6379`
+
+- `infra/k8s/expiration-depl.yaml`
+- `expiration-depl.yaml`
+  - deployment - `expiration-depl.yaml`
+    - similar to tickets-depl.yaml
+    - `REDIS_HOST` specifying host name we want to connect to (`expiration-redis-depl.yaml` -> via service `expiration-redis-srv`)
+  - service (`expiration-srv`) -> port is not required (nothing will connect to it directly)  
+    - REMOVE -> no network request to service so can delete the service.
+- `skaffold dev`
+- `kubectl get pods`
+
 ### 438. File Sync Setup
+- i did this as part of 437
+
 ### 439. Listener Creation
 ### 440. What's Bull All About?
 ### 441. Creating a Queue
