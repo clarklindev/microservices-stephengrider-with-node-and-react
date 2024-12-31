@@ -18010,6 +18010,34 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
 ```
 
 ### 440. What's Bull All About?
+- traditionally what people use bulljs for...
+- tasks that require processing power (eg. video conversion mp4 to mkv) will use worker server (separate machine/container separate from web server)
+- worker server's goal is to convert the video 
+
+<img
+src='exercise_files/udemy-microservices-section20-440-worker-server.png'
+alt='udemy-microservices-section20-440-worker-server.png'
+width=600
+/>
+
+- when someone makes a request to webserver, it will enqueue something called a `job`
+- a job is an js object
+- bull.js will send this js object to `redis server` (list of jobs)
+- then worker servers constantly pull redis server, and see if incoming jobs, complete job and send notification back saying job is complete.
+- bulljs (it handles the entire process) gets used in the webserver and worker servers 
+- using bulljs we create a `queue` (represents messages we want to queue)
+  - we also specify what to do with messages flowing through the queue
+- NOTE: for this project we do NOT have separate web worker servers, everything is contained in expiration service 
+- we only have a single server that does everything.
+
+- regarding Bulljs, we are using bull for delayed aspect of messaging and if expiration service server goes down, redis server will probably not also go down..
+
+<img
+src='exercise_files/udemy-microservices-section20-440-expiration-queue.png'
+alt='udemy-microservices-section20-440-expiration-queue.png'
+width=600
+/>
+
 ### 441. Creating a Queue
 ### 442. Queueing a Job on Event Arrival
 ### 443. Testing Job Processing
