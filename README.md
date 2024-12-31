@@ -17924,6 +17924,25 @@ start();
 - OR restart cscode
 
 ### 436. Skaffold errors - Expiration Image Can't be Pulled
+- TODO: adding our Expiration and Redis service manifests and then running skaffold dev in the terminal
+- ERROR: ...`failed deployments` (errors are happening because we did not update our Skaffold configuration file):
+
+  - pod/expiration-depl-5ff9745876-vx59x: container expiration is waiting to start: cygnetops/expiration can't be pulled
+  - deployment/expiration-depl failed. Error: container expiration is waiting to start: cygnetops/expiration can't be pulled.
+- FIX: `skaffold.yaml` - add the Expiration service to the bottom of the `skaffold.yaml`
+
+```yaml
+#...
+  - image: YOUR_USERNAME/expiration
+      context: expiration
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+
+```
 ### 437. A Touch of Kubernetes Setup
 ### 438. File Sync Setup
 ### 439. Listener Creation
