@@ -17988,6 +17988,27 @@ docker push clarklindev/expiration
 - i did this as part of 437
 
 ### 439. Listener Creation
+- TODO: create listener for `order:created` event
+- TODO: setup bull js
+- TODO: create publisher for `expiration:complete` event
+- `expiration/src/events/listeners/order-created-listener.ts`
+
+```ts
+//expiration/src/events/listeners/order-created-listener.ts
+
+import { Listener, OrderCreatedEvent, Subjects } from "@clarklindev/common";
+import { queueGroupName } from "./queue-group-name";
+import { Message } from "node-nats-streaming";
+
+export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
+  readonly subject = Subjects.OrderCreated;
+  queueGroupName = queueGroupName;
+  async onMessage(data: OrderCreatedEvent['data'], msg:Message){
+      
+  }
+}   
+```
+
 ### 440. What's Bull All About?
 ### 441. Creating a Queue
 ### 442. Queueing a Job on Event Arrival
