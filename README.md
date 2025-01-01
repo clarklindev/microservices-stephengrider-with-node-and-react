@@ -18142,6 +18142,24 @@ import { OrderCreatedListener } from './events/listeners/order-created-listener'
 ```
 
 ### 443. Testing Job Processing
+- manual test with postman
+- REQUIRED: signed in
+  - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
+  
+#### create ticket
+  - create a new ticket -> POST `https://ticketing.dev/api/tickets` -> body / Json / `{"title":"movie", "price": 15}`
+  - NOTE: ticketId
+  
+#### create order
+  - POST `https://ticketing/dev/api/orders` -> body / JSON / `{"ticketId": "xasdasdasdfdsfsdf"}`
+  - NOTE: order created
+
+<img
+src='exercise_files/udemy-microservices-section20-443-testing-job-processing.png'
+alt='udemy-microservices-section20-443-testing-job-processing.png'
+width=600
+/>
+
 ### 444. Delaying Job Processing
 ### 445. Defining the Expiration Complete Event
 ### 446. Publishing an Event on Job Processing
