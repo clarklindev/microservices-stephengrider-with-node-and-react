@@ -18092,6 +18092,55 @@ export {expirationQueue};
 ```
 
 ### 442. Queueing a Job on Event Arrival
+- up to this point, we have defined out queue
+- and what to do when we receive a job...
+
+#### listener
+- `expiration/src/events/listeners/order-created-listener.ts`
+  - TODO: OrderCreatedListener -> write code for event onMessage() to create a job when receiving `order:created` 
+  - ie. enqueue a job using queue (`expiration/src/queues/expiration-queue.ts`)
+  - we pass into expirationQueue.add({}) the payload (see `expiration/src/queue/expiration-queue.ts` Payload interface)
+  - and the orderId value is coming from data property on the event (`data.id`)
+  - TODO: add delay between adding job (receiving event OrderCreatedListener) and processing job (`expiration/src/queues/expiration-queue.ts`)
+
+#### index
+- TODO: add listener to `expiration/src/index.ts` -> `new OrderCreatedListener(natsWrapper.client).listen();`
+
+```ts
+//expiration/src/events/listeners/order-created-listener.ts
+
+import { Listener, OrderCreatedEvent, Subjects } from "@clarklindev/common";
+import { queueGroupName } from "./queue-group-name";
+import { Message } from "node-nats-streaming";
+import { expirationQueue } from "../../queues/expiration-queue";
+
+export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
+  readonly subject = Subjects.OrderCreated;
+  queueGroupName = queueGroupName;
+
+  async onMessage(data: OrderCreatedEvent['data'], msg:Message){
+    await expirationQueue.add({
+      orderId: data.id
+    });
+
+    msg.ack();
+  }
+}   
+```
+
+```ts
+//expiration/src/index.ts
+import { OrderCreatedListener } from './events/listeners/order-created-listener';
+  //...
+  try{
+    new OrderCreatedListener(natsWrapper.client).listen();
+  }
+  catch(err){
+    //...
+  }
+
+```
+
 ### 443. Testing Job Processing
 ### 444. Delaying Job Processing
 ### 445. Defining the Expiration Complete Event
