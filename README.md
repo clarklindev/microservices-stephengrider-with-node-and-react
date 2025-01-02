@@ -18182,7 +18182,8 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
 
   async onMessage(data: OrderCreatedEvent['data'], msg:Message){
     
-    const delay = new Date(data.expiresAt).getTime() - new Date().getTime()
+    const delay = new Date(data.expiresAt).getTime() - new Date().getTime();
+    console.log(`waiting this many milliseconds to process the job:`, delay);
 
     await expirationQueue.add(
       {
@@ -18224,7 +18225,7 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   - COMPLETED - receive event
   - COMPLETED - publishing a job
   - COMPLETED - receiving a job
-  - COMPLETED - processing job
+  - COMPLETED - processing job (wait some time)
   - TODO: publish event of `expiration:complete`
 
 #### ExpirationCompleteEvent
@@ -18268,7 +18269,72 @@ export * from './events/expiration-complete-event';
  - expect deployment with status message similar to this: `asia.gcr.io/golden-index-441407-u9/expiration: Not found. Building`
 
 ### 446. Publishing an Event on Job Processing
+- `expiration/src/events/publishers/expiration-complete-publisher.ts`
+- we can create a publisher to publish the  `ExpirationCompleteEvent` (common/src/events/expiration-complete-event)  
+- TODO: in expiration -> create a publisher
+  - create a class, extend base `Publisher` class and put in the type of event to publish (as an example look at `orders/src/events/publishers/`)
+  - then for `subject` use the Subjects enum
+  - 
+```ts
+//expiration/src/events/publishers/expiration-complete-publisher.ts
+import { Publisher, Subjects, ExpirationCompleteEvent } from "@clarklindev/common";
+
+export class ExpirationCompletePublisher extends Publisher<ExpirationCompleteEvent>{
+  readonly subject = Subjects.ExpirationComplete;
+}
+```
+
+#### ExpirationQueue
+- `expiration/src/queues/expiration-queue.ts `
+- job has a data property, which will contain all information we store inside the job 
+- it is an object matching the Payload interface.
+
+```ts
+//expiration/src/queues/expiration-queue.ts
+import { ExpirationCompletePublisher } from '../events/publishers/expiration-complete-publisher';
+import { natsWrapper } from '../nats-wrapper';
+
+
+//...
+expirationQueue.process(async (job) => {
+  // console.log('i want to publish an `expiration:conplete` event for orderId', job.data.orderId);
+
+  new ExpirationCompletePublisher(natsWrapper.client).publish(
+    {
+      orderId: job.data.orderId
+    }
+  );
+});
+
+export {expirationQueue};
+```
+
+## testing using Postman @4min 50sec
+- just for testing purposes -> first remove the delay (15min) -> `expiration/src/events/listeners/order-created-listener.ts`
+
+### Create ticket
+- POSTMAN -> create a new ticket 
+  - POST `https://ticketing.dev/api/tickets` 
+  - headers -> Content-Type `application/json`
+  - body -> raw json -> `{"title": "movie", price:15}`
+  - (get the ticket id) 
+
+### create order
+- POSTMAN -> use ticket id to create new order `https://ticketing.dev/api/orders`
+  - body -> raw json -> `{"ticketId": "eru4398t4390u843"}`
+
+### terminal output
+- looking for `expiration/` `event published to subject expiration:complete` (ExpirationCompletePublisher extends Publisher which has this log)
+
+<img
+src='exercise_files/udemy-microservices-section20-446-publishing-an-event-event-sequence.png'
+alt='udemy-microservices-section20-446-publishing-an-event-event-sequence.png'
+width=600
+/>
+
 ### 447. Handling an Expiration Event
+- TODO: back in orders/ service ensure we receive this `expiration:complete` event -> then mark order as expired 
+
 ### 448. Emitting the Order Cancelled Event
 ### 449. Testing the Expiration Complete Listener
 ### 450. A Touch More Testing
