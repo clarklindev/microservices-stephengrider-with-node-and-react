@@ -18220,6 +18220,53 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
     - `i want to publish an expiration:conplete event for orderId, job.data.orderId`
 
 ### 445. Defining the Expiration Complete Event
+- PROGRESS...
+  - COMPLETED - receive event
+  - COMPLETED - publishing a job
+  - COMPLETED - receiving a job
+  - COMPLETED - processing job
+  - TODO: publish event of `expiration:complete`
+
+#### ExpirationCompleteEvent
+- add `expiration:complete` event to `common/` module
+- `common/src/events/expiration-complete-event.ts`
+- every event file exports an interface named after event
+  - TODO: `subject` -> set as the enum `Subjects.ExpirationComplete` 
+  - TODO: `data` -> set as `{orderId: string}`
+
+```ts
+//common/src/events/expiration-complete-event.ts
+import { Subjects } from "./subjects"
+
+export interface ExpirationCompleteEvent {
+  subject: Subjects.ExpirationComplete;
+  data: {
+    orderId: string;
+  }
+}
+```
+
+#### common/index
+- `common/src/index.ts`
+- export the `ExpirationCompleteEvent`
+- `common/` publish updates (NOTE: you have to first successfully `pnpm login`)
+
+```ts
+//common/src/index.ts
+//...
+export * from './events/expiration-complete-event';
+```
+
+#### troubleshoot
+- after making sure you are authenticated with `pnpm login` and version has been pushed to npm
+- otherwise the npm module is not published (even though git has committed)
+- if the package fails to update, then... uninstall with `pnpm uninstall @clarklindev/common` and reinstall
+- `pnpm @clarklindev/common`
+
+#### skaffold
+- `skaffold dev`
+ - expect deployment with status message similar to this: `asia.gcr.io/golden-index-441407-u9/expiration: Not found. Building`
+
 ### 446. Publishing an Event on Job Processing
 ### 447. Handling an Expiration Event
 ### 448. Emitting the Order Cancelled Event
