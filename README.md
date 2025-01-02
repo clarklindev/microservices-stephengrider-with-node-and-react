@@ -18161,6 +18161,64 @@ width=600
 />
 
 ### 444. Delaying Job Processing
+- TODO: delay the processing of the job (OrderCreatedListener)
+- add a delay (milliseconds) by using a second argument to add() call 
+  - {delay: 1000}  //1 seconds
+- to delay of 15min, you calculate different between `current time` (time event is received) and `expires at time` 
+  - `const delay = new Date(data.expiresAt).getTime() - new Date().getTime()`
+- NOTE: the delay time `expiresAt` comes from the variable set in `orders/src/routes/new.ts` -> `EXPIRATION_WINDOW_SECONDS` -> `OrderCreatedPublisher(natsWrapper.client).publish({ expiresAt: order.expiresAt.toISOString() })`
+
+```ts
+//expiration/src/events/listeners/order-created-listener.ts
+
+import { Listener, OrderCreatedEvent, Subjects } from "@clarklindev/common";
+import { queueGroupName } from "./queue-group-name";
+import { Message } from "node-nats-streaming";
+import { expirationQueue } from "../../queues/expiration-queue";
+
+export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
+  readonly subject = Subjects.OrderCreated;
+  queueGroupName = queueGroupName;
+
+  async onMessage(data: OrderCreatedEvent['data'], msg:Message){
+    
+    const delay = new Date(data.expiresAt).getTime() - new Date().getTime()
+
+    await expirationQueue.add(
+      {
+        orderId: data.id
+      }, 
+      {
+        delay
+      }
+  );
+
+    msg.ack();
+  }
+}   
+```
+
+### testing
+- POSTMAN 
+
+  #### sign-in (cookie)
+    - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
+    
+  #### create ticket
+    - create a new ticket -> POST `https://ticketing.dev/api/tickets` -> body / Json / `{"title":"movie", "price": 15}`
+    - NOTE: ticketId (id)
+    
+  #### create order using ticket id
+    - POST `https://ticketing/dev/api/orders` -> body / JSON / `{"ticketId": "xasdasdasdfdsfsdf"}`
+    - NOTE: order created
+
+  #### result
+  - bash output: `waiting this many milliseconds to process the job: ...`
+  - then after delay of `EXPIRATION_WINDOW_SECONDS` 
+  - queue can process the job `expirationQueue.process(async (job) => {})` 
+  - should get the message `expiration/src/queues/expiration-queue.ts`
+    - `i want to publish an expiration:conplete event for orderId, job.data.orderId`
+
 ### 445. Defining the Expiration Complete Event
 ### 446. Publishing an Event on Job Processing
 ### 447. Handling an Expiration Event
