@@ -18204,7 +18204,9 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
 
   #### sign-in (cookie)
     - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
-    
+    - signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
+    - or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
+
   #### create ticket
     - create a new ticket -> POST `https://ticketing.dev/api/tickets` -> body / Json / `{"title":"movie", "price": 15}`
     - NOTE: ticketId (id)
@@ -18274,7 +18276,7 @@ export * from './events/expiration-complete-event';
 - TODO: in expiration -> create a publisher
   - create a class, extend base `Publisher` class and put in the type of event to publish (as an example look at `orders/src/events/publishers/`)
   - then for `subject` use the Subjects enum
-  - 
+
 ```ts
 //expiration/src/events/publishers/expiration-complete-publisher.ts
 import { Publisher, Subjects, ExpirationCompleteEvent } from "@clarklindev/common";
@@ -18286,14 +18288,24 @@ export class ExpirationCompletePublisher extends Publisher<ExpirationCompleteEve
 
 #### ExpirationQueue
 - `expiration/src/queues/expiration-queue.ts `
-- job has a data property, which will contain all information we store inside the job 
-- it is an object matching the Payload interface.
+
+- import the publisher: `import { ExpirationCompletePublisher } from '../events/publishers/expiration-complete-publisher';`
+  - it is in the subclass of Publisher `ExpirationCompletePublisher` that we define the event it should send `ExpirationCompleteEvent`
+- whenever we processed a job (received from Redis), publisher specifies the subject/channel we want to send `Subjects.ExpirationComplete` -> `expiration:complete` 
+- we get `orderId` from the job
+- when job from redis has been processed -> we we emit `expiration:complete`
+- job has a `data` property, is an object matching the Payload interface which will contain all information we store inside 
+
+<img
+src='exercise_files/udemy-microservices-section20-446-redis-job-processed-send-expiration-complete.png'
+alt='udemy-microservices-section20-446-redis-job-processed-send-expiration-complete.png'
+width=600
+/>
 
 ```ts
 //expiration/src/queues/expiration-queue.ts
 import { ExpirationCompletePublisher } from '../events/publishers/expiration-complete-publisher';
 import { natsWrapper } from '../nats-wrapper';
-
 
 //...
 expirationQueue.process(async (job) => {
@@ -18312,11 +18324,16 @@ export {expirationQueue};
 ## testing using Postman @4min 50sec
 - just for testing purposes -> first remove the delay (15min) -> `expiration/src/events/listeners/order-created-listener.ts`
 
+#### sign-in (cookie)
+- NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
+- signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
+- or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
+
 ### Create ticket
 - POSTMAN -> create a new ticket 
   - POST `https://ticketing.dev/api/tickets` 
   - headers -> Content-Type `application/json`
-  - body -> raw json -> `{"title": "movie", price:15}`
+  - body -> raw json -> `{"title": "movie", "price": 15}`
   - (get the ticket id) 
 
 ### create order
@@ -18333,7 +18350,60 @@ width=600
 />
 
 ### 447. Handling an Expiration Event
-- TODO: back in orders/ service ensure we receive this `expiration:complete` event -> then mark order as expired 
+
+<img
+src='exercise_files/udemy-microservices-section20-447-order-service-should-listen-for-expiration-complete.png'
+alt='udemy-microservices-section20-447-order-service-should-listen-for-expiration-complete.png'
+width=600
+/>
+
+- TODO: 
+- `expiration/` emits `expiration:complete` event,
+- `order/` service listener should listen for `expiration:complete`
+- when order is cancelled, also emit an `order:cancelled` event from `orders/` service
+
+<img
+src='exercise_files/udemy-microservices-section20-447-order-cancelled-order-service-emit-order-cancelled.png'
+alt='udemy-microservices-section20-447-order-cancelled-order-service-emit-order-cancelled.png'
+width=600
+/>
+
+### order service listener
+- the common module now has an expiration complete event
+- the order service needs to update its npm module to use it: `pnpm update @clarklindev/common` 
+- after receiving ExpirationCompleteEvent -> `order/` service -> we find the `order` 
+- and mark it as `cancelled`
+- and order has a reference to ticket and it is not necessary to set the orders' ticket reference to null as it is not a deciding factor for isReserved `orders/src/models/ticket.ts` 
+- ticketSchema.methods.isReserved() only checks:
+  - OrderStatus.Created,
+  - OrderStatus.AwaitingPayment,
+  - OrderStatus.Complete
+
+- `orders/src/events/listeners/expiration-complete-listener.ts`
+
+```ts
+//orders/src/events/listeners/expiration-complete-listener.ts
+import {ExpirationCompleteEvent, Listener, OrderStatus, Subjects} from '@clarklindev/common';
+import { queueGroupName } from './queue-group-name';
+import { Message } from 'node-nats-streaming';
+import {Order} from '../../models/order';
+
+export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent> {
+  queueGroupName = queueGroupName;
+  readonly subject = Subjects.ExpirationComplete;
+  async onMessage(data: ExpirationCompleteEvent['data'], msg:Message){
+    const order = await Order.findById(data.orderId);
+
+    if(!order){
+      throw new Error('Order not found')
+    }
+
+    order.set({
+      status: OrderStatus.Cancelled,
+    })
+  }
+}
+```
 
 ### 448. Emitting the Order Cancelled Event
 ### 449. Testing the Expiration Complete Listener
