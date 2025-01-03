@@ -18378,7 +18378,7 @@ width=600
   - `OrderStatus.Created`,
   - `OrderStatus.AwaitingPayment`,
   - `OrderStatus.Complete`
-
+- as soon as order is in `OrderStatus.Cancelled` status, it is not reserved
 - `orders/src/events/listeners/expiration-complete-listener.ts`
 
 
@@ -18421,12 +18421,56 @@ export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent
 
 ### 448. Emitting the Order Cancelled Event
 - after updating order status
-- should publish (`OrderCancelledPublisher`) and emit event to say order has been cancelled
+- should publish (`orders/src/events/publishers/order-cancelled-publisher -> OrderCancelledPublisher`) and emit event to say order has been cancelled
   - ticket service should listen for this
   - payment service should listen for this
 - see code above lesson 447
 
 ### 449. Testing the Expiration Complete Listener
+- `orders/src/events/listeners/__test__/expiration-complete-listener.test.ts`
+
+```ts
+//orders/src/events/listeners/__test__/expiration-complete-listener.test.ts
+import mongoose from 'mongoose';
+import { Message } from 'node-nats-streaming';
+import { OrderStatus, ExpirationCompleteEvent} from '@clarklindev/common';
+import { ExpirationCompleteListener } from "../expiration-complete-listener";
+import { natsWrapper } from "../../../nats-wrapper";
+import { Order } from "../../../models/order";
+import { Ticket } from "../../../models/ticket";
+
+const setup = async () =>{
+  //create an instance of the listener
+  const listener = new ExpirationCompleteListener(natsWrapper.client);
+
+  const ticket = Ticket.build({
+    id: new mongoose.Types.ObjectId().toHexString(),
+    title: 'concert',
+    price: 15
+  });
+  await ticket.save();
+
+  const order = Order.build({
+    status: OrderStatus.Created,
+    userId: '32423fcdsfs',  //dont matter
+    expiresAt: new Date(),  //dont matter
+    ticket
+  });
+  await order.save();
+
+  const data:ExpirationCompleteEvent['data'] = {
+    orderId: order.id
+  }
+  
+  //@ts-ignore
+  const msg: Message = {
+    ack: jest.fn()
+  }
+
+  return { listener, order, ticket, data, msg };
+};
+```
+
 ### 450. A Touch More Testing
 ### 451. Listening for Expiration
 
