@@ -18472,6 +18472,46 @@ const setup = async () =>{
 ```
 
 ### 450. A Touch More Testing
+- the actual tests...
+  - ensure onMessage() is called
+  - update order status + save
+  - ensure emit OrderCancelledPublisher
+  - ensure ack() function is called
+
+```ts
+//orders/src/events/listeners/__test__/expiration-complete-listener.test.ts
+//...
+
+it('updates the orders status to cancelled', async ()=>{
+  const {listener, order, ticket, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+  const updatedOrder = await Order.findById(order.id);
+  expect(updatedOrder!.status)
+});
+
+it('emits an OrderCancelled event', async ()=>{
+  const {listener, order, ticket, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+
+  expect(natsWrapper.client.publish).toHaveBeenCalled();  
+
+  //publish should be invoked once, so we look at calls[0]
+  //and we access calls[0][1] because 1st argument is subject, 2nd arg is msg object
+  const eventData = JSON.parse(
+    (natsWrapper.client.publish as jest.Mock).mock.calls[0][1]
+  );
+
+  expect(eventData.id).toEqual(order.id);
+});
+
+it('acks the message', async ()=>{
+  const {listener, order, ticket, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+
+  expect(msg.ack).toHaveBeenCalled();
+});
+```
+
 ### 451. Listening for Expiration
 
 ---
