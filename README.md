@@ -18374,12 +18374,13 @@ width=600
 - after receiving ExpirationCompleteEvent -> `order/` service -> we find the `order` 
 - and mark it as `cancelled`
 - and order has a reference to ticket and it is not necessary to set the orders' ticket reference to null as it is not a deciding factor for isReserved `orders/src/models/ticket.ts` 
-- ticketSchema.methods.isReserved() only checks:
-  - OrderStatus.Created,
-  - OrderStatus.AwaitingPayment,
-  - OrderStatus.Complete
+- `ticketSchema.methods.isReserved()` only checks:
+  - `OrderStatus.Created`,
+  - `OrderStatus.AwaitingPayment`,
+  - `OrderStatus.Complete`
 
 - `orders/src/events/listeners/expiration-complete-listener.ts`
+
 
 ```ts
 //orders/src/events/listeners/expiration-complete-listener.ts
@@ -18387,12 +18388,13 @@ import {ExpirationCompleteEvent, Listener, OrderStatus, Subjects} from '@clarkli
 import { queueGroupName } from './queue-group-name';
 import { Message } from 'node-nats-streaming';
 import {Order} from '../../models/order';
+import { OrderCancelledPublisher } from '../publishers/order-cancelled-publisher';
 
 export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent> {
   queueGroupName = queueGroupName;
   readonly subject = Subjects.ExpirationComplete;
   async onMessage(data: ExpirationCompleteEvent['data'], msg:Message){
-    const order = await Order.findById(data.orderId);
+    const order = await Order.findById(data.orderId).populate('ticket');
 
     if(!order){
       throw new Error('Order not found')
@@ -18400,12 +18402,30 @@ export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent
 
     order.set({
       status: OrderStatus.Cancelled,
-    })
+    });
+
+    await order.save();
+
+    await new OrderCancelledPublisher(this.client).publish({
+      id: order.id,
+      version: order.version,
+      ticket: {
+        id: order.ticket.id
+      }
+    });
+
+    msg.ack();
   }
 }
 ```
 
 ### 448. Emitting the Order Cancelled Event
+- after updating order status
+- should publish (`OrderCancelledPublisher`) and emit event to say order has been cancelled
+  - ticket service should listen for this
+  - payment service should listen for this
+- see code above lesson 447
+
 ### 449. Testing the Expiration Complete Listener
 ### 450. A Touch More Testing
 ### 451. Listening for Expiration
