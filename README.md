@@ -18324,7 +18324,7 @@ export {expirationQueue};
 ## testing using Postman @4min 50sec
 - just for testing purposes -> first remove the delay (15min) -> `expiration/src/events/listeners/order-created-listener.ts`
 
-#### sign-in (cookie)
+### sign-in (cookie)
 - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
 - signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
 - or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
@@ -18513,7 +18513,38 @@ it('acks the message', async ()=>{
 ```
 
 ### 451. Listening for Expiration
+- index.ts is where we intiate listeners
+- so we have to import listener and tell it to listen for incoming events
 
+```ts
+//orders/src/index.ts
+import {ExpirationCompleteListener} from './events/listeners/expiration-complete-listener'
+
+new ExpirationCompleteListener(natsWrapper.client).listen();
+```
+
+#### testing
+- code you can test with POSTMAN
+
+### sign-in (cookie)
+- NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
+- signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
+- or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
+
+### Create ticket
+- POSTMAN -> create a new ticket 
+  - POST `https://ticketing.dev/api/tickets` 
+  - headers -> Content-Type `application/json`
+  - body -> raw json -> `{"title": "movie", "price": 15}`
+  - (get the ticket id) 
+
+### create order
+- POSTMAN -> use ticket id to create new order `https://ticketing.dev/api/orders`
+  - body -> raw json -> `{"ticketId": "eru4398t4390u843"}`
+
+### outcome
+- eventually the `order:cancelled` event should get published
+- expecting: `[orders] event published to subject:  order:cancelled`
 ---
 
 ## section 21 - handling payments (2hr40min)
