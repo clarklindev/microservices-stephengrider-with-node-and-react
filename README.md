@@ -18545,10 +18545,60 @@ new ExpirationCompleteListener(natsWrapper.client).listen();
 ### outcome
 - eventually the `order:cancelled` event should get published
 - expecting: `[orders] event published to subject:  order:cancelled`
+
 ---
 
 ## section 21 - handling payments (2hr40min)
+
 ### 452. The Payments Service
+
+#### TODO: ExpirationComplete sets 'OrderStatus.Cancelled' should be 'OrderStatus.Complete' 
+- NOTE: `ExpirationComplete` event sets order status to "Cancelled" 
+- `orders/src/events/listeners/expiration-complete-listener.ts`
+- we should change this, so that orders that have been paid for, should be "complete" and should not be "cancelled" 
+
+```ts
+//orders/src/events/listeners/expiration-complete-listener.ts
+async onMessage(data:ExpirationCompleteEvent['data'], msg: Message){
+  const order = ...
+
+  //...
+  order.set({
+    status.OrderStatus.Cancelled
+  });
+}
+```
+
+### The payments service
+
+### payments service (Listening for these events)
+- `order:created` -> Payments service listens for this event
+  - goal: payment service needs to know how much money it should be receiving
+
+<img
+src='exercise_files/udemy-microservices-section21-452-payment-service-listens-for-order-created.png'
+alt='udemy-microservices-section21-452-payment-service-listens-for-order-created.png'
+width=600
+/>
+
+- `order:cancelled` -> Payments service listens for this event
+  - goal: if anyone tries to pay for something, reject it (do not let them)..
+
+<img
+src='exercise_files/udemy-microservices-section21-452-payment-service-listens-for-order-cancelled.png'
+alt='udemy-microservices-section21-452-payment-service-listens-for-order-cancelled.png'
+width=600
+/>
+
+### payments service (emit these events) 
+- `charge-created` - order service needs to know an order has been paid for (mark as paid (complete))
+
+<img
+src='exercise_files/udemy-microservices-section21-452-payment-service-publishes-event-charge-created.png'
+alt='udemy-microservices-section21-452-payment-service-publishes-event-charge-created.png'
+width=600
+/>
+
 ### 453. globalThis has no index signature TS Error
 ### 454. Initial Setup
 ### 455. Replicated Fields
