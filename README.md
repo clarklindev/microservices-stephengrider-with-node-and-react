@@ -18600,6 +18600,26 @@ width=600
 />
 
 ### 453. globalThis has no index signature TS Error
+- Payments service...
+- you may end up seeing a TS error like this in your test/setup.ts file:
+- This is caused by a recent change in the `@types/node` library which is a dependency of `ts-node-dev`
+
+```
+Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.ts(7017)
+```
+- FIX: 
+
+```ts
+// payments/src/test/setup.ts
+
+//...
+declare global {
+  var signin: () => string[];
+}
+//...
+
+```
+
 ### 454. Initial Setup
 ### 455. Replicated Fields
 ### 456. Another Order Model!
