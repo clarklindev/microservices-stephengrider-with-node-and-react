@@ -18791,7 +18791,7 @@ width=600
   - id
   - status
   - version
-  - userid
+  - userId
   - price
 
 <img
@@ -18813,7 +18813,7 @@ import {updateIfCurrentPlugin } from 'mongoose-update-if-current';
 interface OrderAttrs{
   id: string;
   version: number;
-  userid: string;
+  userId: string;
   price: number;
   status: OrderStatus;
 }
@@ -18858,7 +18858,7 @@ orderSchema.statics.build = (attrs: OrderAttrs) => {
     _id: attrs.id,
     version: attrs.version,
     price: attrs.price,
-    userId: attrs.userid,
+    userId: attrs.userId,
     status: attrs.status
   })
 }
@@ -18922,13 +18922,79 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
     await order.save();
 
     msg.ack();
-    
   }
 }
 ```
 
 ### 459. Testing Order Creation
+- `payments/src/events/listeners/__test__/order-created-listener.test.ts`
+
+#### testing
+- `payments/`
+- `pnpm run test`
+- `it('replicates the order info', async () => {});` 
+  - try find an order inside orders collection (with correct price)
+
+- `it('acks the message', async ()=>{});`
+  - expect the fake jest `ack()` function to be called
+
+```ts
+//payments/src/events/listeners/__test__/order-created-listener.test.ts
+
+import mongoose from 'mongoose';
+import { OrderCreatedEvent, OrderStatus } from "@clarklindev/common";
+import { natsWrapper } from "../../../nats-wrapper";
+import { OrderCreatedListener } from "../order-created-listener";
+import { Message } from 'node-nats-streaming';
+import { Order } from '../../../models/order';
+
+const setup = async () => {
+  const listener = new OrderCreatedListener(natsWrapper.client);
+  
+  const data: OrderCreatedEvent['data'] = {
+    id: new mongoose.Types.ObjectId().toHexString(),
+    version: 0, //anything - not using
+    expiresAt: 'anything here', //anything - not using
+    userId: 'abc', //anything - not using
+    status: OrderStatus.Created,
+    ticket: {
+      id: 'tickid', //anything - not using
+      price: 10
+    }
+  }
+
+  //@ts-ignore
+  const msg:Message = {
+    ack: jest.fn()
+  }
+
+  return { listener, data, msg};
+};
+
+
+it('replicates the order info', async () => {
+  const { listener, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+
+  const order = await Order.findById(data.id);
+  expect(order!.price).toEqual(data.ticket.price);
+
+});
+
+
+it('acks the message', async ()=>{
+  const { listener, data, msg} = await setup();
+  await listener.onMessage(data, msg);
+
+  expect(msg.ack).toHaveBeenCalled();
+});
+```
+
 ### 460. Marking an Order as Cancelled
+- listener for `order:cancelled`
+- TODO: inside the listener, update the status to `OrderStatus.Cancelled`
+- when user makes a payment request an order, figure out if order has status of cancelled, and if it does, reject payment.
+
 ### 461. Cancelled Testing
 ### 462. Starting the Listeners
 ### 463. Payments Flow with Stripe
