@@ -18807,6 +18807,7 @@ width=600
 //payments/src/models/order.ts
 import { OrderStatus } from '@clarklindev/common';
 import mongoose from 'mongoose';
+import {updateIfCurrentPlugin } from 'mongoose-update-if-current';
 
 //properties -> properties for building an order 
 interface OrderAttrs{
@@ -18862,6 +18863,9 @@ orderSchema.statics.build = (attrs: OrderAttrs) => {
   })
 }
 
+orderSchema.set('versionKey', 'version');
+orderSchema.plugin(updateIfCurrentPlugin);
+
 const Order = mongoose.model<OrderDoc, OrderModel>('Order', orderSchema);
 
 export { Order };
@@ -18872,6 +18876,21 @@ export { Order };
 - then we will create or cancel an order inside payment service `orders` collection
 
 ### 457. Update-If-Current
+- payments/
+- `pnpm i mongoose-update-if-current`
+- add to model file (see 456)
+
+```ts
+//payments/src/models/order.ts
+
+import {updateIfCurrentPlugin } from 'mongoose-update-if-current';
+
+//...
+
+orderSchema.set('versionKey', 'version');
+orderSchema.plugin(updateIfCurrentPlugin);
+```
+
 ### 458. Replicating Orders
 ### 459. Testing Order Creation
 ### 460. Marking an Order as Cancelled

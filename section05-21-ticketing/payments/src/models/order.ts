@@ -1,5 +1,6 @@
 import { OrderStatus } from '@clarklindev/common';
 import mongoose from 'mongoose';
+import {updateIfCurrentPlugin } from 'mongoose-update-if-current';
 
 //properties -> properties for building an order 
 interface OrderAttrs{
@@ -54,6 +55,9 @@ orderSchema.statics.build = (attrs: OrderAttrs) => {
     status: attrs.status
   })
 }
+
+orderSchema.set('versionKey', 'version');
+orderSchema.plugin(updateIfCurrentPlugin);
 
 const Order = mongoose.model<OrderDoc, OrderModel>('Order', orderSchema);
 
