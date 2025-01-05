@@ -18552,7 +18552,7 @@ new ExpirationCompleteListener(natsWrapper.client).listen();
 
 ### 452. The Payments Service
 
-#### TODO: ExpirationComplete sets 'OrderStatus.Cancelled' should be 'OrderStatus.Complete' 
+#### TODO: ExpirationComplete sets 'OrderStatus.Cancelled' but, should be 'OrderStatus.Complete' 
 - NOTE: `ExpirationComplete` event sets order status to "Cancelled" 
 - `orders/src/events/listeners/expiration-complete-listener.ts`
 - we should change this, so that orders that have been paid for, should be "complete" and should not be "cancelled" 
@@ -18620,7 +18620,142 @@ declare global {
 
 ```
 
-### 454. Initial Setup
+### 454. Payments - Initial Setup
+- a lot of `payments/` service is similar to `tickets/` (so copy from tickets/) and `orders/`
+- `.dockerignore`
+- `Dockerfile`
+- `package.json`
+- `tsconfig.json`
+- `src/__mocks__`
+- `src/test`
+- `src/app.ts`
+- `src/index.ts`
+- `src/nats-wrapper.ts`
+
+- payments will have:
+  - `processing` events, 
+  - `publish` events
+  - express routing (route handler)
+  - different from expiration service (where no network requests required)
+
+#### build docker image
+- `payments/` -> `docker build -t clarklindev/payments .`
+- NOTE: docker command's (user id eg. clarklindev) does NOT have @ infront
+- `docker push clarklindev/payments`
+
+#### troubleshoot
+- `kubectl get pods` -> gives list of pods
+- `kubectl delete pod [podname]`
+
+#### add to skaffold.yaml
+- add payments to skaffold `artifacts` to code-sync
+
+```yaml
+# section05-21-ticketing/skaffold.yaml
+  # ...
+  artifacts:
+    #...
+    - image: asia.gcr.io/golden-index-441407-u9/payments
+      context: payments
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
+
+```
+#### create a infra/k8s/payments deployment also requires payments mongodb deployment
+- `section05-21-ticketing/infra/k8s/payments-depl.yaml` copy from `section05-21-ticketing/infra/k8s/tickets-depl.yaml`
+
+```yaml
+# section05-21-ticketing/infra/k8s/payments-depl.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payments
+  template:
+    metadata:
+      labels:
+        app: payments
+    spec:
+      containers:
+        - name: payments
+          # image: clarklindev/payments:latest/payments
+          image: asia.gcr.io/golden-index-441407-u9/payments:latest
+          env: 
+            - name: MONGO_URI
+              value: 'mongodb://payments-mongo-srv:27017/payments'
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+            - name: NATS_URL
+              value: 'http://nats-srv:4222'
+            - name: NATS_CLUSTER_ID
+              value: ticketing
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments-srv
+spec:
+  selector:
+    app: payments
+  ports:
+    - name: payments
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+
+```
+
+```yaml
+# section05-21-ticketing/infra/k8s/payments-mongo-depl.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-mongo-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payments-mongo
+  template:
+    metadata:
+      labels:
+        app: payments-mongo
+    spec:
+      containers:
+        - name: payments-mongo
+          image: mongo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments-mongo-srv
+spec:
+  selector:
+    app: payments-mongo
+  ports:
+    - name: db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+
+```
+
 ### 455. Replicated Fields
 ### 456. Another Order Model!
 ### 457. Update-If-Current

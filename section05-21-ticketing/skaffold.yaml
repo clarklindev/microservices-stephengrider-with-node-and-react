@@ -50,5 +50,13 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
+    - image: asia.gcr.io/golden-index-441407-u9/payments
+      context: payments
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
       
 
