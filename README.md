@@ -18777,6 +18777,29 @@ tickets-mongo-depl-74fbbbd8ff-hdpv5      1/1     Running   0          57s
 ```
 
 ### 455. Replicated Fields
+
+<img
+src='exercise_files/udemy-microservices-section21-455-payment-service-events.png'
+alt='udemy-microservices-section21-455-payment-service-events.png'
+width=600
+/>
+
+- payments service receives events and should store this data inside its own orders collection (needs mongoose model)
+- TODO: orders model for payments service
+
+- the information we need from the events:
+  - id
+  - status
+  - version
+  - userid
+  - price
+
+<img
+src='exercise_files/udemy-microservices-section21-455-replicated-information-of-an-order-to-store-inside-payment-service.png'
+alt='udemy-microservices-section21-455-replicated-information-of-an-order-to-store-inside-payment-service.png'
+width=600
+/>
+
 ### 456. Another Order Model!
 ### 457. Update-If-Current
 ### 458. Replicating Orders
