@@ -18645,7 +18645,7 @@ declare global {
 
 #### troubleshoot
 - `kubectl get pods` -> gives list of pods
-- `kubectl delete pod [podname]`
+- `kubectl delete pod [podname]` -> reset a specific pod
 
 #### add to skaffold.yaml
 - add payments to skaffold `artifacts` to code-sync
@@ -18720,7 +18720,7 @@ spec:
       targetPort: 3000
 
 ```
-
+- section05-21-ticketing/infra/k8s/payments-mongo-depl.yaml
 ```yaml
 # section05-21-ticketing/infra/k8s/payments-mongo-depl.yaml
 apiVersion: apps/v1
@@ -18754,6 +18754,26 @@ spec:
       port: 27017
       targetPort: 27017
 
+```
+- section05-21-ticketing/ `skaffold dev`
+
+#### expected outcome
+- expect -> payments pods (depl and mongo-dpl) to be running (see example below)
+
+```
+NAME                                     READY   STATUS    RESTARTS   AGE
+auth-depl-77d8846899-fwc67               1/1     Running   0          60s
+auth-mongo-depl-76d4599fdc-7m8wr         1/1     Running   0          60s
+client-depl-cf694487b-sdspg              1/1     Running   0          60s
+expiration-depl-6bb5d8fdc6-zt96r         1/1     Running   0          59s
+expiration-redis-depl-68f9c645d8-jk8mj   1/1     Running   0          59s
+nats-depl-6db5f98f95-9dw6h               1/1     Running   0          59s
+orders-depl-dbcb67885-b9t9z              1/1     Running   0          58s
+orders-mongo-depl-6cc484885f-hbwz5       1/1     Running   0          58s
+payments-depl-5f886897b6-2z8jp           1/1     Running   0          57s
+payments-mongo-depl-b4b85d999-87sxd      1/1     Running   0          57s
+tickets-depl-86f6bbdbb6-zh95r            1/1     Running   0          57s
+tickets-mongo-depl-74fbbbd8ff-hdpv5      1/1     Running   0          57s
 ```
 
 ### 455. Replicated Fields
