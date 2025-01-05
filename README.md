@@ -18892,6 +18892,41 @@ orderSchema.plugin(updateIfCurrentPlugin);
 ```
 
 ### 458. Replicating Orders
+- TODO: create a listener for `order:created` event
+- `payments/src/events/listeners`
+- `onMessage(data, msg){}` -> extra information off data object
+- in the listener we use the `/payments/src/models/order.ts`
+
+```ts
+//payments/src/events/listeners/order-created-listener.ts
+
+import { Listener, OrderCreatedEvent, Subjects } from '@clarklindev/common';
+import { queueGroupName } from './queue-group-name';
+import { Message } from 'node-nats-streaming';
+import { Order } from '../../models/order';
+
+export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
+  readonly subject = Subjects.OrderCreated;
+  
+  queueGroupName = queueGroupName;
+
+  async onMessage(data:OrderCreatedEvent['data'], msg:Message){
+    const order = Order.build({
+      id: data.id,
+      price: data.ticket.price,
+      status: data.status,
+      userId: data.userId,
+      version: data.version
+    });
+
+    await order.save();
+
+    msg.ack();
+    
+  }
+}
+```
+
 ### 459. Testing Order Creation
 ### 460. Marking an Order as Cancelled
 ### 461. Cancelled Testing
