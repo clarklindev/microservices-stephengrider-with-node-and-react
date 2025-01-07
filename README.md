@@ -19137,6 +19137,49 @@ new OrderCreatedListener(natsWrapper.client).listen();
 
 
 ### 463. Payments Flow with Stripe
+
+- COMPLETED - handling `orders` inside payments service
+
+<img
+src='exercise_files/udemy-microservices-section21-455-payment-service-events.png'
+alt='udemy-microservices-section21-455-payment-service-events.png'
+width=600
+/>
+
+#### buy button
+
+- TODO: `charges` - handling credit cards payments coming in from users
+- buy button
+
+#### Stripejs
+- opens up dialog modal created by stripe.js (take credit card payment details)
+- delegates handling of payment to 3rd party (Stripe)
+
+<img
+src='exercise_files/udemy-microservices-section21-463-interface-stripejs.png'
+alt='udemy-microservices-section21-463-interface-stripejs.png'
+width=600
+/>
+
+#### Payment flow
+
+<img
+src='exercise_files/udemy-microservices-section21-463-payment-flow-with-stripejs.png'
+alt='udemy-microservices-section21-463-payment-flow-with-stripejs.png'
+width=600
+/>
+
+- stripejs running in browser (it will create the payment modal)
+- user enters credit card details
+- initial connecting to stripe api returns a token (think of it like pre-authorisation - allows a follow up request to charge money)
+- token is one-time use (once charged, no-more access to credit card)
+- stripejs gives token 
+- token is sent with request to payment service
+- inside payment service -> ensure user is trying to pay for a valid order
+- verify price
+- once verified details, payment service makes request to stripe api (including token)
+- TODO: implement above process and test apis with jest
+
 ### 464. Implementing the Create Charge Handler
 ### 465. Validating Order Payment
 ### 466. Testing Order Validation Before Payment
