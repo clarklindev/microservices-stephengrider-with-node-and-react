@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import {app} from './app';
 import { natsWrapper } from './nats-wrapper';
+
 //TODO: import listeners...
+import { OrderCancelledListener } from './events/listeners/order-cancelled-listener';
+import { OrderCreatedListener } from './events/listeners/order-created-listener';
 
 const start = async () => {
   if (!process.env.JWT_KEY) {
@@ -38,7 +41,8 @@ const start = async () => {
     
 
     //initalize listeners
-    //...
+    new OrderCancelledListener(natsWrapper.client).listen();
+    new OrderCreatedListener(natsWrapper.client).listen();
 
     await mongoose.connect(
       process.env.MONGO_URI, {

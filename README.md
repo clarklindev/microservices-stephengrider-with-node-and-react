@@ -19102,6 +19102,40 @@ it('acks the message', async ()=>{
 ```
 
 ### 462. Starting the Listeners
+- now that we have created the listeners,
+- we have to create instances and tell them to start listening for incoming events when application (index.ts) starts up 
+- `payments/src/index.ts`
+
+#### running the app
+- remember we have been creating a couple of different orders
+- everytime we create an order, everytime we cancelled it, those events have been getting saved by `net streaming server` (unless you have restarted the streaming server and dumped the events)
+- when you save `index.ts` the service will restart and create a subscription 
+- listen for all the events on the `order created` and `order cancelled` channels
+- we will then start receiving all the events missed (previously published events) out on over time.
+- EXPECT to see the expiration service starting to backfill all the relevant data.
+  - if you did restart nats streaming server...
+  - create an order and ensure it gets processed by payments service (POSTMAN)
+
+```ts
+//payments/src/index.ts
+import { OrderCancelledListener } from './events/listeners/order-cancelled-listener';
+import { OrderCreatedListener } from './events/listeners/order-created-listener';
+
+//...
+new OrderCancelledListener(natsWrapper.client).listen();
+new OrderCreatedListener(natsWrapper.client).listen();
+
+```
+
+#### postman 
+- 2min 40sec
+- POSTMAN - create an order
+- ensure authenticated
+- create ticket
+- create order for the ticket (you should see: `message received: order:created / payments-service`)
+- then if you wait...delay... (you should see: `message received: order:cancelled / payments-service`)
+
+
 ### 463. Payments Flow with Stripe
 ### 464. Implementing the Create Charge Handler
 ### 465. Validating Order Payment
