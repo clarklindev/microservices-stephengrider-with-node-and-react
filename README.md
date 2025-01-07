@@ -18993,7 +18993,47 @@ it('acks the message', async ()=>{
 ### 460. Marking an Order as Cancelled
 - listener for `order:cancelled`
 - TODO: inside the listener, update the status to `OrderStatus.Cancelled`
-- when user makes a payment request an order, figure out if order has status of cancelled, and if it does, reject payment.
+- when user makes a payment request an order
+  - figure out if order has status of cancelled (search orders collection) and if it does, reject payment.
+  - using id, version, to update status to cancelled -> Subjects.OrderCancelled 
+- NOTE: we use Order.findOne({}) because we want to find record with `id` AND `version`
+
+- `payments/src/events/listeners/order-cancelled-listener.ts`
+
+```ts
+//payments/src/events/listeners/order-cancelled-listener.ts
+import { OrderCancelledEvent, Subjects, Listener, OrderStatus } from "@clarklindev/common";
+import { Message } from "node-nats-streaming";
+
+import { queueGroupName } from "./queue-group-name";
+import { Order } from "../../models/order";
+
+export class OrderCancelledListener extends Listener<OrderCancelledEvent> {
+  
+  readonly subject = Subjects.OrderCancelled;
+  queueGroupName = queueGroupName;
+
+  async onMessage(data: OrderCancelledEvent['data'], msg:Message) {
+    const order = await Order.findOne({
+      _id: data.id,
+      version: data.version - 1
+    });
+
+    if(!order){
+      throw new Error('Order not found');
+    }
+    
+    order.set({
+      status: OrderStatus.Cancelled
+    });
+
+    await order.save();
+
+    msg.ack();
+  }
+
+}
+```
 
 ### 461. Cancelled Testing
 ### 462. Starting the Listeners
