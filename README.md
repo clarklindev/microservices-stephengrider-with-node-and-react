@@ -19889,7 +19889,17 @@ width=600
 
 ### 465. Validating Order Payment
 
+- TODO: find order user trying to pay focus
+- TODO: order belongs to user trying to pay for the order
+- TODO: check order is not cancelled
+
+- Testing with POSTMAN (...rather do automated testing with jest (see 466))
+  - pay for an order that doesnt actually exist
+  - sign up as 2 different users, create an order on one, and try pay for order on another
+  - create an order, wait minute for order to expire, then try pay for it
+
 ### 466. Testing Order Validation Before Payment
+#### testing with jest
 
 ### 467. Testing Same-User Validation
 
