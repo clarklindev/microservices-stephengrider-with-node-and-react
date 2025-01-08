@@ -3545,7 +3545,7 @@ gcloud auth login
 
 - redirects you on browser to google login (same account as where we created gcloud project)
 - if successful, result message: you are now logged in as [email address] your current project is `[none]` you can change this setting by running: `gcloud config set project PROJECT_ID`
-eg. gcloud config set project golden-index-441407-u9
+  eg. gcloud config set project golden-index-441407-u9
 
 ### configure project
 
@@ -7903,7 +7903,7 @@ kubectl get services -n ingress-nginx
 
 ### when is getInitialProps() executed?
 
-- to test, add a console log in client/pages/index.js .getInitialProps() 
+- to test, add a console log in client/pages/index.js .getInitialProps()
   - if console.log shows in terminal (server)
   - if console.log shows in console of browser dev tools (client)
 - anytime we call getInitialProps, we have to consider adding the domain
@@ -7921,6 +7921,7 @@ kubectl get services -n ingress-nginx
   - TEST: signin-in causes change to url, which should call getInitialProps() of page (see browser console log)
 
 ### 238. on the server or browser
+
 - TODO: determining whether we are executing request in browser or on server...
 - `window` object is a browser concept, if we test typeof window === 'undefined', then we are on the server
 
@@ -7930,8 +7931,7 @@ if (typeof window === 'undefined') {
 } else {
   //we are on the , baseURL of ''
 }
-return {}
-
+return {};
 ```
 
 ### 239. ingress-nginx namespace and service important update
@@ -7942,16 +7942,19 @@ return {}
 - sevice name: `ingress-nginx-controller`
 
 ### 240. specifying the host
+
 - NOTE: what is returned from calling getInitialProps() is passed as props to the page component.
 - both the requests (from client and server) look identical, but on server, there needs to pass the domain too.
 
 #### on client (browser)
+
 - recall that returning response.data is an object with currentUser prop that gets passed to the component
 - and to get LandingPage's getInitialProps() to be called, sign in (which causes it to execute on client)
-- requests reaching nginx, ingress wants to know about the host we are trying to reach. 
+- requests reaching nginx, ingress wants to know about the host we are trying to reach.
   - well, requests issued within a browser, includes domain (ticketing.dev) info
 
 #### on server (nextjs)
+
 - identical but we will have to specify domain.
 - `kubectl get services -n ingress-nginx` to get service of namespace
 - the request has to include the domain AND route
@@ -7960,7 +7963,6 @@ return {}
 - requests via getInitialProps on server does not have the included domain we are trying to reach.
 - FIX: add a second parameter: headers (object) to axios target...add host
 - success will return null (on server) meaning we reached service successfully
-
 
 ```ts
 //client/pages/index.js
@@ -7972,21 +7974,20 @@ const LandingPage = ({ currentUser }) => {
   return <h1>landing page</h1>;
 };
 
-LandingPage.getInitialProps = async ({req}) => {
+LandingPage.getInitialProps = async ({ req }) => {
   console.log(req.headers);
 
   if (typeof window === 'undefined') {
-    //we are on the server requests should follow this format: `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/` 
+    //we are on the server requests should follow this format: `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/`
     const response = await axios.get(
       'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser',
       {
         headers: {
-          Host: 'ticketing.dev' //this will be replaced by {headers: req.headers}
-        }
+          Host: 'ticketing.dev', //this will be replaced by {headers: req.headers}
+        },
       }
     );
     return response.data;
-
   } else {
     //we are on the browser, baseURL of ''
     const response = await axios.get('/api/users/currentuser');
@@ -7998,54 +7999,57 @@ LandingPage.getInitialProps = async ({req}) => {
 ```
 
 #### why return null?
+
 - the request is going from nginx to auth service to get logged in user: `/api/users/currentuser` but its not sending with the cookie in the request, so auth service is not sending data back (because it assumes no cookie means not signed in)
 - FIX: add a cookie to request going to auth service (if its coming from server)
 
 <img src="exercise_files/udemy-microservices-section11-240-returns-null-from-request-because-no-cookie-from-nginx-to-auth-service.png" alt="udemy-microservices-section11-240-returns-null-from-request-because-no-cookie-from-nginx-to-auth-service.png" width="800"/>
 
 ### 241. server passing through the cookies
+
 - TODO: when server (nextjs SSR) sending a request to service, needs to include the cookie going out to nginx
 - when getInitialProps() gets called on server (see updated getInitialProps() lesson 240), first argument to server is an object with some properties (including request object)
   - same as express app request object
 
 ```js
-LandingPage.getInitialProps = async ({req}) => {
-  console.log(req.headers)
+LandingPage.getInitialProps = async ({ req }) => {
+  console.log(req.headers);
 };
 ```
 
 <img src="exercise_files/udemy-microservices-section11-241-req-headers-cookie.png" alt="udemy-microservices-section11-241-req-headers-cookie.png" width="800"/>
 
 - NOTE: cookie is passed as a header, so we can look at `req.headers` for cookie
-- NOTE: the headers also includes `host` which is what we need as well. 
+- NOTE: the headers also includes `host` which is what we need as well.
 - so we can update the code by passing throught the headers -> req.headers:
 
 ```js
 //client/pages/index.js
 
 //...
-LandingPage.getInitialProps = async ({req}) => {
+LandingPage.getInitialProps = async ({ req }) => {
   if (typeof window === 'undefined') {
     const response = await axios.get(
       'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser',
       {
-        headers: req.headers  
+        headers: req.headers,
       }
     );
 
     //...
   }
-}
+};
 ```
 
 #### outcome
-- TODO: to test SERVER request -> we hard refresh the browser (we are testing the server sending the request see lesson 237 when is getInitialProps() called -> section getInitialProps() execution on server) 
+
+- TODO: to test SERVER request -> we hard refresh the browser (we are testing the server sending the request see lesson 237 when is getInitialProps() called -> section getInitialProps() execution on server)
 
 - confirmation on browser console (console.log of currentUser)
 
 <img src="exercise_files/udemy-microservices-section11-241-signed-in-client-confirmation-browser-console.png" alt= "udemy-microservices-section11-241-signed-in-client-confirmation-browser-console.png" width="800"/>
 
-- confirmation in terminal (console.log of currentUser) 
+- confirmation in terminal (console.log of currentUser)
 
 <img src="exercise_files/udemy-microservices-section11-241-signed-in-server-confirmation-terminal.png" alt="udemy-microservices-section11-241-signed-in-server-confirmation-terminal.png" width="800"/>
 
@@ -8055,8 +8059,8 @@ LandingPage.getInitialProps = async ({req}) => {
 
 - OUTCOME: `buildClient()` helper (client/api/build-client.js) which creates a configured axios client
 
-- currently everytime we call getInitialProps() we have to: 
-  - setup `if(typeof window === 'undefined'){...}` 
+- currently everytime we call getInitialProps() we have to:
+  - setup `if(typeof window === 'undefined'){...}`
   - `http://NAME_OF_SERVICE.NAMESPACE.svc.cluster.local/` domain url
 - TODO: update so we extract this to helper file -> by creating `buildClient` helper
   - it will preconfigure axios request regardless whether we are on client or on server making requests to a service
@@ -8087,15 +8091,15 @@ const buildClient = ({ req }) => {
 };
 
 export default buildClient;
-
 ```
 
 #### usage of build-client.js
+
 - NOTE: the first argument of getIntialProps() is reffered to as 'context' which is the object with the props like `req` etc
   - instead of destructuring this object and getting request `{req}` pass the `context` object.
-- define axios client `const client = buildClient(context)` 
+- define axios client `const client = buildClient(context)`
   - gets the configured axios instance then we need to pass the requested route
-- `const request = await client.get(route)` 
+- `const request = await client.get(route)`
 
 ```js
 // client/pages/index.js
@@ -8107,22 +8111,22 @@ const LandingPage = ({ currentUser }) => {
 };
 
 LandingPage.getInitialProps = async (context) => {
-  
   const client = buildClient(context);
   const request = await client.get('/api/users/currentuser');
   return request.data;
 };
 
 export default LandingPage;
-
 ```
 
 ### 243. content on the landing page
-- the landing page is now prepped to display user logged-in status 
+
+- the landing page is now prepped to display user logged-in status
   - 'you are logged in' if the server-component runs getInitialProps() -> receives `currentUser` and its NOT null
   - 'you are NOT logged in' if the server-component runs getInitialProps() -> receives `currentUser`and it IS null
 
 #### TESTING
+
 - gcloud kubernetes engine -> cluster is created -> running
 - gcloud network load balancer is created -> running
 - docker desktop started -> docker OK -> kubernetes OK
@@ -8140,6 +8144,7 @@ export default LandingPage;
 
 - will be similar to signup.js
 - client/pages/auth/signin.js
+
   - header changes to 'sign in'
   - url request path `/api/users/signin`
 
@@ -8207,12 +8212,12 @@ const Signin = () => {
 };
 
 export default Signin;
-
 ```
 
 ### 245. reusable header
-- the header at the top of every single page 
-- you can add to _app.js
+
+- the header at the top of every single page
+- you can add to \_app.js
 - TODO: add to nextjs as template's extra content
 - the header navigation should update to reflect the signed-in status
   - signed in -> show `sign out`
@@ -8222,7 +8227,7 @@ export default Signin;
 
 - currently our index.js (landing page) knows who loggedin-user is, but we want the header to know it too
 
-- current architecture  
+- current architecture
 
 <img src="exercise_files/udemy-microservices-section11-245-current-architecture.png" alt="udemy-microservices-section11-245-current-architecture.png" width="800">
  
@@ -8234,7 +8239,8 @@ export default Signin;
 <img src="exercise_files/udemy-microservices-section11-245-update-architecture.png" alt="udemy-microservices-section11-245-update-architecture.png" width="800">
 
 ### 246. moving GetInitialProps
-- in _app.js change `export default` and assign app to a variable
+
+- in \_app.js change `export default` and assign app to a variable
 
 ```js
 //client/pages/_app.js
@@ -8257,14 +8263,15 @@ export default AppComponent;
 ```
 
 ### 247. Issues with Custom App GetInitalProps
-- _app.js is not a page, it is a custom component that wraps a page
+
+- \_app.js is not a page, it is a custom component that wraps a page
 - PROBLEM? the props of getInitialProps() of a custom App component and a Page component are different
-  - the props of Page has context with context:`{req, res}`  
-  - the props of Custom App Component has context with context:`Component, ctx: {req, res}` 
+  - the props of Page has context with context:`{req, res}`
+  - the props of Custom App Component has context with context:`Component, ctx: {req, res}`
 
 <img src="exercise_files/udemy-microservices-section11-247-props-for-getinitialprops-of-page-component-vs-custom-app-component.png" alt="udemy-microservices-section11-247-props-for-getinitialprops-of-page-component-vs-custom-app-component.png" width="600">
 
-- FIX: AppComponents' getInitialProps should receive appContext.ctx 
+- FIX: AppComponents' getInitialProps should receive appContext.ctx
 
 ```js
 import 'bootstrap/dist/css/bootstrap.css';
@@ -8295,38 +8302,40 @@ export default AppComponent;
 ```
 
 #### TROUBLESHOOT
-- NOTE: with nextjs, getInitalProps being also in _app, causes the Pages' eg. LandingPage.getInitialProps() to not be automatically invoked.
+
+- NOTE: with nextjs, getInitalProps being also in \_app, causes the Pages' eg. LandingPage.getInitialProps() to not be automatically invoked.
 
 ### 248. handling multiple GetInitialProps
 
 <img src="exercise_files/udemy-microservices-section11-248-handling-multiple-getInitialProps.png" alt="udemy-microservices-section11-248-handling-multiple-getInitialProps.png" width="600">
 
-- the LandingPage (index.js) getInitialProps() is not being invoked if we also have getInitialProps up at _app.js
+- the LandingPage (index.js) getInitialProps() is not being invoked if we also have getInitialProps up at \_app.js
 
 ### fixing multiple getInitialProps
 
 <img src="exercise_files/udemy-microservices-section11-248-handling-multiple-getInitialProps-fix.png" alt="udemy-microservices-section11-248-handling-multiple-getInitialProps-fix.png" width="600">
 
-- FIX: call the landingPage's getInitialProp() from _app.js's getInitialProps() 
-- FIX: which will then pass the data for BOTH _app.js AND LandingPage down to AppComponent as props and SOME of it goes to LandingPage
+- FIX: call the landingPage's getInitialProp() from \_app.js's getInitialProps()
+- FIX: which will then pass the data for BOTH \_app.js AND LandingPage down to AppComponent as props and SOME of it goes to LandingPage
 - from AppComponent -> console log the appContext from getInitialProps()
-- notice `Component` property which is a reference to the component Page we are trying to render in _app.js
+- notice `Component` property which is a reference to the component Page we are trying to render in \_app.js
   - and because we have a reference to the component, we can call its Component.getInitialProps() function directly
-- NOTE: we will pass it some data by returning data from _app's getInitialProps() call
-  - the appContext goes into AppComponent 
+- NOTE: we will pass it some data by returning data from \_app's getInitialProps() call
+  - the appContext goes into AppComponent
   - the appContext.ctx goes into a page
 - this means we are executing AppComponents getInitialProps AND Page component (LandingPage's) getInitialProps() and both currently return a console log of the currentUser
 
 <img src="exercise_files/udemy-microservices-section11-248-appContext-has-reference-to-component-its-trying-to-render.png" alt="udemy-microservices-section11-248-appContext-has-reference-to-component-its-trying-to-render.png" width="600">
 
-- NOTE: pages without the .getInitialProps() function have that common header code (we set in _app.js) and we are invoking Component.getInitialProps() which might not exists eg. signin.js and signup.js do not have this .getInitialProps
+- NOTE: pages without the .getInitialProps() function have that common header code (we set in \_app.js) and we are invoking Component.getInitialProps() which might not exists eg. signin.js and signup.js do not have this .getInitialProps
 
 - now, AppComponents.getInitialProps() has data common for everypage `const { data } = await client.get('/api/users/currentuser')`
-AND we can also call .getInitialProps() of Pages from AppComponents getInitialProps()
+  AND we can also call .getInitialProps() of Pages from AppComponents getInitialProps()
 
 - TODO: taking the pageProps, and data we are are fetching for AppComponent itself -> return this -> passes it through as props to the component -> ensure the props is used by the components that need it
 
 ### 249. passing props through
+
 - TODO: passing data through as props to the server component
   - by returning an object with the properties and values we need
   - NOTE: spreading `data`, because data is what gets returned from `/api/users/currentuser` call -> is an object with currentUser property.
@@ -8364,7 +8373,8 @@ export default AppComponent;
 ```
 
 ### 250. error: invalid `<Link>` with `<a>` child
-- with nextjs 13 UPDATE:  
+
+- with nextjs 13 UPDATE:
   - remove `<a>`
   - move className up to `<Link className={}>`
   - see [nextjs doc](https://nextjs.org/docs/messages/invalid-new-link-with-extra-anchor)
@@ -8376,11 +8386,13 @@ export default AppComponent;
 ```
 
 ### 251. building the header
+
 - building out the header
   - has logo (left)
   - right-side has buttons `signup` and `signin` OR `signout` if already logged-in
 
 ### 252. conditionally showing Links
+
 - links will be an array which we filter any falsy items
 - map over each remaining item in links, destructure out label and href
 
@@ -8414,10 +8426,11 @@ const HeaderComponent = ({ currentUser }) => {
 export default HeaderComponent;
 ```
 
-### 253. signing out 
+### 253. signing out
+
 - auth route is /api/users/signout
 - TODO: create a page to allow users to signout
-- NOTE: the request to signout MUST be coming from a component, NOT getInitalProps (which is serverside), 
+- NOTE: the request to signout MUST be coming from a component, NOT getInitalProps (which is serverside),
   - server doesnt know what to do with cookies
   - ONLY client side browser can work with cookies so our request MUST come from clientside browser
 - CREATE client/pages/auth/signout.js
@@ -8452,12 +8465,15 @@ export default SignOutPage;
 ```
 
 ### 254. React App Catchup & Checkpoint
+
 - nice summary of what we did this section advised to go through [lesson 254](https://www.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19266074#overview) for refresher.
 
 ---
 
 ## section 12 - code sharing and re-use between services (52min)
+
 ### 255. Shared Logic Between Services
+
 - event-related stuff for auth service ? - no other service really need to know about what the auth service is doing
 - everything auth service does is exposed through JWT in the cookie
 - TODO: ticketing service
@@ -8467,6 +8483,7 @@ export default SignOutPage;
   - edit a ticket (AUTH)
 
 #### moving things from auth service to shared lib
+
 - extract (refactor) code from auth to a common shared library to be used between services
   - TODO: - re-use `requireAuth` middleware
   - TODO: - re-use `NotAuthorizedError`
@@ -8475,6 +8492,7 @@ export default SignOutPage;
 <img src="exercise_files/udemy-microservices-section12-255-code-sharing-between-services-shared-logic-between-services.png" alt="udemy-microservices-section12-255-code-sharing-between-services-shared-logic-between-services.png" width="800" />
 
 ### 256. Options for Code Sharing
+
 - we decide that npm package is the way
 - i've ordered it from prefferred to least prefferred so diff from slides
 
@@ -8503,53 +8521,63 @@ export default SignOutPage;
 <img src="exercise_files/udemy-microservices-section12-257-npmjs-publishing-npm-package.png" alt="udemy-microservices-section12-257-npmjs-publishing-npm-package.png" width="600"/>
 
 #### options for publishing as npm package (4 Options)
-  - Public Package -> (npm Public Registry): Anyone can view and install.
-  - Private Package -> (npm Private Registry): Only authorized users can install; requires a paid plan.
-  - Organization Public Registry -> Public packages under an organization's name, viewable and installable by anyone.
-  - Organization Private Registry -> Private packages under an organization's name, only accessible by invited members or teams, and requires a paid npm plan.
+
+- Public Package -> (npm Public Registry): Anyone can view and install.
+- Private Package -> (npm Private Registry): Only authorized users can install; requires a paid plan.
+- Organization Public Registry -> Public packages under an organization's name, viewable and installable by anyone.
+- Organization Private Registry -> Private packages under an organization's name, only accessible by invited members or teams, and requires a paid npm plan.
 
 #### Key Points
-  - Free Options: Public packages (either personal or organizational) are free.
-  - Paid Options: Private packages (personal or organizational) require a paid plan.
-  - npm Organization: If you’re managing a team or business, npm Organizations are a good way to manage private packages and team permissions.
-  - npm organizations must be unique
 
-- TODO: [npmjs.com](http://npmjs.com) 
+- Free Options: Public packages (either personal or organizational) are free.
+- Paid Options: Private packages (personal or organizational) require a paid plan.
+- npm Organization: If you’re managing a team or business, npm Organizations are a good way to manage private packages and team permissions.
+- npm organizations must be unique
+
+- TODO: [npmjs.com](http://npmjs.com)
+
   - sign up for npm account (MUST BE UNIQUE)
   - add an organization (choose public packages)
-  - create a npm package 
+  - create a npm package
   - publish to public organization we created
 
 - To delete an organization: select organization name (bottom-left) -> billing -> delete organization
 
 ### 258. Publishing NPM Modules
+
 - NOTE: the common folder referenced in these few lessons is moved outside the main project folder
-[git repo: https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
+  [git repo: https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
 
 #### create project
+
 - creating a shared common library
 - create /common/ folder
 - from common folder:
+
 ```cmd
 npm init -y
 ```
+
 - package.json -> use the organization name like: @organization
-- we give our package a name `common` 
+- we give our package a name `common`
 - ie. we are publishing a package called common to our organization `"name": "@organization/common",`
 
 #### create package: common
+
 ```json
 {
-  "name": "@organization/common",
+  "name": "@organization/common"
 }
 ```
+
 - from common/ folder, we make a git repository, npm checks our repo and checks everything is commited before publishing to the registry
 - `git init`
 - `git -am "initial commit"`
 
 #### publish to organization
+
 - NOTE: you need to be logged in to npmjs: `npm login`
-- `npm publish --access public` 
+- `npm publish --access public`
 - NOTE: the --access public (if you omit this, npm assumes we want to publish private package in our org which will throw error because it costs money to publish private package)
 - in npmjs under packages -> `@clarklindev/common@1.0.0`
 
@@ -8562,9 +8590,11 @@ npm init -y
 - i created a git repo for common/ `https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git` so changes can be tracked
 
 #### TROUBLESHOOT - common/ folder location
+
 - NOTE: i think stephen put the common folder inside the main project folder for organizational purpose, as it is ignored by default when you initialize common/ as its own git repo inside the main repo.. (you will see the common/ folder is empty when you look at the git pushes of what gets pushed up in the main project)
 
 #### referenced repository in main project folder
+
 - common/ in the same folder may cause confusion as to whether main project should keep updating the reference to common/
 - even though the project is linked to the NPM package version, not the local submodule.
 - might mistakenly edit the local common/ submodule, thinking those changes will apply to the main project, but they wont unless published to NPM.
@@ -8581,11 +8611,12 @@ npm init -y
 
 ```cmd
 git remote add origin https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git
-git remote -v 
+git remote -v
 git push --set-upstream origin master
 ```
 
 ### TROUBLESHOOT - publish to organization
+
 - you need to be logged in
 
 ```cmd
@@ -8593,39 +8624,50 @@ npm login
 ```
 
 ### 259. Project Setup
+
 - our common/ library will be written as typescript
-- before publishing code, it will be transpiled to javascript 
+- before publishing code, it will be transpiled to javascript
 
 ### Steps to Set Up the Global Bin Directory
+
 - note: setup global bin directory (used for pnpm)
-- Choose a Directory for Global Binaries: You can choose a directory like `~/.pnpm-global/bin` (userfolder/pnpm-global)to store global binaries. 
-  - You can replace `~/.pnpm-global` with another path if you prefer a different location.  
+- Choose a Directory for Global Binaries: You can choose a directory like `~/.pnpm-global/bin` (userfolder/pnpm-global)to store global binaries.
+  - You can replace `~/.pnpm-global` with another path if you prefer a different location.
+
 #### MAC
+
 - run: `pnpm config set global-bin-dir ~/.pnpm-global/bin`
 - NOTE: . in front of a directory on mac means hidden (Hidden files or directories are usually meant for configuration or system-related files)
 - NOTE: on mac ~ means user directory
+
 #### WINDOWS
+
 ##### CONFIGURE PATH
-- run (powershell style command): `pnpm config set global-bin-dir "$env:USERPROFILE\pnpm-global\bin"` 
+
+- run (powershell style command): `pnpm config set global-bin-dir "$env:USERPROFILE\pnpm-global\bin"`
+
 ##### ADD TO PATH
+
 - NOTE: windows you can reference the user directory like: `%USERPROFILE%`
 - add to windows environment variables -> path -> add full path to user folder pnpm-global: `C:\Users\admin\pnpm-global\bin`
 
-#### inside the Common module repository 
+#### inside the Common module repository
+
 - THESE ARE INSTRUCTIONS FOR THE COMMON MODULE (REPOPOSITORY)
 - from that projects folder: [microservices-stephengrider-with-node-and-react-common/](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git) repository folder (this is the common shared module folder we moved to its own repository).
 - first install typescript globally to get access to tsc: `pnpm add -g typescript` (might need to Set Up the Global Bin Directory (see below))
 - install typescript to project as dev-dependency: `pnpm i -D typescript`
 - install `rimraf` as dev-dependency: `pnpm i -D rimraf` -> allows deleting or if doesnt exist, doesnt throw error.
-- we will create a types file via `pnpm tsc --init` -> creates a `tsconfig.json` 
+- we will create a types file via `pnpm tsc --init` -> creates a `tsconfig.json`
 - `"declaration": true` adds a type definition file for the ts
 - `"outdir": './build'` -> after compile, put output in /build
 
 - edit tsconfig
+
 ```json
 //tsconfig.json
 //...
-"declaration": true //Generate .d.ts files from TypeScript and JavaScript files in your project. 
+"declaration": true //Generate .d.ts files from TypeScript and JavaScript files in your project.
 "outdir": './build'
 //...
 ```
@@ -8633,25 +8675,31 @@ npm login
 - package.json
 - pnpm run clean clears the build folder
 - 'tsc' builds the project and outputs js specified in 'output' directory we setup in tsconfig.json
+
 ```json
 "scripts": {
   "clean" : "rimraf ./build",
   "build": "pnpm run clean && tsc"
 }
 ```
+
 #### running the app
+
 - running build: `pnpm run build`
 
 #### tsconfig.json
-- "declaration": true -> Generate .d.ts files from TypeScript and JavaScript files in your project. 
+
+- "declaration": true -> Generate .d.ts files from TypeScript and JavaScript files in your project.
 - "outdir": './build'
 
 #### package.json
+
 - below commented out as we use 'rimraf' package
 <!-- - we installed the `del-cli` npm module
-- del command used in the script is not valid for your operating system 
-  - FIX: we install `cross-env` so `del-cli`  -->
+- del command used in the script is not valid for your operating system
+  - FIX: we install `cross-env` so `del-cli` -->
 - install `rimraf` as dev-dependency -> it can delete the directory itself without error if it doesn't exist
+
 ```json
 //package.json
 "scripts": {
@@ -8663,9 +8711,10 @@ npm login
 - `pnpm run build`
 
 ### 260. Typo in package.json "files" Field - Do Not Skip
-- https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git 
+
+- https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git
 - the project is in a folder called `common` in the tutorials,
-in the common repo, there is no common folder, package.json should be...
+  in the common repo, there is no common folder, package.json should be...
 
 ```json
 //package.json
@@ -8682,37 +8731,47 @@ in the common repo, there is no common folder, package.json should be...
 ```
 
 ### 261. An Easy Publish Command
+
 - building the project will compile the typescript and output the javascript, where it is output is specified in tsconfig - "outdir": './build'
 
 #### 'name'
+
 - this is value they will use for importing when working with this module
 - eg. `import {} from '@organization/common'`
 
 #### 'main'
-- package.json `main` property ->  when we are importing this module, what are they importing? we want it to reference the ./build/index.js
+
+- package.json `main` property -> when we are importing this module, what are they importing? we want it to reference the ./build/index.js
 - ie. when using this package, and you reference the module via an import: `import {} from '@organization/common'`, where does this import point to...
 
 #### 'types'
+
 - types is the reference to the types file generated when calling tsc compile.
 
 #### 'files'
+
 - 'files' -> an array that specifies what we want npm to include in our package: all files in build
 
-- NOTE: this is inside the Common module repository 
+- NOTE: this is inside the Common module repository
+
 ```json
 // package.json
 "main": "./build/index.js",
 "types": "./build/index.d.ts",
-"files": ["build/**/*"] 
+"files": ["build/**/*"]
 ```
+
 #### .gitignore
-- add .gitignore 
+
+- add .gitignore
 - ignore the 'build' folder and 'node_modules'
 
 ### steps to updating
+
 1. update the common/ shared repo (add / commit)
 
 2. update the version (after commit)
+
 - always have to update the version number when we publish our package
 - look at semmantic versioning
 - MANUALLY update the 'version' property of our package: `package.json`
@@ -8723,7 +8782,8 @@ in the common repo, there is no common folder, package.json should be...
 4. npm publish
 
 #### pub script
-- can add to package.json "pub" script 
+
+- can add to package.json "pub" script
 - NOT FOR PRODUCTION -> AS ALL CHANGES ARE ADDED TO COMMIT AT ONCE, ITS TOO GENERIC, VERSIONING NOT SPECIFIC
 
 ```js
@@ -8733,21 +8793,26 @@ in the common repo, there is no common folder, package.json should be...
   "pub": "git add . && git commit -m \"updates\" && pnpm version patch && pnpm run build && pnpm publish"
 },
 ```
+
 - pub script creates two commits:
 
 #### First commit (manual):
+
 - `git add . && git commit -m "updates"`
 - This stages all changes and creates a commit with the message "updates".
 
 #### Second commit (automatic):
+
 - `pnpm version patch`
 - This bumps the version in package.json, commits it with a message like v1.0.1 (the new version), and adds a Git tag.
 
 #### Result
+
 Commit 1: "updates" (manual commit).
 Commit 2: vX.Y.Z (automatic version bump commit from pnpm).
 
 ### 262. Relocating Shared Code
+
 - TODO: move code form auth service to common service
   - auth/src/errors/ -> move this folder to our shared module (project/src)
   - auth/src/middlewares/ -> move this folder to our shared module (project/src)
@@ -8755,7 +8820,8 @@ Commit 2: vX.Y.Z (automatic version bump commit from pnpm).
 <img src="exercise_files/udemy-microservices-section12-262-relocating-shared-code-options-for-syntax-when-import.png" alt="udemy-microservices-section12-262-relocating-shared-code-options-for-syntax-when-import.png" width="800"/>
 
 - options for import syntax:
-  - import {} from '@organization/common' 
+
+  - import {} from '@organization/common'
   - import {} from '@organization/common/errors/bad-request-error'
 
 - to do this, we use the index.ts and import all the files we use, and then export them
@@ -8781,47 +8847,56 @@ export * from './middlewares/validate-request';
 ```
 
 ### 263. Updating Import Statements
-- section05-11-ticketing/auth/src/routes/ 
+
+- section05-11-ticketing/auth/src/routes/
 - TODO: fix broken imports in main project folder
 - because we moved errors/ and middlewares to common module ([repository](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git))
-- we have to update all code that referenced the errors/ or middlewares/ files by importing our common module as an npm package to the project 
+- we have to update all code that referenced the errors/ or middlewares/ files by importing our common module as an npm package to the project
 
 - from the section05-11-ticketing/auth folder:
+
 ```
 pnpm i @clarklindev/common
 ```
 
 #### TROUBLESHOOT
+
 - if your package is already installed you need to update to use latest version
+
 ```
 pnpm update @clarklindev/common
 ```
 
 ### TROUBLESHOOT
+
 - ERROR: "No overload matches this call"
 - There is a types mismatch occurring because two libraries are currently not in sync with each other. You have the types installed for v5 Express, however, your Express is v4. I would recommend removing that @types/express version and replacing with the compatible version:
 
 - FIX: "@types/express": "^4.17.21",
 - package.json dependencies: "@types/express" -> ensure same version in `common/` repo and the `main project` repo
-- FIX: `"@types/express": "^4.17.21"` 
+- FIX: `"@types/express": "^4.17.21"`
 
 ### 264. NPM Update Command
+
 - main project folder:
+
 ```
 pnpm update @clarklindev/common
 
 ```
+
 ### 265. Updating the Common Module
 
 #### verify correct version of common repo
+
 - you can verify that skaffold is using the correct version of the common/ repo by inspecting pods
 
 <img src="exercise_files/udemy-microservices-section12-265-validating-correct-updated-common-repo-version.png" alt="udemy-microservices-section12-265-validating-correct-updated-common-repo-version.png" width="800"/>
 
-
 ```
 kubectl get pods
 ```
+
 - then open a shell inside of the pod to look at the files to make sure we using the latest version of `common/` project
 
 <img src="exercise_files/udemy-microservices-section12-265-validating-correct-updated-common-repo-version_2.png" alt="udemy-microservices-section12-265-validating-correct-updated-common-repo-version.png_2" width="800"/>
@@ -8829,11 +8904,13 @@ kubectl get pods
 ---
 
 ## section 13 - create-read-update-destroy server setup (2hr28min)
+
 ### 266. Ticketing Service Overview
 
 <img src="exercise_files/udemy-microservices-section13-266-ticketing-service-overview-routes.png" alt="udemy-microservices-section13-266-ticketing-service-overview-routes.png" width="600"/>
 
 - 4 routes (create, update, view all, view one by ID)
+
   - get all - GET /api/tickets
   - get one - GET /api/tickets/:id
   - create - POST /api/tickets
@@ -8851,6 +8928,7 @@ kubectl get pods
 ### 267. Project Setup
 
 #### copy + paste from auth/ to tickets/
+
 - section05-13-ticketing/tickets
 - from section05-13-ticketing/auth/ copy all files in root of `auth/` folder and paste in tickets/
 - from section05-13-ticketing/auth/src/ copy `index.ts`, `app.ts`, `test/`
@@ -8858,29 +8936,35 @@ kubectl get pods
 <img src="exercise_files/udemy-microservices-section13-267-copy-from-auth-into-tickets.png" alt="udemy-microservices-section13-267-copy-from-auth-into-tickets.png" width="400" />
 
 #### replace 'auth' references with 'tickets'
+
 - update: tickets/package.json -> "name": "tickets"
 - tickets/src/index.ts -> there is a reference to mongodb connection to connect to `auth-mongo-srv` change to `tickets-mongo-srv`
 - tickets/src/app.ts -> remove reference to routes that are not for tickets/
 - tickets/src/test/setup.ts -> theres a reference to global.signin (leave for now)
 
 #### install dependencies
+
 - tickets/ -> `pnpm i`
 
 #### build image + pushing to dockerhub
+
 - NOTE: Docker desktop is open, Docker / kubernetes is running
-- this step is NOT required for skaffold if running docker/kubernetes on gcloud 
-  - from tickets/ `docker build -t clarklindev/tickets .` 
+- this step is NOT required for skaffold if running docker/kubernetes on gcloud
+  - from tickets/ `docker build -t clarklindev/tickets .`
 - if using docker locally, skaffold will need this docker image later..
 
 ### 268. Running the Ticket Service
+
 #### writing k8s file for deployment + service
+
 - `infra/k8s/tickets-depl.yaml`
 - copy contents from infra/k8s/auth-depl.yaml
 - search and replace all 'auth' with 'tickets' and 'Auth' with 'Tickets'
-- NOTE: the tickets service will try handle authentication by itself, so will also need the JWT_KEY reference 
+- NOTE: the tickets service will try handle authentication by itself, so will also need the JWT_KEY reference
 - need JWT_KEY to validate requests and ensure the token is valid
 
 ### update skaffold.yaml (for file sync)
+
 - `section05-13-ticketing/skaffold.yaml` ensure files sync
 - copy the artifacts entry for auth and paste, replace `auth` with `tickets`
 
@@ -8889,7 +8973,7 @@ kubectl get pods
 ```yaml
 
   artifacts:
-    
+
     #...
 
     - image: asia.gcr.io/golden-index-441407-u9/tickets
@@ -8903,38 +8987,44 @@ kubectl get pods
 ```
 
 ### k8s file for mongodb depl/service
+
 - create `infra/k8s/tickets-mongo-depl.yaml`
 - copy contents of `infra/k8s/auth-mongo-depl.yaml` and paste in `infra/k8s/tickets-mongo-depl.yaml`
 - replace all reference to 'auth' with 'tickets'
 
 ### run skaffold
+
 - close skaffold if already running
 - `kubectl get pods` ensure all pods are/have shutdown
 - from main project folder: `skaffold dev`
 
-#### TROUBLESHOOT 
+#### TROUBLESHOOT
+
 - if theres an error: manually create docker image again -> stop skaffold
-- from tickets/ `docker build -t clarklindev/tickets .` 
+- from tickets/ `docker build -t clarklindev/tickets .`
 - `docker push clarklindev/tickets`
 - then from main project folder: start `skaffold dev`
 
 ### 269. Mongo Connection URI
+
 - connection to tickets/ for mongodb is hardcoded: `mongoose.connect('mongodb://tickets-mongo-srv:27017/tickets');`
 - TODO: update so its env variable set via deployment yaml
 - do this for both auth and tickets
 
 #### 1. CREATE ENV VARIABLE IN infra/k8s/tickets-depl.yaml
+
 - the db connection url should be set via env in `infra/k8s/[x]-depl.yaml file`
 - TODO: mongodb database url set via environment variable in `infra/k8s/tickets-depl.yaml`
-- general good idea is to make the connection string an environment variable 
+- general good idea is to make the connection string an environment variable
 - update `infra/k8s/tickets-depl.yaml` env -> by adding env entry for mongo uri.
 - `tickets/src/index.ts` already had the mongodb connection so cut from there
 - but the connection value you can get from `infra/k8s/tickets-mongo-depl.yaml` -> service name `tickets-mongo-srv` (what we trying to connect to)
-- NOTE: the environment variable set in the deployment yaml: `infra/k8s/*-depl.yaml` 
+- NOTE: the environment variable set in the deployment yaml: `infra/k8s/*-depl.yaml`
+
   - ie. auth/src/index.ts using `process.env.MONGO_URI` but the variable is specific to that `auth` containers' deployment (auth-depl.yaml)
 
   - ie. tickets/src/index.ts using `process.env.MONGO_URI` but the variable is specific to that `tickets` containers' deployment
-  (tickets-depl.yaml)
+    (tickets-depl.yaml)
 
 ```yaml
 //infra/k8s/tickets-depl.yaml
@@ -8943,7 +9033,7 @@ kubectl get pods
         - name: tickets
           # image: clarklindev/tickets:latest/tickets
           image: asia.gcr.io/golden-index-441407-u9/tickets:latest
-          env: 
+          env:
             - name: MONGO_URI
               value: 'mongodb://tickets-mongo-srv:27017/tickets'
             - name: JWT_KEY
@@ -8953,7 +9043,8 @@ kubectl get pods
                   key: JWT_KEY
 ```
 
-#### 2. USE ENV VARIABLE 
+#### 2. USE ENV VARIABLE
+
 - use the ticket env in `tickets/src/index.ts`
 - we should do check that MONGO_URI env is defined
 
@@ -8964,36 +9055,34 @@ const start = async () => {
 
   if (!process.env.MONGO_URI) {
     throw new Error('MONGO_URI must be defined');
-  }  
+  }
 
   try {
-    await mongoose.connect(
-      process.env.MONGO_URI, 
-      {
-        // useNewUrlParser: true,
-        // useUnifiedTopology: true,
-        // useCreateIndex: true
-      }
-    ); //connecting to mongodb on cluster ip service
+    await mongoose.connect(process.env.MONGO_URI, {
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,
+      // useCreateIndex: true
+    }); //connecting to mongodb on cluster ip service
     console.log('connected to mongodb');
   } catch (err) {
     console.error(err);
   }
 
   //...
-}
+};
 ```
 
 ### 270. Quick Auth Update
+
 - move the mongodb connection string from `auth/src/index.ts` to deployment yaml `infra/k8s/auth-depl.yaml`
 - update auth/src/index.ts to use environment variable.
 - infra/k8s/auth-depl.yaml
 
 ```yaml
 # infra/k8s/auth-depl.yaml
-  env:
-    - name: MONGO_URI
-      value: 'mongodb://auth-mongo-srv:27017/auth'
+env:
+  - name: MONGO_URI
+    value: 'mongodb://auth-mongo-srv:27017/auth'
 #...
 ```
 
@@ -9029,12 +9118,13 @@ try {
 - create test file `tickets/src/routes/__test__/new.test.ts`
 
 ### TESTING
+
 - `tickets/src/routes/__test__/new.test.ts`
 
 ```ts
 //tickets/src/routes/__test__/new.test.ts
-import { app } from "../../app";
-import request from "supertest";
+import { app } from '../../app';
+import request from 'supertest';
 
 it('has a route handler to handle listening to /api/tickets for post requests', async () => {});
 it('can only be accessed if user is signed in', async () => {});
@@ -9053,10 +9143,11 @@ it('creates a ticket given valid inputs', async () => {});
   - test we are able to create a ticket
 
 ### 272. Creating the tickets router
-- TODO: test to ensure the request route does NOT return a 404 
+
+- TODO: test to ensure the request route does NOT return a 404
 - test: `it('has a route handler to handle listening to /api/tickets for post requests', async () => {});`
 - NOTE: `tickets/src/app.ts` has catch-all route for invalid url's
-- throws NotFoundError status code 404 
+- throws NotFoundError status code 404
 
 ```ts
 //tickets/src/app.ts
@@ -9065,17 +9156,16 @@ it('creates a ticket given valid inputs', async () => {});
 app.all('*', async (req, res, next) => {
   throw new NotFoundError();
 });
-
 ```
 
-
 ### TESTING
+
 - `tickets/src/routes/__test__/new.test.ts`
 
 ```ts
 //tickets/src/routes/__test__/new.test.ts
-import { app } from "../../app";
-import request from "supertest";
+import { app } from '../../app';
+import request from 'supertest';
 
 //TODO: test to ensure the request does NOT return a 404 (app.ts throws NotFoundError as catchall route when invalid url)
 it('has a route handler to handle listening to /api/tickets for post requests', async () => {
@@ -9091,6 +9181,7 @@ it('has a route handler to handle listening to /api/tickets for post requests', 
 ```
 
 #### 1. create route
+
 - create src/routes/new.ts -> route `/api/tickets` responsible for creating a ticket
 
 ```ts
@@ -9098,14 +9189,15 @@ it('has a route handler to handle listening to /api/tickets for post requests', 
 import express, { Request, Response } from 'express';
 const router = express.Router();
 
-router.post('/api/tickets', (req: Request, res: Response) => { 
+router.post('/api/tickets', (req: Request, res: Response) => {
   res.sendStatus(200);
 });
 
-export {router as createTicketRouter }
+export { router as createTicketRouter };
 ```
 
 #### 2. import router
+
 - import route to app.ts
 - then test from tickets/ folder: `pnpm run test`
 
@@ -9132,44 +9224,45 @@ app.all('*', async (req, res, next) => {
 ```
 
 ### 273. Adding Auth Protection
+
 - test: make an unauthenticated request
 - test: `it('can only be accessed if user is signed in', async () => {});`
   - simulate not signed-in by sending request without jwt/cookie in request header
-- NOTE: common/ repository library has the errors -> `src/errors/not-authorized-error.ts` 
+- NOTE: common/ repository library has the errors -> `src/errors/not-authorized-error.ts`
 - `NotAuthorizedError` returns status code `401` when user is not authorized to visit a route
 - REPO: `microservices-stephengrider-with-node-and-react-common` -> /src/errors/ NotAuthorizedError
 
 ### TESTING
+
 - `tickets/src/routes/__test__/new.test.ts`
 
 ```ts
 //tickets/src/routes/__test__/new.test.ts
-import { app } from "../../app";
-import request from "supertest";
+import { app } from '../../app';
+import request from 'supertest';
 
 //simulate not signed-in by sending request without jwt/cookie in request header
 //microservices-stephengrider-with-node-and-react-common/src/errors/ NotAuthorizedError -> throws 401
 
-//BEFORE: test fails -> our test is expecting a 401, 
+//BEFORE: test fails -> our test is expecting a 401,
 //it is passing and returning 200 as there is no authentication tied to tickets/ route handler and therefore no NotAuthorizedError thrown.
 //FIX: ensure that authentication is required to access route -> add middleware
 
 it('can only be accessed if user is signed in', async () => {
-  await request(app)
-    .post('/api/tickets')
-    .send({})
-    .expect(401);
+  await request(app).post('/api/tickets').send({}).expect(401);
 });
 ```
+
 - test -> from tickets/ folder: `pnpm run test`
 
-#### CHECK1 - middleware currentUser -> if there is token, decoded token and add to req.currentUser 
-- NOTE: this middleware has to be added after cookieSession -> because cookieSession can then look at cookie and set `req.session` 
+#### CHECK1 - middleware currentUser -> if there is token, decoded token and add to req.currentUser
+
+- NOTE: this middleware has to be added after cookieSession -> because cookieSession can then look at cookie and set `req.session`
 - folder: `tickets/src/app.ts`
 - RECALL in `common/src/middlewares/current-user` there is a check to see if request has session and session includes jwt
   - NO token, call `next()`
   - YES there is a token, decode token and set on `req.currentUser`
-- TODO: to ensure tickets/ has authentication, just need to add in tickets/src/app.ts/ `current-user` middleware from common/ 
+- TODO: to ensure tickets/ has authentication, just need to add in tickets/src/app.ts/ `current-user` middleware from common/
 
 ```ts
 //tickets/src/app.ts
@@ -9185,10 +9278,10 @@ app.use(
 );
 app.use(currentUser); //decoded token is added to req.currentUser if token valid
 app.use(createTicketRouter);
-
 ```
 
-#### CHECK2 - middleware requireAuth -> if NOT req.currentUser throw error 
+#### CHECK2 - middleware requireAuth -> if NOT req.currentUser throw error
+
 - RECALL in `common/src/middlewares/require-auth` there is a check to see if request has req.currentUser
 - if requireAuth fails, ie if req.currentUser not defined, throw `NotAuthorizedError()`
 - folder: `src/routes/new.ts`
@@ -9201,20 +9294,22 @@ import { requireAuth } from '@clarklindev/common';
 import express, { Request, Response } from 'express';
 const router = express.Router();
 
-router.post('/api/tickets', requireAuth, (req: Request, res: Response) => { 
+router.post('/api/tickets', requireAuth, (req: Request, res: Response) => {
   res.sendStatus(200);
 });
 
-export {router as createTicketRouter }
+export { router as createTicketRouter };
 ```
+
 ### TESTING
+
 - test that if we are authenticated, then it should NOT return 401 status code (opposite of prev test)
-- TODO: in tickets/src/tests/setup.ts there is `global.signin = async ()=>{}` helper (from auth) 
+- TODO: in tickets/src/tests/setup.ts there is `global.signin = async ()=>{}` helper (from auth)
 
 ```ts
 //tickets/src/routes/__test__/new.test.ts
-import { app } from "../../app";
-import request from "supertest";
+import { app } from '../../app';
+import request from 'supertest';
 
 //...
 
@@ -9225,22 +9320,25 @@ it('returns a status other than 401 if the user is signed in', async () => {
 ```
 
 ### 274. Faking Authentication During Tests
-- TODO: in tickets/src/tests/setup.ts there is `global.signin = async ()=>{}` helper (from auth) 
+
+- TODO: in tickets/src/tests/setup.ts there is `global.signin = async ()=>{}` helper (from auth)
 - this helper was used for tests to fake sign-in during testing and return a cookie
 - NOTE: this helper WONT WORK for tickets/ because it doesnt have access to a route `/api/users/signup` to fake test signup
 - AND there should NOT be interdependency on services while running tests, eg. `tickets/` reaching out to `auth/`
 
 #### fake signed in
+
 - the purpose of the .signin function was to return a cookie with a JWT
-- looking at the cookie after authenticating (sign-in) 
+- looking at the cookie after authenticating (sign-in)
 
 <img src="exercise_files/udemy-microservices-section13-274-faking-authentication-during-testing-sign-in-cookie.png" alt="udemy-microservices-section13-274-faking-authentication-during-testing-sign-in-cookie.png" width="800" />
 
 #### get the cookie
+
 - if we take this cookie, and send it along with requests, we will be authenticated
 - TODO: build our own cookie `tickets/src/tests/setup.ts` -> `global.signin = async ()=>{}`
 
-- from browser tools -> network -> XHR -> headers -> request headers -> cookie  (everything after `cookie: express:sess=`)
+- from browser tools -> network -> XHR -> headers -> request headers -> cookie (everything after `cookie: express:sess=`)
 
 ```req header
 //...
@@ -9253,6 +9351,7 @@ cookie: express:sess=
 - OR from browser tools -> application -> storage -> cookies -> select the domain (ticketing.dev) -> copy cookie value
 
 #### decode the cookie
+
 - paste the cookie in [base64decode.org](http://base64decode.org)
 
 <img src="exercise_files/udemy-microservices-section13-274-faking-authentication-during-testing-decode-cookie.png" alt="udemy-microservices-section13-274-faking-authentication-during-testing-decode-cookie.png" width="800"/>
@@ -9264,12 +9363,12 @@ cookie: express:sess=
   3. build sesion object {jwt: MY_JWT}
   4. turn session into JSON
   5. take JSON and encode it as base64
-  6. return a string with cookie: express:sess=cookie 
+  6. return a string with cookie: express:sess=cookie
 
 ```ts
 //tickets/src/tests/setup.ts
 
-beforeAll(async ()=>{
+beforeAll(async () => {
   process.env.JWT_KEY = 'adsopsdfisd';
   //OLD WAY
   // const mongo = new MongoMemoryServer();
@@ -9277,33 +9376,35 @@ beforeAll(async ()=>{
   mongo = await MongoMemoryServer.create();
   const mongoUri = mongo.getUri();
 
-// await mongoose.connect(mongoUri, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// });
+  // await mongoose.connect(mongoUri, {
+  //   useNewUrlParser: true,
+  //   useUnifiedTopology: true,
+  // });
   await mongoose.connect(mongoUri, {});
 });
 
 //...
 
-global.signin = async ()=>{
+global.signin = async () => {
   //1. build a jwt payload {id, email}
   //2. create the jwt (need process.env.JWT_KEY)
   //3. build sesion object {jwt: MY_JWT}
   //4. turn session into JSON
-  //5. take JSON and encode it as 
-  //6. return a string with cookie: express:sess=cookie 
-}
+  //5. take JSON and encode it as
+  //6. return a string with cookie: express:sess=cookie
+};
 ```
 
 ### 275. A Required Session Fix and a Global Signin Reminder
+
 - NOTE: this is for lesson 276
 - tickets/src/test/setup.ts
 - UPDATE: global signin declaration
 - UPDATE: the return of the global.signin -> fix is required to return the cookie to prevent our tests from failing
 - UPDATE: remove async: `signin = () => {}`
 
-- update: 
+- update:
+
 ```ts
 //tickets/src/test/setup.ts
 
@@ -9312,16 +9413,17 @@ declare global {
   var signin: () => string[];
 }
 
-global.signin = ()=>{
-//...
+global.signin = () => {
+  //...
 
-//return [`express:sess=${base64}`];
+  //return [`express:sess=${base64}`];
   //UPDATE
   return [`session=${base64}`];
-}
+};
 ```
 
 ### 276. Building a Session
+
 - tickets/src/test/setup.ts
 - `import jwt from 'jsonwebtoken';`
 - NOTE: typescript marks the `process.env.JWT_TOKEN` as possibly undefined, FIX: add exclaimation at end `process.env.JWT_TOKEN!`
@@ -9330,33 +9432,32 @@ global.signin = ()=>{
 - turn the session to json `const sessionJSON = JSON.stringify(session);`
 - then turn sessionJSON into base64 `const base64 = Buffer.from(sessionJSON).toString('base64');`
 - return [`session=${base64}`];
-- NOTE: the global declaration... we update it as it used to return promise 
+- NOTE: the global declaration... we update it as it used to return promise
 - NOTE: with supatest, cookies should be returned in an array
 - NOTE: UPDATE: `tickets/src/test/setup.ts` remove async: `signin = () => {}`
 
 ```ts
 declare global {
   var signin: () => string[];
-} 
-
+}
 ```
+
 ```ts
 //tickets/src/test/setup.ts
 import jwt from 'jsonwebtoken';
 
 global.signin = () => {
-
   //1. build a jwt payload {id, email}
   const payload = {
     id: '23432456565r6',
-    email: 'test@test.com'
-  }
+    email: 'test@test.com',
+  };
 
   //2. create the jwt (need process.env.JWT_KEY)
   const token = jwt.sign(payload, process.env.JWT_KEY!);
-  
+
   //3. build sesion object {jwt: MY_JWT}
-  const session = {jwt: token};
+  const session = { jwt: token };
 
   //4. turn session into JSON
   const sessionJSON = JSON.stringify(session);
@@ -9364,16 +9465,16 @@ global.signin = () => {
   //5. take JSON and encode it as base64
   const base64 = Buffer.from(sessionJSON).toString('base64');
 
-  //6. return a string with cookie: 
+  //6. return a string with cookie:
   //return [`express:sess=${base64}`];
 
   //UPDATE
   return [`session=${base64}`];
-}
-
+};
 ```
 
-#### attach cookie to test in src/routes/__test__/new.test.ts
+#### attach cookie to test in src/routes/**test**/new.test.ts
+
 - `src/routes/__test__/new.test.ts`
 - add a cookie to the test by calling .set('Cookie', global.signin()) - `const response = await request(app).post('/api/tickets').set('Cookie', global.signin()).send({});`
 
@@ -9386,44 +9487,42 @@ it('returns a status other than 401 if the user is signed in', async () => {
 
   expect(response.status).not.toEqual(401);
 });
-
 ```
 
 ### 277. Testing Request Validation
+
 - TODO: ensure title and price are provided with request
   - if not return an error
 
 ```ts
-
 it('returns an error if invalid title is provided', async () => {
   await request(app)
     .post('/api/tickets')
     .set('Cookie', global.signin())
     .send({
       title: '',
-      price: 10
+      price: 10,
     })
     .expect(400);
-  
+
   await request(app)
     .post('/api/tickets')
     .set('Cookie', global.signin())
     .send({
-      price: 10
+      price: 10,
     })
     .expect(400);
-
 });
 
 it('returns an error if invalid price is provided', async () => {
   await request(app)
-  .post('/api/tickets')
-  .set('Cookie', global.signin())
-  .send({
-    title: 'sdfsdfsfd',
-    price: -10
-  })
-  .expect(400);
+    .post('/api/tickets')
+    .set('Cookie', global.signin())
+    .send({
+      title: 'sdfsdfsfd',
+      price: -10,
+    })
+    .expect(400);
 
   await request(app)
     .post('/api/tickets')
@@ -9436,6 +9535,7 @@ it('returns an error if invalid price is provided', async () => {
 ```
 
 ### 278. Validating Title and Price
+
 - src/test/setup.ts
 - put the body validation logic after `requireAuth` middleware
 - `import {body} from 'express-validator';`
@@ -9444,7 +9544,7 @@ it('returns an error if invalid price is provided', async () => {
 - no errors are thrown or response sent back.
 - `import {validateRequest} from '@clarklindev/common'`
 - add `validateRequest` after the validation check
-- validation for title  
+- validation for title
   - `.not().isEmpty()` will check for title not provided OR title is an empty string
 - validation for price
   - accept $ and decimal value for cents
@@ -9454,35 +9554,34 @@ it('returns an error if invalid price is provided', async () => {
 ```ts
 import { requireAuth, validateRequest } from '@clarklindev/common';
 import express, { Request, Response } from 'express';
-import {body} from 'express-validator';
+import { body } from 'express-validator';
 
 const router = express.Router();
 
-router.post('/api/tickets', 
-  requireAuth, 
+router.post(
+  '/api/tickets',
+  requireAuth,
   [
-    body('title')
-      .not()
-      .isEmpty()
-      .withMessage('Title is required'),
-    
+    body('title').not().isEmpty().withMessage('Title is required'),
+
     body('price')
-      .isFloat({ gt: 0})
-      .withMessage('Price must be greater than 0')
+      .isFloat({ gt: 0 })
+      .withMessage('Price must be greater than 0'),
   ],
 
   validateRequest,
 
-  (req: Request, res: Response) => { 
-    res.sendStatus(200)
+  (req: Request, res: Response) => {
+    res.sendStatus(200);
   }
 );
 
-export {router as createTicketRouter }
+export { router as createTicketRouter };
 ```
 
 ### 279. Reminder on Mongoose with TypeScript
-- refresher lesson (should watch it) - reminder on working with mongoose 
+
+- refresher lesson (should watch it) - reminder on working with mongoose
 - for mongoose to work with mongodb, have to create a model.
 - what we save to database is a Ticket Model (mongoose)
 - the model represents the collection of records inside mongodb
@@ -9492,30 +9591,37 @@ export {router as createTicketRouter }
 <img src="exercise_files/udemy-microservices-section13-279-ticket-model.png" alt="udemy-microservices-section13-279-ticket-model.png" width="800" />
 
 - TicketAttrs - title:string, price:number, userId:string
+
   - properties required to build a new Ticket
 
 - TicketDoc - title:string, price:number, userId:string, createAt:string
+
   - properties that a Ticket has
 
 - TicketModel - build:(attrs) => Doc
-  - Properties tied to the model 
+  - Properties tied to the model
   - build() takes in some attributes and returns a document
 
-#### NOTE: TicketAttrs vs TicketDoc 
-  - TicketAttrs is properties to build a record (single entry)
-  - TicketDoc - this is for after the record is created and saved (becomes a mongoose document), there can be extra properties put on by mongoose
+#### NOTE: TicketAttrs vs TicketDoc
+
+- TicketAttrs is properties to build a record (single entry)
+- TicketDoc - this is for after the record is created and saved (becomes a mongoose document), there can be extra properties put on by mongoose
 
 #### Mongoose model
+
 - TicketAttrs -> interface that describes properties to create a new Ticket
 
-- TicketDoc -> interface that describes the properties a saved record has 
+- TicketDoc -> interface that describes the properties a saved record has
+
   - single record.
 
-- TicketModel -> all different properties that will be assigned to the model itself. 
+- TicketModel -> all different properties that will be assigned to the model itself.
+
   - the entire collection of data.
 
 - Schema -> listing all the properties we want AND has toJSON manipulates the json representation of the data.
-  - in toJSON convert mongodb id's (has _id) to `id`
+
+  - in toJSON convert mongodb id's (has \_id) to `id`
 
 - REMINDER using the User example: `userSchema.statics.build = (attrs:UserAttrs) => {return new User(attrs); };` -> there is no type checking when we create new User() so we created a static function build() which knows the received attributes type (attrs:UserAttrs)
 
@@ -9528,15 +9634,15 @@ it('creates a ticket given valid inputs', async () => {
   await request(app)
     .post('api/tickets')
     .send({
-      title:'asdasdas',
-      price: 20
+      title: 'asdasdas',
+      price: 20,
     })
     .expect(201);
-
 });
 ```
 
-#### create a new Ticket model 
+#### create a new Ticket model
+
 - tickets/src/models/ticket.ts
 - creating the mongoose model interfaces
 
@@ -9544,37 +9650,39 @@ it('creates a ticket given valid inputs', async () => {
 //section05-13-ticketing/tickets/src/models/ticket.ts
 import mongoose from 'mongoose';
 
-interface TicketAttrs{
+interface TicketAttrs {
   title: string;
   price: number;
   userId: string;
 }
 
-interface TicketDoc extends mongoose.Document{
+interface TicketDoc extends mongoose.Document {
   title: string;
   price: number;
   userId: string;
 }
 
-interface TicketModel extends mongoose.Model<TicketDoc>{
+interface TicketModel extends mongoose.Model<TicketDoc> {
   build(attrs: TicketAttrs): TicketDoc;
 }
-
 ```
 
 ### 280. Defining the Ticket Model
+
 - creating the ticket schema
 
 #### schema type vs interface type
+
 - NOTE: when creating the schema, list out all the properties the schema should have
-  - NB!!!! these properties are reference to global `String` Constructor references 
+  - NB!!!! these properties are reference to global `String` Constructor references
   - NB!!!! the interface refers to a `string` type (typescript concept)
   - therefore we use Capitals for the type
   - the second property to the schema is an object where we put the toJSON function
-    - transform() function has `doc` and `ret` 
+    - transform() function has `doc` and `ret`
     - `ret` is the object that will turn into JSON (make direct changes on ret)
   - statics.build() is the method we use to create new objects (because it has type support)
 - create the model: `const Ticket = mongoose.model<TicketDoc, TicketModel>('Ticket', ticketSchema)`
+
   - first argument we provide a name for the collection: `Ticket`
   - second is the schema to use: `ticketSchema`
 
@@ -9585,39 +9693,39 @@ interface TicketModel extends mongoose.Model<TicketDoc>{
 import mongoose from 'mongoose';
 
 //...
-const ticketSchema = new mongoose.Schema({
-  title:{
-    type:String,
-    required: true
+const ticketSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    userId: {
+      type: String,
+      required: true,
+    },
   },
-  price:{
-    type:Number,
-    required:true
-  },
-  userId:{
-    type:String,
-    required:true
-  }
-}, 
 
-{
-  toJSON:{
-    transform(doc, ret){
-      ret.id = ret._id;
-      delete ret._id;
-    }
+  {
+    toJSON: {
+      transform(doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+      },
+    },
   }
-}
 );
 
-ticketSchema.statics.build = (attrs:TicketAttrs) => {
+ticketSchema.statics.build = (attrs: TicketAttrs) => {
   return new Ticket(attrs);
-}
+};
 
 const Ticket = mongoose.model<TicketDoc, TicketModel>('Ticket', ticketSchema);
 
-export {Ticket}
-
+export { Ticket };
 ```
 
 ### 281. Creation via Route Handler
@@ -9632,30 +9740,33 @@ export {Ticket}
 - import our Ticket model to the test `import { Ticket } from "../../models/ticket";`
 
   1. we will first check the amount of records inside the ticket collection
-    - get all tickets -> `let tickets = await Tickets.find({});`
-    - the initial call we expect nothing to be inside the mongodb because in test setup (`src/test/setup.ts`) beforeEach() we empty the db collections
+
+  - get all tickets -> `let tickets = await Tickets.find({});`
+  - the initial call we expect nothing to be inside the mongodb because in test setup (`src/test/setup.ts`) beforeEach() we empty the db collections
 
   2. then we will make the request to create a ticket and save to database
-    - NOTE: we have to be logged in: `.set('Cookie', global.signin())`
-    - in the test -> expect the return statusCode 201 (created) 
-    - we update the code: `tickets/src/routes/new.ts` -> (req: Request, res: Response) => {}
-    - import Ticket 
+
+  - NOTE: we have to be logged in: `.set('Cookie', global.signin())`
+  - in the test -> expect the return statusCode 201 (created)
+  - we update the code: `tickets/src/routes/new.ts` -> (req: Request, res: Response) => {}
+  - import Ticket
 
   3. then we will ensure the number of records increased
-    - get tickets in db 
-    - `expect(tickets.length).toEqual(1);`
+
+  - get tickets in db
+  - `expect(tickets.length).toEqual(1);`
 
   4. cd section05-13-ticketing/tickets/ `pnpm run test`
 
 ```ts
 //src/routes/__test__/new.test.ts
-import { Ticket } from "../../models/ticket";
+import { Ticket } from '../../models/ticket';
 
 it('creates a ticket given valid inputs', async () => {
   let tickets = await Tickets.find({});
 
   expect(tickets.length).toEqual(0);
-  const title = "adsfjsdfdslf";
+  const title = 'adsfjsdfdslf';
   const price = 20;
 
   await request(app)
@@ -9663,7 +9774,7 @@ it('creates a ticket given valid inputs', async () => {
     .set('Cookie', global.signin())
     .send({
       title,
-      price
+      price,
     })
     .expect(201);
 
@@ -9678,7 +9789,7 @@ it('creates a ticket given valid inputs', async () => {
 - in tickets/src/routes/new.ts
 - get title, price off request
 - create the ticket calling: `const ticket = Ticket.build({title, price, id: req.currentUser.id})`
-- NOTE: TypeScript, the `!` symbol is called the non-null assertion operator. 
+- NOTE: TypeScript, the `!` symbol is called the non-null assertion operator.
   - It tells the TypeScript compiler that you are certain a value is not null or undefined
 - NOTE: typescript warns that id (req.currentUser.id) might not exist, but we have `requireAuth` middleware which makes sure req.currentUser.id exists.
 - TODO: add exclaimation AFTER currentUser so typescript ignores it `id: req.currentUser!.id`
@@ -9688,49 +9799,44 @@ it('creates a ticket given valid inputs', async () => {
 
 ```ts
 import express, { Request, Response } from 'express';
-import {body} from 'express-validator';
+import { body } from 'express-validator';
 
-import { requireAuth, validateRequest} from '@clarklindev/common';
+import { requireAuth, validateRequest } from '@clarklindev/common';
 import { Ticket } from '../models/ticket';
 
 const router = express.Router();
 
-router.post('/api/tickets',
+router.post(
+  '/api/tickets',
 
   requireAuth,
 
   [
-    body('title')
-      .not()
-      .isEmpty()
-      .withMessage('Title is required'),
-    
+    body('title').not().isEmpty().withMessage('Title is required'),
+
     body('price')
-      .isFloat({ gt: 0})
-      .withMessage('Price must be greater than 0')
+      .isFloat({ gt: 0 })
+      .withMessage('Price must be greater than 0'),
   ],
 
   validateRequest,
 
-  (req: Request, res: Response) => { 
-    
+  (req: Request, res: Response) => {
     const { title, price } = req.body;
-    
+
     const ticket = Ticket.build({
-      title, 
-      price, 
-      id: req.currentUser!.id
+      title,
+      price,
+      id: req.currentUser!.id,
     });
 
     await ticket.save();
 
     res.status(201).send(ticket);
-
   }
 );
 
-export {router as createTicketRouter };
-
+export { router as createTicketRouter };
 ```
 
 ### 282. Testing Show Routes
@@ -9754,34 +9860,34 @@ import request from 'supertest';
 import { app } from '../../app';
 
 // get a ticket by id that does not exist
-it('returns a 404 if the ticket is not found', async () => { 
-  await request(app)
-    .get('/api/tickets/sfjlsdfjdslfdsf')
-    .send()
-    .expect(404);
+it('returns a 404 if the ticket is not found', async () => {
+  await request(app).get('/api/tickets/sfjlsdfjdslfdsf').send().expect(404);
 });
-
 ```
 
 ### TEST 2 - Ticket FOUND
+
 - REQUIRED: we have a ticket that we can find from GET
-1. TODO: first simulate create a ticket (lesson 281) 
-  - POST request
-  - requires authentication (cookie)
-  - the response from creating the cookie is the ticket (we need its id) 
-  - ticket id -> `response.body.id`
-  - expect status code: 201 (created)
+
+1. TODO: first simulate create a ticket (lesson 281)
+
+- POST request
+- requires authentication (cookie)
+- the response from creating the cookie is the ticket (we need its id)
+- ticket id -> `response.body.id`
+- expect status code: 201 (created)
 
 2. TODO: get the ticket by id
-  - GET request
-  - does NOT require authentication
-  - expect status code: 200
+
+- GET request
+- does NOT require authentication
+- expect status code: 200
 
 ```ts
 //tickets/src/routes/__test__/show.test.ts
 //...
 it('returns the ticket if the ticket is found', async () => {
-  const title = "concert";
+  const title = 'concert';
   const price = 20;
 
   //create the ticket first
@@ -9790,7 +9896,7 @@ it('returns the ticket if the ticket is found', async () => {
     .set('Cookie', global.signin())
     .send({
       title,
-      price
+      price,
     })
     .expect(201);
 
@@ -9802,13 +9908,13 @@ it('returns the ticket if the ticket is found', async () => {
 
   expect(ticketResponse.body.title).toEqual(title);
   expect(ticketResponse.body.price).toEqual(price);
-
 });
-
 ```
 
 ### 283. Unexpected Failure!
+
 - NOTE: near end of lesson, the tests for ticket not found -> fails
+
   - we are checking for a 404... but get 400 (bad request)
   - in next lesson, stephen explains why but long story short, its because the ticket id is not a valid mongoose id.
 
@@ -9819,42 +9925,44 @@ it('returns the ticket if the ticket is found', async () => {
 - building `tickets/src/show.ts`
 
 - TODO: if it cant find the ticket -> return a 404
+
   - use Ticket model to find by id
 
 - TODO: return ticket if ticket is found
   - if you leave off the status code, default is 200;
 
 #### use showTicketRouter
+
 ```ts
 //tickets/src/app.ts
 //...
 import { showTicketRouter } from './routes/show';
 //...
 app.use(showTicketRouter);
-
 ```
 
 ```ts
 //tickets/src/show.ts
 import express, { Request, Response } from 'express';
 import { Ticket } from '../models/ticket';
-import {NotFoundError} from '@clarklindev/common';
+import { NotFoundError } from '@clarklindev/common';
 
 const router = express.Router();
-router.get('/api/tickets/:id', async (req:Request, res:Response) => {
+router.get('/api/tickets/:id', async (req: Request, res: Response) => {
   const ticket = await Ticket.findById(req.params.id);
 
-  if(!ticket){
+  if (!ticket) {
     throw NotFoundError();
   }
 
   res.send(ticket); //no status code... default to 200
 });
 
-export { router as showTicketRouter}
+export { router as showTicketRouter };
 ```
 
 ### 284. What's that Error?!
+
 - our error is currently handled in [common/ module](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
   - `src/middlewares/error-handler.ts` by errorHandler
 - the general error handler is called when there is no custom error handler: `res.status(400).send({ errors: [{ message: 'something went wrong' }] });`
@@ -9870,19 +9978,16 @@ export { router as showTicketRouter}
 ```ts
 //show.test.ts
 // get a ticket by id that does not exist
-it('returns a 404 if the ticket is not found', async () => { 
-  await request(app)
-    .get('/api/tickets/sfjlsdfjdslfdsf')
-    .send()
-    // .expect(404);
+it('returns a 404 if the ticket is not found', async () => {
+  await request(app).get('/api/tickets/sfjlsdfjdslfdsf').send();
+  // .expect(404);
 
-  console.log(response.body) //wont log unless .expect(404) is removed temporarily
-
+  console.log(response.body); //wont log unless .expect(404) is removed temporarily
 });
-
 ```
 
 ### debugging src/middlewares/error-handler.ts
+
 - NOTE: THIS IS A QUICK HACK FOR DEBUGGING
 - you can add a console.log(err) to errorHandler BUT will result in rebuild, set new version, redeploy, then in Tickets/ install the updated @clarklindev/common
 - Quick hack (NOT RECOMMENDED) -> because we import the @clarklindev/common/ library -> look inside node_modules/ navigate to middlewares/error-handler.js (NOTE: EDIT JS (THE BUILT VERSION OF TYPESCRIPT CODE))
@@ -9919,7 +10024,7 @@ export const errorHandler = (
 
 <img src="exercise_files/udemy-microservices-section13-284-console-log-the-actual-error.png" alt="udemy-microservices-section13-284-console-log-the-actual-error.png" width="800"/>
 
-- shows the error is we are trying the use an invalid value for mongodb "_id"
+- shows the error is we are trying the use an invalid value for mongodb "\_id"
 - it is saying our api `/api/tickets/:id`, id needs to receive a valid mongodb id and our request is `/api/tickets/sdfhjsdiuhfsdfs` (invalid)
 - FIX: in the tests, change to a valid id
 
@@ -9927,10 +10032,10 @@ export const errorHandler = (
 //tickets/src/show.ts
 import express, { Request, Response } from 'express';
 import { Ticket } from '../models/ticket';
-import {NotFoundError} from '@clarklindev/common';
+import { NotFoundError } from '@clarklindev/common';
 
 const router = express.Router();
-router.get('/api/tickets/:id', async (req:Request, res:Response) => {
+router.get('/api/tickets/:id', async (req: Request, res: Response) => {
   const ticket = await Ticket.findById(req.params.id);
   //...
 });
@@ -9938,12 +10043,14 @@ router.get('/api/tickets/:id', async (req:Request, res:Response) => {
 
 ### 285. Better Error Logging
 
-####  updating middleware errorHandler
+#### updating middleware errorHandler
+
 - TODO: update by adding `console.error` inside errorHandler (common/), this will give us more information when error not handled by our custom errors.
 - make the change in common/ and publish `pnpm run pub`
 - update the version in tickets/ `pnpm update @clarklindev/common --latest`
 
 #### generating the mongodb id
+
 - show.test.ts -> generate the mongodb id: `import mongoose from 'mongoose'`
 - `const id = new mongoose.Types.ObjectId().toHexString();`
 
@@ -9954,18 +10061,13 @@ import mongoose from 'mongoose';
 //...
 
 // get a ticket by id that does not exist
-it('returns a 404 if the ticket is not found', async () => { 
+it('returns a 404 if the ticket is not found', async () => {
   const id = new mongoose.Types.ObjectId().toHexString();
 
-  await request(app)
-    .get(`/api/tickets/${id}`)
-    .send()
-    .expect(404);
+  await request(app).get(`/api/tickets/${id}`).send().expect(404);
 
-  console.log(response.body) //wont log unless .expect(404) is removed temporarily
-
+  console.log(response.body); //wont log unless .expect(404) is removed temporarily
 });
-
 ```
 
 ### 286. Complete Index Route Implementation
@@ -9978,8 +10080,10 @@ it('returns a 404 if the ticket is not found', async () => {
 
 - TODO: test that after 3 tickets are created
   - if you query the api, the response should have length of 3
-make a request to api and expect length of 3 in response
+    make a request to api and expect length of 3 in response
+
 #### create test
+
 - `routes/__test__/index.test.ts`
 
 ```ts
@@ -9987,34 +10091,27 @@ import request from 'supertest';
 import { app } from '../../app';
 
 const createTicket = () => {
-  return request(app)
-    .post('/api/tickets')
-    .set('Cookie', global.signin())
-    .send({
-      title: 'adasdasda',
-      price: 20
-    });
-}
+  return request(app).post('/api/tickets').set('Cookie', global.signin()).send({
+    title: 'adasdasda',
+    price: 20,
+  });
+};
 
 it('can fetch a list of tickets', async () => {
-  
   //create 3x tickets
   await createTicket();
   await createTicket();
   await createTicket();
 
   //make a request to api and expect length of 3 in response
-  const response = await request(app)
-    .get('/api/tickets')
-    .send()
-    .expect(200);
-  
-  expect(response.body.length).toEqual(3);
+  const response = await request(app).get('/api/tickets').send().expect(200);
 
+  expect(response.body.length).toEqual(3);
 });
 ```
 
 #### create route
+
 - tickets/src/routes/index.ts
 
 ```ts
@@ -10025,9 +10122,8 @@ const router = express.Router();
 
 router.get('/api/tickets', async (req: Request, res: Response) => {
   const tickets = await Ticket.find({});
-  
-  res.send(tickets);
 
+  res.send(tickets);
 });
 
 export { router as indexTicketRouter };
@@ -10035,7 +10131,7 @@ export { router as indexTicketRouter };
 
 ```ts
 //tickets/src/app.ts
-import {indexTicketRouter} from './routes/index';
+import { indexTicketRouter } from './routes/index';
 //...
 app.use(indexTicketRouter);
 ```
@@ -10053,7 +10149,6 @@ app.use(indexTicketRouter);
 ```ts
 //tickets/src/routes/__test__/update.test.ts
 
-
 import request from 'supertest';
 import { app } from '../../app';
 import mongoose from 'mongoose';
@@ -10066,7 +10161,7 @@ it('returns a 404 if the provided id does not exist', async () => {
     .set('Cookie', global.signin()) //is logged in
     .send({
       title: 'sdfsdfdsf',
-      price: 20
+      price: 20,
     })
     .expect(404);
 });
@@ -10078,34 +10173,28 @@ it('returns a 401 (not allowed) if user not authenticated', async () => {
     .put(`/api/tickets/${id}`)
     .send({
       title: 'sdfsdfdsf',
-      price: 20
+      price: 20,
     })
     .expect(401);
 });
 
-it('returns a 401 if user does not own the ticket', async () => {
-    
-});
+it('returns a 401 if user does not own the ticket', async () => {});
 
-it('returns a 400 if the user provides an invalid title or price', async () => {
-    
-});
+it('returns a 400 if the user provides an invalid title or price', async () => {});
 
-it('updates the ticket if provided valid inputs - happy test', async () => {
-    
-});
-
+it('updates the ticket if provided valid inputs - happy test', async () => {});
 ```
 
 ### 288. Handling Updates
+
 - implementing the update route
 - tickets/src/routes/update.ts
 
 #### testing
+
 - TODO: if `id` does not exist it should return 404
 - TODO: if user `not authenticated` return 401
   - add the middleware: `requireAuth` to route, it will through the NotAuthorizedError
-
 
 ```ts
 //tickets/src/routes/update.ts
@@ -10117,51 +10206,55 @@ import {
   validateRequest,
   NotFoundError,
   requireAuth,
-  NotAuthorizedError
+  NotAuthorizedError,
 } from '@clarklindev/common';
 
 import { Ticket } from '../models/ticket';
 
 const router = express.Router();
 
-router.put('/api/tickets/:id', requireAuth, async (req: Request, res: Response) => {
-  const ticket = await Ticket.findById(req.params.id);
+router.put(
+  '/api/tickets/:id',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const ticket = await Ticket.findById(req.params.id);
 
-  if(!ticket){
-    throw new NotFoundError();
+    if (!ticket) {
+      throw new NotFoundError();
+    }
+
+    res.send(ticket);
   }
+);
 
-  res.send(ticket);
-
-});
-
-export {router as updateTicketRouter}
-
+export { router as updateTicketRouter };
 ```
 
 - wire up to tickets/src/app.ts
 
 ```ts
 //...
-import {updateTicketRouter} from './routes/update';
+import { updateTicketRouter } from './routes/update';
 //...
 app.use(updateTicketRouter);
-
 ```
 
 ### 289. Permission Checking
+
 - TODO: `tickets/src/routes/__test__/update.test.ts`
 - create a ticket and then try update with a different user -> return statusCode: 401
 
 #### create a ticket
+
 - this creates a ticket -> BUT... the ticket will have `user id` that is the same userId as signin (from cookie)
-- any follow up request to try edit a ticket will use the same cookie (with same user id) ie. we currently only have one user 
+- any follow up request to try edit a ticket will use the same cookie (with same user id) ie. we currently only have one user
 - FIX: fix in test/setup.ts (see below...)
 
 - AFTER UPDATE (tickets/src/test/setup.ts)
-- with the request, it calls `global.signin()` which returns a cookie with a new user id 
+- with the request, it calls `global.signin()` which returns a cookie with a new user id
 - REQUIRED: capture the `response` -> to save this cookie or its id
 - pretend you're a different user by calling setCookie on follow up request, and calling `global.sigin()` again (produces new id)
+
   - .expect(401)
 
 - OPTIONAL - do a follow up and check on the ticket and ensure its details did not update (because different user was used)
@@ -10169,30 +10262,29 @@ app.use(updateTicketRouter);
 ```ts
 //tickets/src/routes/__test__/update.test.ts
 it('returns a 401 if user does not own the ticket', async () => {
+  //create a ticket REQUEST
+  const response = await request(app)
+    .post(`/api/tickets`)
+    .set('Cookie', global.signin())
+    .send({
+      title: 'sfddsfsd',
+      price: 20,
+    });
 
-//create a ticket REQUEST
-const response = await request(app)
-  .post(`/api/tickets`)
-  .set('Cookie', global.signin())
-  .send({
-    title: 'sfddsfsd',
-    price: 20
-  });
-
-//...edit a ticket REQUEST
-//currently it will use the same cookie
-//AFTER UPDATE (tickets/src/test/setup.ts)
-await request(app)
-  .put(`/api/tickets/${response.body.id}`)
-  .set('Cookie', global.signin())
-  .send({
-    title: 'asddasd',
-    price: 20
-  })
-  .expect(401);
+  //...edit a ticket REQUEST
+  //currently it will use the same cookie
+  //AFTER UPDATE (tickets/src/test/setup.ts)
+  await request(app)
+    .put(`/api/tickets/${response.body.id}`)
+    .set('Cookie', global.signin())
+    .send({
+      title: 'asddasd',
+      price: 20,
+    })
+    .expect(401);
 });
-
 ```
+
 #### test setup -> setting the id
 
 - tickets/src/test/setup.ts
@@ -10207,32 +10299,32 @@ import mongoose from 'mongoose';
 //...
 
 //get cookie
-global.signin = ()=> {
+global.signin = () => {
   //1. build a jwt payload {id, email}
   const payload = {
-    // id: '23432456565r6', 
+    // id: '23432456565r6',
     id: new mongoose.Types.ObjectId().toHexString(),
-    email: 'test@test.com'
-  }
+    email: 'test@test.com',
+  };
   //2. create the jwt (need process.env.JWT_KEY)
   const token = jwt.sign(payload, process.env.JWT_KEY!);
 
-   //3. build sesion object {jwt: MY_JWT}
-   const session = {jwt: token};
+  //3. build sesion object {jwt: MY_JWT}
+  const session = { jwt: token };
 
-   //4. turn session into JSON
-   const sessionJSON = JSON.stringify(session);
- 
-   //5. take JSON and encode it as base64
-   const base64 = Buffer.from(sessionJSON).toString('base64');
- 
-   //6. return a string with cookie: express:sess=cookie 
-   return [`session=${base64}`];
+  //4. turn session into JSON
+  const sessionJSON = JSON.stringify(session);
 
-}
+  //5. take JSON and encode it as base64
+  const base64 = Buffer.from(sessionJSON).toString('base64');
+
+  //6. return a string with cookie: express:sess=cookie
+  return [`session=${base64}`];
+};
 ```
 
 #### update the update route
+
 - tickets/src/routes/update.ts
 - ensure whoever making request (current logged in user) is same user id as that on ticket
   - `if(ticket.userId !== req.currentUser!.id){}`
@@ -10243,50 +10335,55 @@ global.signin = ()=> {
 
 //...
 
-router.put('/api/tickets/:id', requireAuth, async (req: Request, res: Response) => {
-  const ticket = await Ticket.findById(req.params.id);
+router.put(
+  '/api/tickets/:id',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const ticket = await Ticket.findById(req.params.id);
 
-  if(!ticket){
-    throw new NotFoundError();
+    if (!ticket) {
+      throw new NotFoundError();
+    }
+
+    if (ticket.userId !== req.currentUser!.id) {
+      throw new NotAuthorizedError();
+    }
+
+    res.send(ticket);
   }
-
-  if(ticket.userId !== req.currentUser!.id){
-    throw new NotAuthorizedError();
-  }
-
-  res.send(ticket);
-
-});
+);
 ```
 
 ### 290. Final Update Changes
+
 - `tickets/src/routes/__test__/update.test.ts` ...contined
-- test with invalid title or price 
+- test with invalid title or price
+
   - create a ticket
   - make a request to update - invalid title
   - make a request to update - invalid price
 
-- happy test 
+- happy test
   - create ticket (request)
   - make an update (another request)
   - ensure same cookie as when calling create ticket
   - expect status code: 200
   - make a follow up request after update
+
 ```ts
 //tickets/src/routes/__test__/update.test.ts
 
 it('returns a 400 if the user provides an invalid title or price', async () => {
-
   const cookie = global.signin();
 
   //create a ticket
   const response = await request(app)
-  .post(`/api/tickets`)
-  .set('Cookie', cookie)
-  .send({
-    title: 'sfddsfsd',
-    price: 20
-  });
+    .post(`/api/tickets`)
+    .set('Cookie', cookie)
+    .send({
+      title: 'sfddsfsd',
+      price: 20,
+    });
 
   //make a request to update - invalid title
   await request(app)
@@ -10294,17 +10391,17 @@ it('returns a 400 if the user provides an invalid title or price', async () => {
     .set('Cookie', cookie)
     .send({
       title: '',
-      price: 20
+      price: 20,
     })
     .expect(400);
-  
+
   //make a request to update - invalid price
   await request(app)
     .put(`/api/tickets/${response.body.id}`)
     .set('Cookie', cookie)
     .send({
       title: 'asdasddadsd',
-      price: -20
+      price: -20,
     })
     .expect(400);
 });
@@ -10314,12 +10411,12 @@ it('updates the ticket if provided valid inputs - happy test', async () => {
 
   //create a ticket
   const response = await request(app)
-  .post(`/api/tickets`)
-  .set('Cookie', cookie)
-  .send({
-    title: 'sfddsfsd',
-    price: 20
-  });
+    .post(`/api/tickets`)
+    .set('Cookie', cookie)
+    .send({
+      title: 'sfddsfsd',
+      price: 20,
+    });
 
   //update ticket
   await request(app)
@@ -10327,25 +10424,25 @@ it('updates the ticket if provided valid inputs - happy test', async () => {
     .set('Cookie', cookie)
     .send({
       title: 'new title',
-      price: 100
+      price: 100,
     })
     .expect(200);
-  
+
   //fetch the ticket again
   const ticketResponse = await request(app)
     .get(`/api/tickets/${response.body.id}`)
     .send();
-  
-  expect(ticketResponse.body.title).toEqual('new title'); 
-  expect(ticketResponse.body.price).toEqual(100); 
-});
 
+  expect(ticketResponse.body.title).toEqual('new title');
+  expect(ticketResponse.body.price).toEqual(100);
+});
 ```
 
 #### update the update route
+
 - tickets/src/routes/update.ts
-- validate the request, 
-- apply update 
+- validate the request,
+- apply update
 - save ticket
 - sending back ticket will have the updated data
 
@@ -10358,41 +10455,39 @@ import {
   validateRequest,
   NotFoundError,
   requireAuth,
-  NotAuthorizedError
+  NotAuthorizedError,
 } from '@clarklindev/common';
 
 //...
 
-router.put('/api/tickets/:id',
+router.put(
+  '/api/tickets/:id',
   requireAuth,
   [
-    body('title')
-      .not()
-      .isEmpty()
-      .withMessage('Title is required'),
+    body('title').not().isEmpty().withMessage('Title is required'),
     body('price')
-      .isFloat({gt: 0})
-      .withMessage('Price must be provided and greater than 0')
+      .isFloat({ gt: 0 })
+      .withMessage('Price must be provided and greater than 0'),
   ],
   validateRequest,
   async (req: Request, res: Response) => {
     const ticket = await Ticket.findById(req.params.id);
 
-    if(!ticket){
+    if (!ticket) {
       throw new NotFoundError();
     }
 
-    if(ticket.userId !== req.currentUser!.id){
+    if (ticket.userId !== req.currentUser!.id) {
       throw new NotAuthorizedError();
     }
 
-    //apply update 
+    //apply update
     ticket.set({
       title: req.body.title,
-      price: req.body.price
-    })
+      price: req.body.price,
+    });
 
-    await ticket.save();  //ticket is now updated
+    await ticket.save(); //ticket is now updated
 
     //sending back ticket will have the updated data
     res.send(ticket);
@@ -10401,15 +10496,18 @@ router.put('/api/tickets/:id',
 ```
 
 ### 291. Manual Testing
-- TODO: expose access to the ticket service 
-- need to update infra/k8s/ingress-srv.yaml 
-- add a new path to ingress-srv before the catchall (`path: /?(.*)`)  route
+
+- TODO: expose access to the ticket service
+- need to update infra/k8s/ingress-srv.yaml
+- add a new path to ingress-srv before the catchall (`path: /?(.*)`) route
 
 #### updated kubernetes syntax (Kubernetes 1.19+)
+
 - NOTE: this is the updated syntax used in Kubernetes ingress resources , specifically for Kubernetes 1.19+. The tutorial uses the old style of defining serviceName and servicePort, which was deprecated in newer versions of Kubernetes.
 - NOTE: `pathType: ImplementationSpecific` -> allows a regex path match in Kubernetes Ingress
 
 #### DEPRECATED SYNTAX
+
 ```yaml
 #infra/k8s/ingress-srv.yaml
 
@@ -10422,46 +10520,50 @@ router.put('/api/tickets/:id',
 ```
 
 #### UPDATED SYNTAX
+
 ```yaml
 #infra/k8s/ingress-srv.yaml
 #...
 paths:
-- path: /api/users/?(.*)
-  pathType: ImplementationSpecific
-  backend:
-    service:
-      name: auth-srv
-      port:
-        number: 3000
-- path: /api/tickets/?(.*)
-  pathType: ImplementationSpecific
-  backend:
-    service:
-      name: tickets-srv
-      port: 
-        number: 3000
-- path: /?(.*)
-  pathType: ImplementationSpecific
-  backend:
-    service:
-      name: client-srv
-      port:
-        number: 3000
+  - path: /api/users/?(.*)
+    pathType: ImplementationSpecific
+    backend:
+      service:
+        name: auth-srv
+        port:
+          number: 3000
+  - path: /api/tickets/?(.*)
+    pathType: ImplementationSpecific
+    backend:
+      service:
+        name: tickets-srv
+        port:
+          number: 3000
+  - path: /?(.*)
+    pathType: ImplementationSpecific
+    backend:
+      service:
+        name: client-srv
+        port:
+          number: 3000
 #...
 ```
 
 #### manual testing with postman
 
 ##### sign in/sign up
+
 - first signin or signup (to be authenticated)
+
   - the email/password must already exist on auth service (signin) or signup (new credentials)
 
 - POSTMAN POST https://ticketing.dev/api/users/signin
   - body -> raw -> JSON -> {"email": "test@test.com", "password": "password"}
 
 ##### ensure user logged in
+
 - POSTMAN GET https://ticketing.dev/api/users/currentuser
-- if signedin/signedup -> expect authentication response 
+- if signedin/signedup -> expect authentication response
 
 ```ts
   "currentUser":{
@@ -10472,20 +10574,24 @@ paths:
 ```
 
 #### create a ticket
+
 - POSTMAN POST https://ticketing.dev/api/tickets
   - body -> raw -> JSON -> {"title": "new ticket", "price": 20}
 - EXPECT RESPONSE status 200
 - returns a ticket with (id) property eg. ABCDEFG
 
-#### get ticket (single) -> use ticket id (from create a ticket)  
+#### get ticket (single) -> use ticket id (from create a ticket)
+
 - POSTMAN GET https://ticketing.dev/api/tickets/54hhh4545636346346
 - EXPECT RESPONSE status 200 with details about ticket
 
 #### get all tickets
+
 - POSTMAN GET https://ticketing.dev/api/tickets/
 - EXPECT RESPONSE array of tickets
 
 #### update the ticket
+
 - NOTE: you need to use the same ticket id (from create a ticket)
 - POSTMAN PUT https://ticketing.dev/api/tickets/ABCDEFG
   - body -> raw -> JSON -> {"title": "updated ticket", "price": 10}
@@ -10495,15 +10601,17 @@ paths:
 ---
 
 ## section 14 - NATS streaming server - an event bus implementation (2hr57min)
+
 ### 292. What Now?
 
-- Reminder of our services  
+- Reminder of our services
 
 <img src="exercise_files/udemy-microservices-section14-292-reminder-our-services.png" alt="udemy-microservices-section14-292-reminder-our-services.png" width="800"/>
 
 <img src="exercise_files/udemy-microservices-section14-292-next-steps.png" alt="udemy-microservices-section14-292-next-steps.png" width="800">
 
 ### what next?
+
 - OPTION 1 - frontend of ticket-related (client side)
 - OPTION 2 - ticket 'orders' service
   - deals with people wanting to buy a ticket
@@ -10518,11 +10626,11 @@ paths:
   - before... we implement a simple event bus from scratch
   - differences between our event bus (express) vs NATS
 
-
 ### 293. NATS Server Status - IMPORTANT NOTE
+
 - DockerHub image of the NATS Streaming Server (and the docs)
-- NOTE: [deprecation legacy docs](https://nats-io.gitbook.io/legacy-nats-docs/nats-streaming-server-aka-stan/developing-with-stan) warning for NATS Streaming server on docs 
-- So just to be clear, NATS Streaming server is deprecated not NATS, 
+- NOTE: [deprecation legacy docs](https://nats-io.gitbook.io/legacy-nats-docs/nats-streaming-server-aka-stan/developing-with-stan) warning for NATS Streaming server on docs
+- So just to be clear, NATS Streaming server is deprecated not NATS,
 - NATS streaming has been deprecated in favor of a more modern JetStream (newer, more robust persistence layer, offering advanced features like durable streams, stream processing, and more extensive support for persistent message queues).
 - there are other options for message queue services like RabbitMQ and Kafka
 - NATS shows how message queues work
@@ -10530,6 +10638,7 @@ paths:
 ### 294. Three Important Items
 
 #### we are using NATS Streaming server
+
 - [NATS](https://docs.nats.io) streaming server - shares events across different applications
 - `NATS` vs `NATS Streaming server` are different programs
 - NATS (simple implementation of event sharing) -> WE ARE NOT USING THIS
@@ -10540,9 +10649,11 @@ paths:
 - NATS Streaming implements important design decisions that will affect our app.
 
 #### NATS Streaming image in kubernetes
+
 - we will run [`nats-streaming`](https://hub.docker.com/_/nats-streaming) docker image in kubernetes
 
 #### nats-streaming Docker documentation
+
 - note the [command line options](https://hub.docker.com/_/nats-streaming#commandline-options) for nats streaming server
 
 - hub.docker.com -> image `nats-streaming`
@@ -10663,9 +10774,8 @@ Common Options:
 
 ```
 
-
-
 ### 295. Creating a NATS Streaming Deployment
+
 - deploy NATS streaming deployment via kubernetes like any other of our services (with deployment yaml)
 - `section05-14-ticketing/infra/k8s/nats-depl.yaml`
   - NOTE: the docker image for nats -> `image: nats-streaming:0.17.0`
@@ -10698,21 +10808,22 @@ spec:
       containers:
         - name: nats
           image: nats-streaming:0.17.0
-          args: [
-            '-p',
-            '4222',
-            '-m',
-            '8222',
-            '-hbi',
-            '5s',
-            '-hbt',
-            '5s',
-            '-hbf',
-            '2',
-            '-SD',
-            '-cid',
-            'ticketing',
-          ]
+          args:
+            [
+              '-p',
+              '4222',
+              '-m',
+              '8222',
+              '-hbi',
+              '5s',
+              '-hbt',
+              '5s',
+              '-hbf',
+              '2',
+              '-SD',
+              '-cid',
+              'ticketing',
+            ]
 ---
 apiVersion: v1
 kind: Service
@@ -10733,31 +10844,37 @@ spec:
 ```
 
 ### 296. Big Notes on NATS Streaming
-- `NATS streaming server` vs our `custom event bus` 
+
+- `NATS streaming server` vs our `custom event bus`
 
 ## our custom event bus
+
 - custom event bus -> shared events with axios and express (eg. post event to event bus service)
 
 <img src="exercise_files/udemy-microservices-section14-296-our-custom-event-bus.png" alt="udemy-microservices-section14-296-our-custom-event-bus.png" width="800"/>
 
 ### sending events
+
 - if event bus receives an event, it sends it off to every service (even originating service)
 
 <img src="exercise_files/udemy-microservices-section14-296-our-custom-event-bus-sends-events-to-every-service.png" alt="udemy-microservices-section14-296-our-custom-event-bus-sends-events-to-every-service.png" width="800"/>
 
 ### events stored in memory
+
 - event bus stored events in memory -> if there was a service with down time and when it came back up, OR a new service added it fetched events it missed
 
 ### adding new service
+
 - this was useful if you added new services -> the new service could request all events ever submitted -> and the event bus would send it and then the new service would be up to date.
 
 <img src="exercise_files/udemy-microservices-section14-296-our-custom-event-bus-new-service-can-request-event-history-to-get-updated.png" alt="udemy-microservices-section14-296-our-custom-event-bus-new-service-can-request-event-history-to-get-updated.png" width="800"/>
 
 ## NATS Streaming server (node-nats-streaming)
+
 - NATS Streaming server - uses a client library (instead of custom event bus) called npm package: `node-nats-streaming`
-  - event-based 
+  - event-based
   - create some objects
-  - sets up listeners, 
+  - sets up listeners,
   - emit events
   - callback based infrastructure
 - services listening for events also with `node-nats-streaming` library
@@ -10776,18 +10893,21 @@ spec:
 <img src="exercise_files/udemy-microservices-section14-296-using-nats-streaming-subscribe-to-channels.png" alt="udemy-microservices-section14-296-using-nats-streaming-subscribe-to-channels.png" width="800"/>
 
 ### NATS streaming storing events - memory
+
 - NATS Streaming stores all events in memory (default), flat files or in a mySQL/Postgres DB
-- if a new service comes online -> it requests the NATS Streaming to give all events ever submitted 
+- if a new service comes online -> it requests the NATS Streaming to give all events ever submitted
 
 <img src="exercise_files/udemy-microservices-section14-296-using-nats-streaming-stores-events-by-default-in-memory.png" alt="udemy-microservices-section14-296-using-nats-streaming-stores-events-by-default-in-memory.png" width="800"/>
 
 ### NATS streaming stores events - files (default) or db
+
 - can configure NATS Streaming that events get stored in file or db
   - this way if the NATS Streaming goes down / offline / needs restart it loses everything stored in memory BUT it can then connect to the file / db to fetch all the events ever emitted
 
 <img src="exercise_files/udemy-microservices-section14-296-using-nats-streaming-stores-all-events-in-files-default-or-db.png" alt="udemy-microservices-section14-296-using-nats-streaming-stores-all-events-in-files-default-or-db.png" width="800"/>
 
 ### 297. Building a NATS Test Project
+
 <img src="exercise_files/udemy-microservices-section14-297-nats-building-a-NATS-test-project.png" alt="udemy-microservices-section14-297-nats-building-a-NATS-test-project.png" width="800"/>
 
 - create a new sub-project (typscript) (this will be a test project)
@@ -10796,6 +10916,7 @@ spec:
   - one to emit events
   - one to listen for events
 - will run outside of kubernetes
+
   - but should connect to the `NATS Streaming server` inside the kubernetes cluster
 
 - `section05-14-ticketing/nats-test`
@@ -10805,11 +10926,12 @@ spec:
 - src/publisher.ts
 - add scripts to package.json
 
-#### troubleshoot 
-- this `tsc --init` command requires typescript to be installed globally 
-- `npm i -g typescript` 
+#### troubleshoot
+
+- this `tsc --init` command requires typescript to be installed globally
+- `npm i -g typescript`
 - NOTE: if you installing globally dont use pnpm, use npm is fine
-- ensure that npm is added to environment variables -> path: `c:\Users\admin\AppData\Roaming\npm\` 
+- ensure that npm is added to environment variables -> path: `c:\Users\admin\AppData\Roaming\npm\`
 
 ```json
 //package.json
@@ -10823,15 +10945,18 @@ spec:
 //...
 
 ```
+
 - from `section05-14-ticketing/nats-test/` folder: make it a typescript project: `tsc --init` -> creates a `tsconfig.json`
 
-- note instead of calling it a `client`, documentation calls it `stan` (which is `nats` spelt backwards) 
+- note instead of calling it a `client`, documentation calls it `stan` (which is `nats` spelt backwards)
 - `stan` is a nats project terminology for a client
 - `nats` is a library
 - `stan` is an instance / client used to connect to nats streaming server
 
 #### publisher.ts
+
 - .connect() has some arguments
+
   - the arguments:
     - 1st argument -> value set to 'ticketing'
     - 2nd argument -> value set to 'abc'
@@ -10850,27 +10975,31 @@ spec:
 import nats from 'node-nats-streaming';
 
 const stan = nats.connect('ticketing', 'abc', {
-  url: 'http://localhost:4222'
+  url: 'http://localhost:4222',
 });
 
-stan.on('connect', ()=>{
-  console.log('publisher connected to NATS')
-})
-
+stan.on('connect', () => {
+  console.log('publisher connected to NATS');
+});
 ```
-#### troubleshoot 
+
+#### troubleshoot
+
 - error - typescript error with the `stan.on()` listener
 - FIX: ensure the project is typescript project by calling `tsc --init` from within `nats-test/` folder
   - this creates `nats-test/tsconfig.json`
 
 ### 298. Port-Forwarding with Kubectl
+
 - for test purposes, to get access to the NATS Streaming server we can:
 
 #### accessing something inside a cluster
+
 - to access something inside the cluster there are some options:
 - we will use option 3
 
 ## OPTION 1 - clusterIP service
+
 - access pod via cluster ip service
 - our publisher program can then communicate directly with ingress nginx
 - CON is that its not easy severe the link (ingress-nginx and clusterIP service) and then toggle it back on
@@ -10878,32 +11007,37 @@ stan.on('connect', ()=>{
 <img src="exercise_files/udemy-microservices-section14-298-port-forwarding-option1-connect-via-cluster-ip-service.png" alt="udemy-microservices-section14-298-port-forwarding-option1-connect-via-cluster-ip-service.png" width="800"/>
 
 ## OPTION 2 - create a NodePort service
+
 - or can create a node port service to connect pod to outside world (outside the kubernetes cluster)
 - CON is that its not easy severe the link (NodePort service) and then toggle it back on
 - would still require a config file
 
 <img src="exercise_files/udemy-microservices-section14-298-port-forwarding-option2-connect-via-nodeport-service.png" alt="udemy-microservices-section14-298-port-forwarding-option2-connect-via-nodeport-service.png" width="800"/>
 
-## OPTION 3 - (ONLY while in dev)  
+## OPTION 3 - (ONLY while in dev)
+
 - run a command in terminal that tells `Kubernetes cluster` to `port forward` a port off a `specific pod` in our cluster.
-- this will cause cluster to behave as if it has a nodePort service running inside of it 
+- this will cause cluster to behave as if it has a nodePort service running inside of it
 - will expose the pod (port) to outside world
 - allows to connect from local machine
 
 <img src="exercise_files/udemy-microservices-section14-298-port-forwarding-option3-port-forward-a-port-off-a-pod.png" alt="udemy-microservices-section14-298-port-forwarding-option3-port-forward-a-port-off-a-pod.png" width="800"/>
 
 //-------------------------------------------------------------------------------
+
 # STEPS TO PUBLISHING
-## STEP1 
+
+## STEP1
 
 - /nats-test/
 - `kubectl get pods`
 
 <img src="exercise_files/udemy-microservices-section14-298-kubectrl-get-pods.png" alt="udemy-microservices-section14-298-kubectrl-get-pods.png" width="800"/>
 
-
 ## STEP 2
+
 #### forwarding port
+
 - get name of pod: kubectl port-forward nats-depl-... [port on local machine to get access to the nats-depl-... pod]:[port on the pod trying get access to]
 - run from /nats-test/ folder: `kubectl port-forward nats-depl-85f8d5bb89-jx85p 4222:4222`
 - this command is not restricted to NATS but can be used connect to any pod we want to temporarily connect to
@@ -10916,7 +11050,9 @@ Forwarding from [::1]:4222 -> 4222
 ```
 
 ## STEP 3
+
 #### running publish
+
 - open another Terminal
   - /nats-test/ `pnpm run publish`
 
@@ -10926,6 +11062,7 @@ publisher connected to NATS
 ```
 
 #### to stop port forwarding
+
 - to easily break connection -> stop the process running the port forward command (will do it later)
 
 ### 299. Publishing Events
@@ -10933,6 +11070,7 @@ publisher connected to NATS
 <img src="exercise_files/udemy-microservices-section14-299-overview-of-publisher-and-listener-and-nats-initial-diagram.png" alt="udemy-microservices-section14-299-overview-of-publisher-and-listener-and-nats-initial-diagram.png" width="800"/>
 
 #### NATS streaming server
+
 - NATS streaming server has list of channels
 - we always publish information to a specific channel
 
@@ -10940,7 +11078,7 @@ publisher connected to NATS
 
 - DATA
 - `data` to share (eg an object) eg. a ticket with 'title' 'price'
-- this data is reffered to in NATS as a message 
+- this data is reffered to in NATS as a message
 - we sometimes refer to it as an event
 
 - SUBJECT
@@ -10951,7 +11089,7 @@ publisher connected to NATS
 - NATS streaming server will then add subject `ticket:created` to its list of channels
 - NATS will take this `data` and broadcast to anyone listening
 - NOTE: NATS can only communicate in 'strings' so need to convert js to JSON
-- stan.publish() 
+- stan.publish()
   - first param is the subject/channel
   - second is data
   - third (optional) is a callback function once publish has completed
@@ -10962,11 +11100,11 @@ publisher connected to NATS
 import nats from 'node-nats-streaming';
 
 const stan = nats.connect('ticketing', 'abc', {
-  url: 'http://localhost:4222'
+  url: 'http://localhost:4222',
 });
 
 stan.on('connect', () => {
-  console.log('publisher connected to NATS')
+  console.log('publisher connected to NATS');
 
   const data = JSON.stringify({
     id: '123',
@@ -10975,15 +11113,15 @@ stan.on('connect', () => {
   });
 
   stan.publish('ticket:created', data, () => {
-    console.log('event published')
+    console.log('event published');
   });
-
 });
 ```
 
 <img src="exercise_files/udemy-microservices-section14-299-stan-publish.png" alt="udemy-microservices-section14-299-stan-publish.png" width="800"/>
 
 #### listener
+
 - the listener will be listening for a subject - `ticket:created`
 - it will send this (subject) to stan client
 - `stan client` will tell `NATS Streaming server` that anytime data is received from this channel (subject), it should receive a copy of it
@@ -10994,11 +11132,11 @@ stan.on('connect', () => {
 
 <img src="exercise_files/udemy-microservices-section14-299-overview-of-publisher-and-listener-and-nats.png" alt="udemy-microservices-section14-299-overview-of-publisher-and-listener-and-nats.png" width="800"/>
 
-
 ### 300. Small Required Command Change
+
 - REQUIRED for upcoming lessons
-- `ts-node-dev` updated library by default does NOT restart 
-- you need to enable it in scripts -> add `--rs` to `ts-node-dev` commands 
+- `ts-node-dev` updated library by default does NOT restart
+- you need to enable it in scripts -> add `--rs` to `ts-node-dev` commands
 
 - package.json
 
@@ -11011,6 +11149,7 @@ stan.on('connect', () => {
 ```
 
 ### 301. Listening For Data
+
 - TODO: create a subject/ channel we want to listen to
 - given to stan client
 - registers a subscription with NATS Streaming
@@ -11022,7 +11161,7 @@ import nats from 'node-nats-streaming';
 console.clear();
 
 const stan = nats.connect('ticketing', '123', {
-  url:'http://localhost:4222'
+  url: 'http://localhost:4222',
 });
 
 stan.on('connect', () => {
@@ -11032,75 +11171,88 @@ stan.on('connect', () => {
 
   subscription.on('message', (msg) => {
     console.log('message received');
-  })
+  });
 });
 ```
 
 ### TEST
 
-- vscode terminal 1 -> from main project dir run `scaffold dev` 
+- vscode terminal 1 -> from main project dir run `scaffold dev`
 
 #### PUBLISH
+
 - vscode terminal 2 -> from `nats-test/`
+
   - get pod name: `kubectl get pods`
   - forward port: `kubectl port-forward nats-depl-85f8d5bb89-jx85p 4222:4222`
 
 - vscode terminal 3 -> from `nats-test/` folder
+
   - run publish: `pnpm run publish`
 
 - EXPECT:
+
 ```
 publisher connected to NATS
 event published
 ```
 
 #### LISTEN
+
 - vscode terminal 4 -> from `nats-test`
+
   - run publish: `pnpm run listen`
 
 - EXPECT:
+
 ```
 Listener connected to NATS
 message received
 ```
+
 ### 302. Accessing Event Data
+
 - UPDATED: nats-test/src/listener.ts
 - giving the prop an annotation of `Message`
+
   - ctrl + click on `Message` to see type definition
   - important functions:
     - `getSubject()` returns name of channel
     - `getSequence()` get the number of the message (ie. 1st message is 1)
-    - `getData()` returns the data of the message 
+    - `getData()` returns the data of the message
 
 - Docker desktop is running / kubernetes is running
 - `Skaffold dev`
 
 -LISTEN
+
 - nats-test/ `pnpm run listen`
 
 - PUBLISH
 - docker desktop is running (docker / kubernetes)
-- 1st terminal window -> `skaffold dev` 
+- 1st terminal window -> `skaffold dev`
 
--`nats-test/` folder: 
-  - get pods:  `kubectl get pods`
-  - 2nd terminal window -> forward port: `kubectl port-forward nats-depl-7b8d75cc76-rk5hd 4222:4222`
-    - NOTE: the pods name changes everytime skaffold dev is run: `nats-depl-`
+-`nats-test/` folder:
 
-  - in 3rd terminal window -> `pnpm run publish`
-  - type: `rs` (to restart/re-connect publish) and everytime a new message will be sent and received by listener
-  - expect that the listener terminal receives the message and that event #number `msg.getSequence()` gets incremented
+- get pods: `kubectl get pods`
+- 2nd terminal window -> forward port: `kubectl port-forward nats-depl-7b8d75cc76-rk5hd 4222:4222`
+
+  - NOTE: the pods name changes everytime skaffold dev is run: `nats-depl-`
+
+- in 3rd terminal window -> `pnpm run publish`
+- type: `rs` (to restart/re-connect publish) and everytime a new message will be sent and received by listener
+- expect that the listener terminal receives the message and that event #number `msg.getSequence()` gets incremented
 
 <img src="exercise_files/udemy-microservices-section14-302-accessing-event-data-showing-rs-restarts-which-causes-publish.png" alt="udemy-microservices-section14-302-accessing-event-data-showing-rs-restarts-which-causes-publish.png" width="800"/>
 
 ```ts
 //nats-test/src/listener.ts
-import nats, {Message} from 'node-nats-streaming';
+import nats, { Message } from 'node-nats-streaming';
 
 console.clear();
 
 const stan = nats.connect('ticketing', '123', {
-  url:'http://localhost:4222'
+  url: 'http://localhost:4222',
 });
 
 stan.on('connect', () => {
@@ -11111,16 +11263,17 @@ stan.on('connect', () => {
   subscription.on('message', (msg: Message) => {
     const data = msg.getData();
 
-    if(typeof data === 'string'){
+    if (typeof data === 'string') {
       console.log(`Received event #${msg.getSequence()}, with data: ${data}`);
     }
-  })
+  });
 });
 ```
 
 ### 303. Client ID Generation
+
 - adding additional listener (horizontal scale) causes error
-<img src="exercise_files/udemy-microservices-section14-303-client-id-generation-horizontal-scale-adding-additional-listener-causes-error.png" alt="udemy-microservices-section14-303-client-id-generation-horizontal-scale-adding-additional-listener-causes-error.png" width="800"/>
+  <img src="exercise_files/udemy-microservices-section14-303-client-id-generation-horizontal-scale-adding-additional-listener-causes-error.png" alt="udemy-microservices-section14-303-client-id-generation-horizontal-scale-adding-additional-listener-causes-error.png" width="800"/>
 
 - the second argument to publisher calling .connect() is the client id
 - NATS server maintains list of channels (subject)
@@ -11129,29 +11282,31 @@ stan.on('connect', () => {
 
 <img src="exercise_files/udemy-microservices-section14-303-client-id-duplicate-error.png" alt="udemy-microservices-section14-303-client-id-duplicate-error.png" width="800"/>
 
-- FIX: randomly create the connect id 
+- FIX: randomly create the connect id
 - OUTCOME: can run multiple clients each with a random generated ID
 
 #### generate connect id
+
 - we use `randomBytes` from `crypto` library `randomBytes(4).toString('hex')`
 - nats-test/src/listener.ts
 
 ```ts
 //nats-test/src/listener.ts
-import {randomBytes} from 'crypto';
+import { randomBytes } from 'crypto';
 
 const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
-  url:'http://localhost:4222'
+  url: 'http://localhost:4222',
 });
-
 ```
 
 ### 304. Queue Groups
+
 - 1x publisher / 2x listeners
 - listeners - second argument to subscribe()
 - PROBLEM: if both listeners commited code to db then you would have duplicate entries saved in db
 
 #### Queue Group
+
 - FIX: Queue Group - if there are `multiple instances` of `same service` (horizontal scaling) only one of them should receive the message
 - queue groups are created inside a channel
 - can have multiple queue groups inside a channel
@@ -11167,18 +11322,19 @@ const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
 <img src="exercise_files/udemy-microservices-section14-304-queue-group-all-subscribers-of-channel-receive-events.png" alt="udemy-microservices-section14-304-queue-group-all-subscribers-of-channel-receive-events.png" width="800" />
 
 #### creating queue group
-- the first is the name of the channel you want to listen 
+
+- the first is the name of the channel you want to listen
 - you can add a listener to a queue group by specifying a 2nd parameter to the .subscribe() call
-  - eg `orders-service-queue-group` -> other listeners need to use this same string to be in same group 
+  - eg `orders-service-queue-group` -> other listeners need to use this same string to be in same group
 
 ```ts
 //nats-test/src/listeners.ts
 
 //...
 stan.on('connect', () => {
-  
+
   const subscription = stan.subscribe(
-    'ticket:created', 
+    'ticket:created',
     'orders-service-queue-group'
   );
 }
@@ -11187,6 +11343,7 @@ stan.on('connect', () => {
 <img src="exercise_files/udemy-microservices-section14-304-queue-group-only-one-in-group-receives-message.png" alt="udemy-microservices-section14-304-queue-group-only-one-in-group-receives-message.png" width="800"/>
 
 ### 305. Manual Ack Mode
+
 - the first 2 paramaters are strings, but the third is chained on function calls
 - to add other options you can chain them on as methods onto `subscriptionOption()` call
   - .setDeliverAllAvailable()
@@ -11197,8 +11354,8 @@ stan.on('connect', () => {
 
 - **Previous Setup Recap:**
   - Added a second argument to the `subscribe` call for setting up a queue group.
-  
 - **Customizing Subscriptions:**
+
   - First two arguments (`channel name`, `queue group`) are strings.
   - Additional options are more complex and set via chained method calls.
 
@@ -11220,7 +11377,7 @@ stan.on('connect', () => {
     .setManualAckMode(true);
 
   const subscription = stan.subscribe(
-    'ticket:created', 
+    'ticket:created',
     'orders-service-queue-group',
     options
   );
@@ -11239,7 +11396,9 @@ stan.on('connect', () => {
 ```
 
 ### SUMMARY
+
 #### default .subscribe() behavior
+
 - when subscriber (listener) receives a message from NATS channel, by default it is marked as 'processed'
 - if there are errors during processing of message, the event/message is lost.
 
@@ -11253,11 +11412,13 @@ stan.on('connect', () => {
   - Errors during processing result in event loss.
 
 #### override default
+
 - call `setManualAckMode(true)`
 - makes events NOT marked as processed until explicitly acknowledged calling `msg.ack()`
 - unprocessed events keep retries (every 30sec)
 
 - **Changing Default Behavior:**
+
   - Use `setManualAckMode(true)` to enable manual acknowledgment.
   - Manual acknowledgment ensures:
     - Events are not marked as processed until explicitly acknowledged.
@@ -11265,16 +11426,19 @@ stan.on('connect', () => {
     - Events can be retried by another service or the same service.
 
 - **Manual Acknowledgment Workflow:**
+
   - Acknowledge events using `msg.ack()`.
   - Without acknowledgment:
     - The server retries delivery every 30 seconds.
     - Events cycle through queue group members until successfully processed.
 
 - **Use Case Importance:**
+
   - Critical for ensuring event processing reliability (e.g., payment events).
   - Prevents event loss due to transient failures or processing errors.
 
 - **Implementation Steps:**
+
   1. Enable manual mode with `setManualAckMode(true)`.
   2. Add `msg.ack()` in the event handler after successful processing.
   3. Test by observing retries for unacknowledged events.
@@ -11283,11 +11447,12 @@ stan.on('connect', () => {
   - `setManualAckMode(true)` is crucial for ensuring fault tolerance and reliability in event processing.
 
 ### 306. Client Health Checks
+
 - if the listeners are restarted quickly and publish restarted quickly after - it may publish message but the listeners might miss it, and only after show it with order wrong.
 
 <img src='exercise_files/udemy-microservices-section14-306-client-health-checks.png' alt='udemy-microservices-section14-306-client-health-checks.png' width='800'/>
 
-- troubleshooting an issue in a NATS streaming server where published events are delayed or temporarily lost when restarting listeners. 
+- troubleshooting an issue in a NATS streaming server where published events are delayed or temporarily lost when restarting listeners.
 
 #### Issue Replication:
 
@@ -11297,36 +11462,43 @@ stan.on('connect', () => {
 - The NATS server exposes a monitoring port (8222) to provide data about clients, channels, and subscriptions.
 
 - open another terminal window: `nats-test/`
-```terminal 
+
+```terminal
 kubectl get pods
 kubectl port-forward nats-depl-[pod name] 8222:8222
 ```
 
 #### NATS streaming server monitoring page
-###### view in browser 
+
+###### view in browser
+
 - browser: `localhost:8222/streaming` (NATS streaming server monitoring page)
 
 <img src='exercise_files/udemy-microservices-section14-306-localhost-8222-nats-streaming.png' alt='udemy-microservices-section14-306-localhost-8222-nats-streaming.png' width='800'/>
 
 - http://localhost:8222/streaming/clientsz
+
   - prints out every client (id) connected to NATS streaming server
- 
+
   <img src='exercise_files/udemy-microservices-section14-306-localhost-8222-nats-streaming-clients.png' alt='udemy-microservices-section14-306-localhost-8222-nats-streaming-clients.png' width='800'/>
 
 - http://localhost:8222/streaming/channelsz
+
   - prints out all channels in NATS
 
   <img src='exercise_files/udemy-microservices-section14-306-localhost-8222-nats-streaming-clients.png' alt='udemy-microservices-section14-306-localhost-8222-nats-streaming-clients.png' width='800'/>
 
 - http://localhost:8222/streaming/channelsz?subs=1
+
   - Using the `subs=1` query, detailed channels information NATS streaming server is running
   - helping identify disconnected clients.
   - queue_name
   - ack_wait
-  
+
   <img src='exercise_files/udemy-microservices-section14-306-localhost-8222-nats-streaming-channels-subs=1.png' alt='udemy-microservices-section14-306-localhost-8222-nats-streaming-channels-subs=1.png' width='800'/>
 
 #### NATS waiting for listener to come back online...
+
 - restarting a subscription (listener) and then refreshing `NATS streaming server monitoring page` prints out 3 subscriptions.
 - stopping give NATS hope that the listener will come back online
 - NATS will wait until eventually it decides listener is not coming back... then removed from the list..
@@ -11337,13 +11509,15 @@ kubectl port-forward nats-depl-[pod name] 8222:8222
   - `hbf` (how many times client request can fail before NATS assumes the connected client is dead)
 
 #### consequence of killing a listener
+
 - killing a listener
 - NATS sends a heart beat request
-- wait for heartbeat request to fail twice in a row 
+- wait for heartbeat request to fail twice in a row
 - NATS realises client is gone
 - NATS removes listener off `streaming/channels/subscriptions` list
 
 ### figuring out client not active - OPTION 1
+
 - we can implement tighter heartbeat checks (event then there is delay of eg. 10seconds before cleanup)
 
 ```yaml
@@ -11364,21 +11538,22 @@ spec:
       containers:
         - name: nats
           image: nats-streaming:0.17.0
-          args: [
-            '-p',
-            '4222',
-            '-m',
-            '8222',
-            '-hbi',
-            '5s',
-            '-hbt',
-            '5s',
-            '-hbf',
-            '2',
-            '-SD',
-            '-cid',
-            'ticketing',
-          ]
+          args:
+            [
+              '-p',
+              '4222',
+              '-m',
+              '8222',
+              '-hbi',
+              '5s',
+              '-hbt',
+              '5s',
+              '-hbf',
+              '2',
+              '-SD',
+              '-cid',
+              'ticketing',
+            ]
 ---
 apiVersion: v1
 kind: Service
@@ -11398,11 +11573,10 @@ spec:
       targetPort: 8222
 ```
 
-
 #### Observation:
 
 - When a listener restarts, its subscription lingers briefly as the server assumes it might reconnect.
-This leads to delayed delivery of messages or temporary loss until the server determines the client is offline.
+  This leads to delayed delivery of messages or temporary loss until the server determines the client is offline.
 
 #### Root Cause:
 
@@ -11411,18 +11585,21 @@ This leads to delayed delivery of messages or temporary loss until the server de
 #### Potential Solutions:
 
 - Tighter Heartbeat Configurations:
-- Adjust: 
-  - HB (heartbeat frequency), 
-  - HBT (response time), and 
+- Adjust:
+  - HB (heartbeat frequency),
+  - HBT (response time), and
   - HBF (failure count) to detect disconnections faster.
 
 #### Explicit Client Notifications:
+
 - Implement methods for clients to explicitly notify the server of disconnection to prevent lingering subscriptions.
 
 - This diagnostic approach and solutions aim to reduce message delays and ensure the NATS streaming server handles client disconnections more reliably. Further adjustments and enhancements are discussed in subsequent steps.
 
 ### figuring out client not active - OPTION 2
+
 ### 307. Graceful Client Shutdown
+
 - the client explicitly notifies the NATS Streaming server when it is closing, so the server stops sending messages
 
 - TODO: modify the `listener` and `publisher` code to detect when the process is about to close (eg. on a manual restart or if the terminal is closed).
@@ -11432,10 +11609,10 @@ This leads to delayed delivery of messages or temporary loss until the server de
 ```ts
 //nats-test/listeners.ts
 //...
-stam.on('connect', ()=> {
+stam.on('connect', () => {
   //...
 
-  stan.on('close', ()=> {
+  stan.on('close', () => {
     console.log('NATS connection closed');
     process.exit();
   });
@@ -11443,43 +11620,45 @@ stam.on('connect', ()=> {
   //...
 });
 
-process.on('SIGINT', ()=> stan.close());
-process.on('SIGTERM', ()=> stan.close());
-
+process.on('SIGINT', () => stan.close());
+process.on('SIGTERM', () => stan.close());
 ```
+
 - when realizing process will close...we add event handlers to `send a shutdown request` to the server, informing it that the client is going offline and shouldn't receive any more messages
 - TODO: add handlers for termination signals to ensure that when the process is interrupted, the client sends a `close signal` to the server before the process ends.
-  - `SIGINT` (interrupt signal -> eg. restarting program) 
-  - `SIGTERM` (terminate signal -> eg. CTRL + C) 
+  - `SIGINT` (interrupt signal -> eg. restarting program)
+  - `SIGTERM` (terminate signal -> eg. CTRL + C)
 - NOTE on windows 'SIGINT' and 'SIGTERM' might not work correctly...
 
 TEST - observe the subscription list in the browser, ensuring that closed clients are removed from the server's list of active subscriptions.
+
 - not foolproof -> If the process is forcibly killed (eg. through the task manager), the shutdown request wont be sent.
 
-# 308. Core Concurrency Issues 
+# 308. Core Concurrency Issues
+
 - THEORY LESSON
 - THIS IS AN IMPORTANT LESSON (MAYBE THE MOST IMPORTANT IN COURSE)
 - events arriving outside of intended order
 
 - some things that can go wrong:
   1. Listener can fail to process the event
-    - file for storage is locked preventing processing event
-    - limit to amount you can deposit
-  2. waiting for event 1 to retry 
-    - causes order of received events to process out of order
-    - ie. event 1 failed and needs to retry
-    - event 2, 3 get processed before event 1
+  - file for storage is locked preventing processing event
+  - limit to amount you can deposit
+  2. waiting for event 1 to retry
+  - causes order of received events to process out of order
+  - ie. event 1 failed and needs to retry
+  - event 2, 3 get processed before event 1
   3. one listener might run quicker than another
-    - so backlog of deposit
-    - and withdrawal (faster)
+  - so backlog of deposit
+  - and withdrawal (faster)
   4. listener shuts down (ungracefully)
-    - NATS thinks listener still alive, sends the message, fails acknowledge 
-    - withdrawal request gets processed
-    - 30seconds later -> shuts down and retries on another listener
-  5. processing same event twice in a row 
-    - listener fails to process event on time 
-    - eg. time to process event/message takes exactly 30seconds 
-    - at 30 seconds NATS assumes the event process failed and sends out another event for processing
+  - NATS thinks listener still alive, sends the message, fails acknowledge
+  - withdrawal request gets processed
+  - 30seconds later -> shuts down and retries on another listener
+  5. processing same event twice in a row
+  - listener fails to process event on time
+  - eg. time to process event/message takes exactly 30seconds
+  - at 30 seconds NATS assumes the event process failed and sends out another event for processing
 
 ### 309. Common Questions
 
@@ -11505,6 +11684,7 @@ TEST - observe the subscription list in the browser, ensuring that closed client
   - communication jumps
 
 #### Failure of Single Instance Solution:
+
 - 2 instances of account service
 
 <img src="exercise_files/udemy-microservices-section14-309-03-possible-solution-1-two-service-listener.png" alt="udemy-microservices-section14-309-03-possible-solution-1-two-service-listener.png" width="600"/>
@@ -11513,8 +11693,8 @@ TEST - observe the subscription list in the browser, ensuring that closed client
 
 <img src="exercise_files/udemy-microservices-section14-309-03-possible-solution-1-single-copy-service-listener-fail-bottleneck.png" alt="udemy-microservices-section14-309-03-possible-solution-1-single-copy-service-listener-fail-bottleneck.png" width="600"/>
 
-- using just one instance of a service to avoid concurrency issues. 
-- creates a bottleneck, limiting the app's scalability. 
+- using just one instance of a service to avoid concurrency issues.
+- creates a bottleneck, limiting the app's scalability.
 - This also doesn't completely solve the issue because failures (e.g., temporary issues with file systems or retries) can still occur, leading to the same concurrency problems.
 
 - Scaling vertically (increasing resources) is not enough for handling more traffic; hence, the need to scale horizontally (running multiple service instances) is important.
@@ -11523,26 +11703,30 @@ TEST - observe the subscription list in the browser, ensuring that closed client
 
 <img src="exercise_files/udemy-microservices-section14-309-03-possible-solution-2-solving-every-concurrency-issue-fail.png" alt="udemy-microservices-section14-309-03-possible-solution-2-solving-every-concurrency-issue-fail.png" width="600"/>
 
-- Trying to handle every possible concurrency issue through code is not feasible because there are potentially infinite scenarios. 
+- Trying to handle every possible concurrency issue through code is not feasible because there are potentially infinite scenarios.
 - in most applications (e.g., social media platforms), minor inconsistencies like out-of-order or duplicate events are often not critical.
-- find balance between solving concurrency issues and the time and effort required. 
+- find balance between solving concurrency issues and the time and effort required.
 - Sometimes, trying to fix every possible issue isn't worth the engineering cost.
 
 #### Conclusion:
-- concurrency issues are inevitable, whether in microservices or monolithic architectures. 
+
+- concurrency issues are inevitable, whether in microservices or monolithic architectures.
 - solutions can help mitigate some problems (e.g., limiting instances)
 - perfect handling of concurrency is often impractical for most applications.
 
 ### 310. [Optional] More Possible Concurrency Solutions
+
 - 16min 42sec
 - THESE SOLUTIONS WONT WORK (STEPHENS THOUGHTS)
 
-- Each solution progresses closer to resolving concurrency challenges but falls short due to technical limitations or performance trade-offs. 
+- Each solution progresses closer to resolving concurrency challenges but falls short due to technical limitations or performance trade-offs.
 
-## 3 potential solutions 
+## 3 potential solutions
+
 - highlighting 3 solutions for handling concurrency in distributed systems and why these don't fully work
 
 ## 1. Shared State with Sequence Numbers:
+
 - Events are processed sequentially (in-order) by checking a shared store (processed sequence #'s) to ensure previous events are completed (processed).
 
 - Pro: Ensures events are processed exactly once and in the correct order.
@@ -11555,6 +11739,7 @@ TEST - observe the subscription list in the browser, ensuring that closed client
 - number one, it goes over to service A
 - service will immediately process this event. So it's going to deposit $70.
 - It will then take that sequence number and put it into the shared store.
+
 ---
 
 <img src="exercise_files/udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_2.png" alt="udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_2.png" width="600"/>
@@ -11562,14 +11747,15 @@ TEST - observe the subscription list in the browser, ensuring that closed client
 - sequence number two, that's a deposit goes over to B
 - B is going to then look into this data store and see if the previous event sequence number (# 1) has already been processed.
 - Number one has been processed because it is inside the data store.
-- Service B can successfully or at least try to process number two. 
+- Service B can successfully or at least try to process number two.
+
 ---
 
 <img src="exercise_files/udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_3.png" alt="udemy-microservices-section14-310-01-possible-solution-3-share-state-between-services-first-ensure-previous-process-sequence_3.png" width="600"/>
 
 - withdrawal goes over to service A
 - service A checks to see that the previous sequence number has already been processed.
-- number two has been processed because three minus one is two. 
+- number two has been processed because three minus one is two.
 - so it is in the store -> successfully withdraw the $100 right away.
 
 ---
@@ -11586,14 +11772,16 @@ width='600'
 - sequence1 goes to serviceA , sequence2 goes to serviceB
 - serviceB looks at shared store and sees sequence1 is not processed and not in the store yet, so it waits
 - say sequence1 (userA) fails and times-out -> goes back to NATS for reissue
-- sequence2 (userB) is waiting for sequence1 (userA) event to be processed even though sequence2 (userB) is not for same user (userA)   
+- sequence2 (userB) is waiting for sequence1 (userA) event to be processed even though sequence2 (userB) is not for same user (userA)
+
 ---
 
 ## 2. User-Specific Sequence Numbers:
+
 - at 4min 15sec
 
 - `Each user/resource` has its `own sequence number`, enabling parallel event processing across users.
-- tries to solve problems with solution 1 
+- tries to solve problems with solution 1
 
 - Pro: Eliminates dependency between unrelated users/resources, improving concurrency.
 - Con: Requires separate channels for each user/resource, which incurs overhead and hits scalability limits in systems like NATS Streaming Server.
@@ -11603,42 +11791,45 @@ width='600'
 - going to track exactly which user each event is intended to be processed for.
 - sequence #1 for User Jim -> trying to deposit $70 -> goes to service A
 - sequence #1 for User Mary -> trying to deposit $40
-- Jim's event processed -> stores processed sequence number in its own sequence 
+- Jim's event processed -> stores processed sequence number in its own sequence
   - and shared data store -> updated: $70
-- mary's event processed -> stores processed sequence number in its own sequence 
+- mary's event processed -> stores processed sequence number in its own sequence
   - and shared data store -> updated $40
-- THEN jims 2nd sequence comes, sees sequence 1 is already processed 
+- THEN jims 2nd sequence comes, sees sequence 1 is already processed
   - sequence 2 is then processed -> stores processed sequence number in its own sequence
-- THEN jims 3rd sequence comes, sees sequence 2 is already processed 
+- THEN jims 3rd sequence comes, sees sequence 2 is already processed
   - sequence 3 is then processed -> stores processed sequence number in its own sequence
 
---- 
+---
 
 <img src="exercise_files/udemy-microservices-section14-310-02-possible-solution-4-event-1-mary-does-not-hold-up-event-2-jim.png" alt="udemy-microservices-section14-310-02-possible-solution-4-event-1-mary-does-not-hold-up-event-2-jim.png" width="600"/>
 
 ### how does have separate sequence numbers for separate users (resource) help?
+
 - showing that there is no hold-up for other user sequence
 - `event 1 Jim` to service A
-- `event 1 Jim `is processed 
+- `event 1 Jim `is processed
 - `event 1 Mary` to service B
 - `event 2 Jim` to service A
 - if there is a problem with `event 1 mary`, `event 2 Jim` can still complete
 
 ### problem with channel limits and processing overhead
+
 - problem is that if each user (resource) gets its own sequence numbers, with NATS streaming server you would need a channel for each (ie 2 channels per resource):
   - account:deposit:jim
   - account:withdrawal:jim
   - account:deposit:mary
   - account:withdrawal:mary
-- with NAT streaming server (or any event bus) there is processing overhead in adding more channels 
-- and there are max limits to number of channels 
+- with NAT streaming server (or any event bus) there is processing overhead in adding more channels
+- and there are max limits to number of channels
 
-<img src="exercise_files/udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence-channel-deposit-withdraw-overhead-max-limits.png" alt="udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence-channel-deposit-withdraw-overhead-max-limits" width="600"/>
----
+## <img src="exercise_files/udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence-channel-deposit-withdraw-overhead-max-limits.png" alt="udemy-microservices-section14-310-02-possible-solution-4-each-user-has-its-sequence-channel-deposit-withdraw-overhead-max-limits" width="600"/>
 
 ### 3. Publisher-Stored Events with Sequence Numbers:
+
 - 9min 15sec
 - solution 3 - trying to overcome users (owners) not being able to get own sequence numbers
+
   - the event is stored at the publisher (ie. publisher has db that tracks all events dispatched over time)
   - the publisher also tracks the sequence id of every event
   - publisher will know what `last sequences` apply for which user (NOT REALLY TRUE -> see discussion end of solution 3)
@@ -11650,23 +11841,22 @@ width='600'
 
   <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-hoping-NATS-returns-the-sequence-number.png"  alt="udemy-microservices-section14-310-03-possible-solution-5-hoping-NATS-returns-the-sequence-number.png" width="600"/>
 
-  ---
+  ***
 
   - the sequence number is only assigned AFTER gets sent from publisher to NATS streaming
   - hoping that the sequence number gets sent back to publisher
 
   <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.png" width="600"/>
 
-  ---
+  ***
 
   - then after, event goes on to account service (listener) to be processed
   - the deposit amount is stored in db -> $70
   - the `sequence number` of the event just processed is also `stored` in db (sequence #1)
 
-
   <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.5.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_1.5.png" width="600"/>
 
-  ---
+  ***
 
   - the publisher then moves on to `event 2: user mary`
   - dispatch the event
@@ -11675,8 +11865,8 @@ width='600'
   - processed and saved to db -> last ID processed (sequence number) saved
 
   <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_2.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_2.png" width="600"/>
-  
-  ---
+
+  ***
 
   - next `event 3 - User Jim`
   - we know its for User Jim and last time this user processed a sequence was 1, so for event 3 we put `1 in last sequence`
@@ -11689,21 +11879,21 @@ width='600'
 
 ---
 
-  - as long as the numbers are equal to each other, the event can be processed
+- as long as the numbers are equal to each other, the event can be processed
 
   <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_4.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_4.png" width="600"/>
 
 ---
 
-  - then we go on to next event 
-  - we know its about `user Jim` -> look at most recent event -> which has sequence number of (3)
-  - so we put that for the event -> 3
+- then we go on to next event
+- we know its about `user Jim` -> look at most recent event -> which has sequence number of (3)
+- so we put that for the event -> 3
 
 <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_5.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_5.png" width="600"/>
 
 ---
 
-- sent off to NATS 
+- sent off to NATS
 - which gives it sequence number -> 4
 - sent to account service (listener)
 - checks last processed sequence are same (new event's `last processed sequence` AND the saved `db's last processed sequence for user` ) -> 3
@@ -11713,7 +11903,7 @@ width='600'
 ---
 
 - processes sequence 4
-- saves to db -> user jim last processed updates to 4  
+- saves to db -> user jim last processed updates to 4
 - balance updates
 
 <img src="exercise_files/udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_7.png" alt="udemy-microservices-section14-310-03-possible-solution-5-publisher-should-receive-sequence-number_7.png" width="600"/>
@@ -11727,8 +11917,9 @@ width='600'
 - where jim has a deposit $40
 - AND simultaneously jim has a withdrawal $100
 - if you accidentally try process withdrawal before the deposit
+
   - service B looks at event's `last sequence` -> 3
-  - service B looks in DB's `last sequence`  for `user jim` -> 1
+  - service B looks in DB's `last sequence` for `user jim` -> 1
   - AND THAT IS NOT THE SAME!!!
   - service B will refuse to process the event
   - event will eventually time-out
@@ -11745,12 +11936,14 @@ width='600'
 ---
 
 #### why this wont work?
+
 - it wont work because the event sequence number is not sent back from NATS to publisher
-- sending events to NATS is a one-way operation 
-- so NATS doesnt send anything back to the publisher 
+- sending events to NATS is a one-way operation
+- so NATS doesnt send anything back to the publisher
   - it cant figure out the next events' last sequence number...
 
 ### 311. Solving Concurrency Issues
+
 - the system is poorly designed and relying on NATS to fix it
 - redesign the service
 - SOLUTION -> adding the transaction number to events (by redesigning the transaction service / db stored data)
@@ -11775,6 +11968,7 @@ width='600'
 alt='udemy-microservices-section14-311-revisiting-blog-post-simplified-diag-generic-terminology.png'
 width='600'
 />
+
 - we've been focusing on NATS and the services that listens to events coming out from NATS
 
 <img src='exercise_files/udemy-microservices-section14-311-revisiting-blog-post-simplified-diag-relates-to-nats+service.png'
@@ -11783,7 +11977,7 @@ width='600'
 />
 
 - but the publisher we've neglected
-- what is the publisher 
+- what is the publisher
   - where the events are coming from and its underlying data
 - TODO: figuring out what service is responsible for these events
 - for our app it would probably be a transactions/account service
@@ -11802,6 +11996,7 @@ width='600'
   - emit transaction event (which is the publisher events)
 
 #### visualizing how we would design this transactions service
+
 - user logs onto banking website
 - makes transactions
 - event moves to transaction service
@@ -11811,6 +12006,7 @@ width='600'
 alt='udemy-microservices-section14-311-solving-concurrency-issues-visualizing-transactions-service.png'
 width='600'
 />
+
 ---
 
 <img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-transaction-events.png'
@@ -11839,7 +12035,7 @@ width='600'
 <img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-better-redesigned-publisher-events.png'
 alt='udemy-microservices-section14-311-solving-concurrency-issues-better-redesigned-publisher-events.png'
 width='600'
-/>   
+/>
 
 - the database would have an entry for each user calculating the balance
 - each user starts with `balance: 0` and no `last transaction number: -`
@@ -11861,6 +12057,7 @@ width='600'
 />
 
 ---
+
 - after processing 2nd transaction...
 
 <img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_3_2nd-transaction.png'
@@ -11869,6 +12066,7 @@ width='600'
 />
 
 ---
+
 - after processing 3rd transaction...
 
 <img src='exercise_files/udemy-microservices-section14-311-solving-concurrency-issues-processing-event-transaction_4_3nd-transaction.png'
@@ -11876,11 +12074,13 @@ alt='udemy-microservices-section14-311-solving-concurrency-issues-processing-eve
 width='600'
 />
 
-### handling unprocessed events  
+### handling unprocessed events
 
 ## NEW RULE
-- events now have a transaction number 
+
+- events now have a transaction number
 - service should only process the event if the event's `transaction number` is one more than `user in db's` last transaction number
+
   - ie. db user -> last transaction number should equal the event's transaction number minus 1.
 
 - `event 1` goes to service A and service A crashes...
@@ -11915,12 +12115,14 @@ width='600'
 - transaction 3 goes to `Account service listener B` etc etc
 
 #### concurrency issues fixed
+
 1. where NATS thinks client is alive while its actually dead
 2. one listener running quicker than another
 3. listener can fail to process the event where we have to wait 30secs before re-issue
 4. different users trying to access the db committing to db at same time
 
 ### 312. Concurrency Control with the Tickets App
+
 - theory lesson
 
 <img src='exercise_files/udemy-microservices-section14-312-concurrency-control-with-ticketing-service-using-ticket-versioning.png'
@@ -11928,8 +12130,8 @@ alt='udemy-microservices-section14-312-concurrency-control-with-ticketing-servic
 width='600'
 />
 
-- how the concept of "versioning" (or "last transaction number") is applied to the ticketing service in a microservices architecture. 
-- The ticketing service, which handles creating and updating tickets, will maintain a version number that tracks changes to each ticket. 
+- how the concept of "versioning" (or "last transaction number") is applied to the ticketing service in a microservices architecture.
+- The ticketing service, which handles creating and updating tickets, will maintain a version number that tracks changes to each ticket.
 - This versioning is critical because the order service, which handles ticket orders, needs to know the current price of tickets and how that price changes over time.
 
 ### how it works:
@@ -11941,8 +12143,9 @@ width='600'
 - The `ticket service` is responsible for management of `ticket version` in tickets database...
 - all other services will lag the ticket version in ticket database managed by ticket service
 
-#### Ticket Creation and Versioning: 
-- When a ticket is created with a price (e.g., $10), it's assigned a version number (e.g., version 1). 
+#### Ticket Creation and Versioning:
+
+- When a ticket is created with a price (e.g., $10), it's assigned a version number (e.g., version 1).
 
 <img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-01-create-ticket-event-saved.png'
 alt='udemy-microservices-section14-312-concurrency-with-tickets-app-01-create-ticket-event-saved.png'
@@ -11956,8 +12159,9 @@ alt='udemy-microservices-section14-312-concurrency-with-tickets-app-02-emit-even
 width='600'
 />
 
-#### Ticket Updates: 
-- Subsequent updates (e.g., changing the price from $10 to $50, and then to $100) also increment the version number. 
+#### Ticket Updates:
+
+- Subsequent updates (e.g., changing the price from $10 to $50, and then to $100) also increment the version number.
 
 <img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-03-ticket-update.png'
 alt='udemy-microservices-section14-312-concurrency-with-tickets-app-03-ticket-update.png'
@@ -11971,8 +12175,9 @@ alt='udemy-microservices-section14-312-concurrency-with-tickets-app-03-ticket-up
 width='600'
 />
 
-#### Event Processing: 
-- Events are processed by services (like the order service) in the correct order. 
+#### Event Processing:
+
+- Events are processed by services (like the order service) in the correct order.
 - Sometimes events may arrive out of order or fail to be processed. In such cases, the version number helps ensure that updates are applied correctly, and prevents inconsistent states.
 
 <img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-04-ticket-created-fails-to-be-processed.png'
@@ -11980,8 +12185,9 @@ alt='udemy-microservices-section14-312-concurrency-with-tickets-app-04-ticket-cr
 width='600'
 />
 
-#### Handling Failures: 
-- If an event fails or is processed out of order, the service checks the version number of the ticket before applying the update. 
+#### Handling Failures:
+
+- If an event fails or is processed out of order, the service checks the version number of the ticket before applying the update.
 - If the ticket version is incorrect, the update is not applied until the correct version is processed, ensuring consistency.
 
 <img src='exercise_files/udemy-microservices-section14-312-concurrency-with-tickets-app-05-incorrect-version-order.png'
@@ -11999,16 +12205,18 @@ width='600'
 
 - etc etc for v2 and v3
 
-#### Versioning and MongoDB: 
+#### Versioning and MongoDB:
+
 - MongoDB and Mongoose can handle much of the versioning automatically, simplifying the implementation. The versioning system ensures that services always have the correct, or lagging, version of a ticket, preventing inconsistencies between services.
 
-- while the versioning system might sound complex, it's crucial for maintaining data integrity across microservices, especially when events are delayed or processed out of order. 
+- while the versioning system might sound complex, it's crucial for maintaining data integrity across microservices, especially when events are delayed or processed out of order.
 
 - versioning always fixes every scenario UNLESS the event/message for a ticket continuously loops on retry/fail attempts to be processed.
 
 ### 313. Event Redelivery
+
 - all events emmited to NATS Streaming is automatically saved in NATS `event history`
-- event also gets send to account service (listeners) 
+- event also gets send to account service (listeners)
 - a subscription can then be customized to retrieve the list of events from NATS
 
 <img src='exercise_files/udemy-microservices-section14-313-event-redelivery-nats-event-history.png'
@@ -12023,15 +12231,13 @@ width='600'
 // section05-14-ticketing/nats-test/src/listeners.ts
 
 //...
-  const options = stan
-    .subscriptionOptions()
-    .setManualAckMode(true);
+const options = stan.subscriptionOptions().setManualAckMode(true);
 
-  const subscription = stan.subscribe(
-    'ticket:created',
-    // 'orders-service-queue-group',
-    options
-  );
+const subscription = stan.subscribe(
+  'ticket:created',
+  // 'orders-service-queue-group',
+  options
+);
 //...
 ```
 
@@ -12040,6 +12246,7 @@ width='600'
 - in `listeners.ts` to tell nats to get some messages delivered in the past...add a subscription option
 - CTRL + click on `.subscriptionOptions()`
 - methods available to call to customize which events (submitted in past) get replayed (resent) while offline
+
   - `setStartAtSequence()`
   - `setStartTime()`
   - `setStartWithLastReceived()`
@@ -12053,46 +12260,48 @@ width='600'
 // section05-14-ticketing/nats-test/src/listeners.ts
 
 //...
-  const options = stan
-    .subscriptionOptions()
-    .setManualAckMode(true)
-    .setDeliverAllAvailable()
+const options = stan
+  .subscriptionOptions()
+  .setManualAckMode(true)
+  .setDeliverAllAvailable();
 
-  const subscription = stan.subscribe(
-    'ticket:created',
-    // 'orders-service-queue-group',
-    options
-  );
+const subscription = stan.subscribe(
+  'ticket:created',
+  // 'orders-service-queue-group',
+  options
+);
 //...
 ```
 
 - below is copy-and-paste from CTRL+click: `nats-test/node_modules/node-nats-streaming/index.d.ts`
+
 ```ts
 //nats-test/node_modules/node-nats-streaming/index.d.ts
 //...
-declare interface SubscriptionOptions  {
-    durableName?: string;
-    maxInFlight?: number;
-    ackWait?: number;
-    startPosition: StartPosition;
-    startSequence?: number;
-    startTime?: number;
-    manualAcks?: boolean;
-    setMaxInFlight(n: number):SubscriptionOptions;
-    setAckWait(millis: number): SubscriptionOptions;
-    setStartAt(startPosition: StartPosition): SubscriptionOptions;
-    setStartAtSequence(sequence: number): SubscriptionOptions;
-    setStartTime(date: Date): SubscriptionOptions;
-    setStartAtTimeDelta(millis: number):SubscriptionOptions;
-    setStartWithLastReceived():SubscriptionOptions;
-    setDeliverAllAvailable():SubscriptionOptions;
-    setManualAckMode(tf: boolean): SubscriptionOptions;
-    setDurableName(durableName: string): SubscriptionOptions;
+declare interface SubscriptionOptions {
+  durableName?: string;
+  maxInFlight?: number;
+  ackWait?: number;
+  startPosition: StartPosition;
+  startSequence?: number;
+  startTime?: number;
+  manualAcks?: boolean;
+  setMaxInFlight(n: number): SubscriptionOptions;
+  setAckWait(millis: number): SubscriptionOptions;
+  setStartAt(startPosition: StartPosition): SubscriptionOptions;
+  setStartAtSequence(sequence: number): SubscriptionOptions;
+  setStartTime(date: Date): SubscriptionOptions;
+  setStartAtTimeDelta(millis: number): SubscriptionOptions;
+  setStartWithLastReceived(): SubscriptionOptions;
+  setDeliverAllAvailable(): SubscriptionOptions;
+  setManualAckMode(tf: boolean): SubscriptionOptions;
+  setDurableName(durableName: string): SubscriptionOptions;
 }
 //...
 ```
 
 ### 314. Durable Subscriptions
+
 - durable subscriptions is a more effective alternative to re-delivering all past events for message processing systems.
 
 - A subscription with a unique identifier (set using `setDurableName`) allows the system to `track which events have been processed`.
@@ -12102,17 +12311,17 @@ declare interface SubscriptionOptions  {
 // section05-14-ticketing/nats-test/src/listeners.ts
 
 //...
-  const options = stan
-    .subscriptionOptions()
-    .setManualAckMode(true)
-    .setDeliverAllAvailable()
-    .setDurableName('accounting-service');
+const options = stan
+  .subscriptionOptions()
+  .setManualAckMode(true)
+  .setDeliverAllAvailable()
+  .setDurableName('accounting-service');
 
-  const subscription = stan.subscribe(
-    'ticket:created',
-    // 'queue-group',
-    options
-  );
+const subscription = stan.subscribe(
+  'ticket:created',
+  // 'queue-group',
+  options
+);
 //...
 ```
 
@@ -12134,7 +12343,8 @@ width='600'
 ---
 
 #### service goes offline
-- if service goes down (offline)... 
+
+- if service goes down (offline)...
 - and events come in eg. `event 2` and `event 3`
 - the service wont receive the event BUT.. NATS will store the event the service missed in durable subscription
 
@@ -12146,7 +12356,8 @@ width='600'
 ---
 
 #### service comes back online
-- when service comes back online 
+
+- when service comes back online
 - and connects with same id (durable-subscription-`ID`)
 - NATS looks at what was processed and what hasnt
 - unprocessed events/messages are sent to account service (listener) for processing
@@ -12157,7 +12368,7 @@ width='600'
 />
 
 - once processed
-- durable subscriptions marks it as PROCCESSED 
+- durable subscriptions marks it as PROCCESSED
 
 <img src='exercise_files/udemy-microservices-section14-314-durable-subscription_5-after-processed.png'
 alt='udemy-microservices-section14-314-durable-subscription_5-after-processed.png'
@@ -12169,13 +12380,15 @@ width='600'
 - AND no events are erroneously re-processed (fixing `setDeliverAllAvailable()` option when called on its own)..
 
 #### Set Deliver All Available:
+
 - when using `setDurableName()` you still need `setDeliverAllAvailable()`
 - `setDeliverAllAvailable()` ensures that when a service connects for the first time, it receives all past events.
-- Used only for the initial subscription setup. 
+- Used only for the initial subscription setup.
 - On subsequent reconnects (restarts), `setDeliverAllAvailable()` is ignored and the system checks the durable name to avoid redundant re-delivery.
 
 #### The Issue of Disconnections:
-- If a client disconnects, we close our connection to NATS 
+
+- If a client disconnects, we close our connection to NATS
 - NATS sees it is the client with the durable subscription `setDurableName`
 - NATS might assume it won't reconnect and discard the durable subscription's history.
 
@@ -12187,6 +12400,7 @@ width='600'
 - This can be mitigated by using `queue groups`.
 
 #### Queue Groups:
+
 - fixing NATS discarding durable subscription history...
 
 - Adding a queue group (setQueueGroup) ensures the durable subscription's state is preserved even during brief disconnections.
@@ -12199,7 +12413,7 @@ width='600'
   const options = stan
     .subscriptionOptions()
     .setManualAckMode(true)
-    .setDeliverAllAvailable() 
+    .setDeliverAllAvailable()
     .setDurableName('accounting-service');
 
   const subscription = stan.subscribe(
@@ -12220,6 +12434,7 @@ width='600'
 ---
 
 ## section 15 - connecting to NATS in a nodejs world (1hr22min)
+
 ### 315. Reusable NATS Listeners
 
 <img src='exercise_files/udemy-microservices-section16-315-reusable-nats-listener.png'
@@ -12230,10 +12445,10 @@ width='600'
 - extracting code to make reusable listeners (pub/receive messages)
 - move to common module library
 - TODO: create a class called `Listener`
-- `Listener` -> `abstract` class 
+- `Listener` -> `abstract` class
 
 - properties:
-  - (abstract) `subject` -> string -> channel to listen to 
+  - (abstract) `subject` -> string -> channel to listen to
   - (abstract) `onMessage()` -> function -> run when a message is received
   - `client` -> Stan -> pre-initialized NATS client
   - (abstract) `queueGroupName` -> string -> name of the queue group this listener will join
@@ -12247,14 +12462,15 @@ alt='udemy-microservices-section16-315-reusable-nats-listener-abstract-subclasse
 width='600'
 />
 
-- will create subclasses of Listener 
-  - `orderUpdatedListener` 
-  - `ticketCreatedListener`  
+- will create subclasses of Listener
+  - `orderUpdatedListener`
+  - `ticketCreatedListener`
   - listens for a particular event
   - customize `subject`
   - customize `onMessage`
 
 ### 316. Listener abstract class
+
 - TODO: implement class `Listener`
 - `nats-test/src/listener.ts`
 
@@ -12265,9 +12481,10 @@ width='600'
 
 ### subscription options
 
-- subscription options - defined using a helper method, which configures settings like: 
-  - `setDeliverAllAvailable()` - delivering all available messages, 
-  - `setManualAckMode(true)` - enabling manual acknowledgement, 
+- subscription options - defined using a helper method, which configures settings like:
+
+  - `setDeliverAllAvailable()` - delivering all available messages,
+  - `setManualAckMode(true)` - enabling manual acknowledgement,
   - `setDurableName(this.queueGroupName)` - and setting the durableName to the groupName.
 
 - NOTE: `queueGroupName` and `durableName` are usually the same
@@ -12275,30 +12492,29 @@ width='600'
 ### listen method
 
 - subscribes to a subject and group, then `listens for incoming messages`.
-- Upon receiving a message -> it is logged and parsed. 
-  - if the data is a `string`, its parsed as JSON. 
+- Upon receiving a message -> it is logged and parsed.
+  - if the data is a `string`, its parsed as JSON.
   - if it’s a `buffer`, it's converted to a string and then parsed.
 - the parsed data (parseMessage(msg:Message)) is passed to the `onMessage()` method (which is abstract and must be implemented in subclasses).
 
 ```ts
 // nats-test/src/listener.ts
-import nats, {Message, Stan} from 'node-nats-streaming';
-import {randomBytes} from 'crypto';
+import nats, { Message, Stan } from 'node-nats-streaming';
+import { randomBytes } from 'crypto';
 
 const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
-    url:'http://localhost:4222'
-  });
+  url: 'http://localhost:4222',
+});
 
 //...
-abstract class Listener{
+abstract class Listener {
   abstract subject: string;
   abstract queueGroupName: string;
-  abstract onMessage: (data:any, msg: Message) => void;
+  abstract onMessage: (data: any, msg: Message) => void;
 
   protected ackWait = 5 * 1000;
 
-  constructor(private client: Stan) {
-  }
+  constructor(private client: Stan) {}
 
   subscriptionOptions() {
     return this.client
@@ -12321,17 +12537,16 @@ abstract class Listener{
 
       const parsedData = this.parseMessage(msg);
       this.onMessage(parsedData, msg);
-    })
+    });
   }
 
-  parseMessage(msg:Message) {
+  parseMessage(msg: Message) {
     const data = msg.getData();
     return typeof data === 'string'
-      ? JSON.parse(data) 
-      : JSON.parse(data.toString('utf8'))
+      ? JSON.parse(data)
+      : JSON.parse(data.toString('utf8'));
   }
 }
-
 ```
 
 ### 317. Extending the Listener
@@ -12341,19 +12556,20 @@ abstract class Listener{
 - `nats-test/src/listener.ts` is listening for `ticket:created`
 
 #### using TicketCreatedListener
+
 - usage: `new TicketCreatedListener(stan).listen();`
 
 ```ts
 //nats-test/src/listener.ts/
 //...
 const stan = nats.connect('ticketing', randomBytes(4).toString('hex'), {
-  url:'http://localhost:4222'
+  url: 'http://localhost:4222',
 });
 
 //...
 stan.on('connect', () => {
   console.log('Listener connected to NATS');
-  
+
   stan.on('close', () => {
     console.log('NATS connection closed');
     process.exit();
@@ -12363,12 +12579,12 @@ stan.on('connect', () => {
 });
 
 //...
-abstract class Listener{
+abstract class Listener {
   //...
 }
 //...
 
-class TicketCreatedListener extends Listener{
+class TicketCreatedListener extends Listener {
   subject = 'ticket:created';
   queueGroupName = 'payments-service';
 
@@ -12379,12 +12595,12 @@ class TicketCreatedListener extends Listener{
 }
 
 //...
-
 ```
 
 ### 318. Quick Refactor
+
 - The Listener class will be defined in common/ module (repo)
-- the services will import this Listener 
+- the services will import this Listener
 - each service will then define a subclass of Listener and have its own custom logic
 
 <img src='exercise_files/udemy-microservices-section16-318-quick-refactor-listeners-defined-in-services.png'
@@ -12393,10 +12609,12 @@ width='600'
 />
 
 #### Refactor
+
 - the abstact base listener is moved to: `nats-test/src/events/base-listener.ts`
 - the TicketCreatedListener is also moved to its own file: `nats-test/src/events/ticket-created-listner.ts`
 
 #### usage
+
 - import `TicketCreatedListener` and create an instance
 
 ```ts
@@ -12412,10 +12630,11 @@ stan.on('connect', () => {
 ```
 
 ### 319. Leveraging TypeScript for Listener Validation
+
 - the first app: difficult to remember:
   - remembering properties of events
   - remembering names of the events / spelling errors
- 
+
 <img src='exercise_files/udemy-microservices-section16-319-mapping-between-subject-names-and-event-data.png'
 alt='udemy-microservices-section16-319-mapping-between-subject-names-and-event-data.png'
 width='600'
@@ -12431,20 +12650,22 @@ width='600'
 ### 320. Subjects Enum
 
 #### creating a file to store enums
+
 - use enum to store all possible `subjects`
 - usage: `Subjects.TicketCreated`
 - `nats-test/src/events/subjects.ts`
 
 ```ts
 //nats-test/src/events/subjects.ts
-export enum Subjects{
+export enum Subjects {
   TicketCreated = 'ticket:created',
-  OrderUpdated = 'order:updated'
+  OrderUpdated = 'order:updated',
 }
 ```
 
 ### 321. Custom Event Interface
-- Custom Event Interface -> an interface to describe the coupling of a `subject` and its associated `event data` 
+
+- Custom Event Interface -> an interface to describe the coupling of a `subject` and its associated `event data`
 - TODO: create a new file `nats-test/src/events/ticket-created-event.ts`
 - we set up tight-coupling between the subject and its data.
 
@@ -12456,7 +12677,7 @@ width='600'
 ```ts
 //nats-test/src/events/ticket-created-event.ts
 
-import { Subjects } from "./subjects"; //import enum
+import { Subjects } from './subjects'; //import enum
 
 export interface TicketCreatedEvent {
   subject: Subjects.TicketCreated;
@@ -12470,21 +12691,22 @@ export interface TicketCreatedEvent {
 
 ### 322. Enforcing Listener Subjects
 
-- typscript needs to check that the `subject` matches up with type of data provided to `onMessage(data)` 
+- typscript needs to check that the `subject` matches up with type of data provided to `onMessage(data)`
 
 <img src='exercise_files/udemy-microservices-section16-322-enforcing-listener-subjects.png'
 alt='udemy-microservices-section16-322-enforcing-listener-subjects.png'
 width='600'
 />
 
-- in `src/events/base-listener.ts` 
-- create an interface -> this interface describes a generic event 
+- in `src/events/base-listener.ts`
+- create an interface -> this interface describes a generic event
 - it will have a property `subject` and its value must be one of the values of `Subjects` Enum
+
 ```ts
 //src/events/base-listener.ts
 import { Subjects } from './subjects';
 
-interface Event{
+interface Event {
   subject: Subjects;
   data: any;
 }
@@ -12493,6 +12715,7 @@ interface Event{
 ```
 
 #### Generic type
+
 - setup Listener as a generic class
 - this syntax says whenever we extend Listener, we have to provide a custom type `Listener<T extends Event>`
 - this is like an argument for types (reference it in function via T)
@@ -12503,12 +12726,13 @@ interface Event{
 ```ts
 export abstract class Listener<T extends Event> {
   abstract subject: T['subject'];
-  abstract onMessage(data: T['data'], msg: Message):void;
+  abstract onMessage(data: T['data'], msg: Message): void;
   //...
 }
 ```
 
 #### using Listener
+
 - /`nats-test/src/events/ticket-created-listener.ts`
 - when using Listener (generic class) -> need to provide an argument for type T
 - provide Listener with a type (... eg. TicketCreatedEvent) - that describes the event we expect to receive inside this listener
@@ -12525,22 +12749,23 @@ width='600'
   - so subject needs to be of type whatever is defined in `TicketCreatedEvents` subject type
 
 #### this part is updated to be 'readonly' in lesson 323
-- provide the type annotation to `subject` as `Subjects.TicketCreated` so that subjects type can never be set to anything else (will always only be type: `Subjects.TicketCreated`) later on in code... 
+
+- provide the type annotation to `subject` as `Subjects.TicketCreated` so that subjects type can never be set to anything else (will always only be type: `Subjects.TicketCreated`) later on in code...
 - if it was `subject = Subjects.TicketCreated;` -> subject can be anything else inside `Subjects
 
-- NOTE: defining subject as `readonly` ensures it doesnt get updated.. 
+- NOTE: defining subject as `readonly` ensures it doesnt get updated..
 
 ```ts
 //nats-test/src/events/ticket-created-listener.ts
 
-import { Message } from "node-nats-streaming";
+import { Message } from 'node-nats-streaming';
 
-import { Listener } from "./base-listener";
-import { Subjects } from "./subjects";
-import {TicketCreatedEvent} from './ticket-created-event';
+import { Listener } from './base-listener';
+import { Subjects } from './subjects';
+import { TicketCreatedEvent } from './ticket-created-event';
 
-export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
-  // subject = 'ticket:created'; 
+export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
+  // subject = 'ticket:created';
   // subject: Subjects.TicketCreated = Subjects.TicketCreated;
   readonly subject = Subjects.TicketCreated;
   queueGroupName = 'payments-service';
@@ -12553,40 +12778,43 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
 ```
 
 ### 323. Quick Note: 'readonly' in Typescript
+
 - make 'subject' `readonly`
 
 ```ts
 export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
   readonly subject = Subjects.TicketCreated;
- 
+
   // ...everything else
 }
 ```
 
 ### 324. Enforcing Data Types
+
 -`onMessage(data:any)` need to update the type -> it should reference the data type of the T's (TicketCreatedEvent) data type
+
 - FIX: `onMessage(data':TicketCreatedEvent['data'])`
 - nats-test/src/events/ticket-created-event.ts
 
 ```ts
 //nats-test/src/events/ticket-created-event.ts
-import { Message } from "node-nats-streaming";
-import { Listener } from "./base-listener";
-import { TicketCreatedEvent } from "./ticket-created-event";
-import { Subjects } from "./subjects";
+import { Message } from 'node-nats-streaming';
+import { Listener } from './base-listener';
+import { TicketCreatedEvent } from './ticket-created-event';
+import { Subjects } from './subjects';
 
-export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
+export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
   readonly subject = Subjects.TicketCreated;
   queueGroupName = 'payments-service';
 
   onMessage(data: TicketCreatedEvent['data'], msg: Message) {
     msg.ack();
   }
-
 }
 ```
 
 ### 325. Where Does this Get Used?
+
 - understanding what code goes into Common module (when refactoring)
 
 <img src='exercise_files/udemy-microservices-section16-325-what-goes-into-common-module.png'
@@ -12594,7 +12822,7 @@ alt='udemy-microservices-section16-325-what-goes-into-common-module.png'
 width='600'
 />
 
-- eventually, the code will be merged into a common module. 
+- eventually, the code will be merged into a common module.
 
 #### common module
 
@@ -12610,6 +12838,7 @@ width='600'
 - define custom listeners specific to the service’s business logic (e.g., handling `ticketCreated` events with custom logic in `onMessage`).
 
 ### 326. Custom Publisher
+
 - refactoring to create `base-publisher.ts` (similar to base-listener.ts)
 - TODO: the whole point of doing all this is to get Typescript to check our code:
   - that when we emit data, it has the correct properties
@@ -12623,24 +12852,25 @@ width='600'
 import { Stan } from 'node-nats-streaming';
 import { Subjects } from './subjects';
 
-interface Event{
+interface Event {
   subject: Subjects;
   data: any;
 }
 
 export abstract class Publisher<T extends Event> {
   abstract subject: T['subject'];
-  constructor(private client: Stan) { }
+  constructor(private client: Stan) {}
 
   publish(data: T['data']) {
-    this.client.publish(this.subject, JSON.stringify(data), () => { 
+    this.client.publish(this.subject, JSON.stringify(data), () => {
       console.log('event published');
-    })
+    });
   }
 }
 ```
 
 #### custom publisher class
+
 - nats-test/src/events/ticket-created-publisher.ts
 
 ```ts
@@ -12655,15 +12885,16 @@ export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent> {
 ```
 
 ### 327. Using the Custom Publisher
+
 - FIX: firstly fix this -> data should be passed as JSON (src/events/base-publisher.ts)
 
 - using `TicketCreatedPublisher`
 
-- we receive warning when using TicketCreatedPublisher 
-<img src='exercise_files/udemy-microservices-section16-327-using-the-custom-publisher-TicketCreatedPublisher.png'
-alt='udemy-microservices-section16-327-using-the-custom-publisher-TicketCreatedPublisher.png'
-width='600'
-/>
+- we receive warning when using TicketCreatedPublisher
+  <img src='exercise_files/udemy-microservices-section16-327-using-the-custom-publisher-TicketCreatedPublisher.png'
+  alt='udemy-microservices-section16-327-using-the-custom-publisher-TicketCreatedPublisher.png'
+  width='600'
+  />
 
 - nats-test/src/publisher.ts
 
@@ -12690,36 +12921,36 @@ stan.on('connect', () => {
   publisher.publish({
     id: '123',
     title: 'concert',
-    price: 20
+    price: 20,
   });
-
 });
 
 //...
-
 ```
+
 ### 328. Awaiting Event Publication
-- publishing to NATS is an async operation 
-- TODO: be able to use it as `async` with async/await 
+
+- publishing to NATS is an async operation
+- TODO: be able to use it as `async` with async/await
 - ensure that the `base-publisher.ts` class `returns a promise` from `publish()`
 
 - UPDATE: src/events/base-publisher.ts
+
 ```ts
 //base-publisher.ts
 import { Stan } from 'node-nats-streaming';
 import { Subjects } from './subjects';
 
-interface Event{
+interface Event {
   subject: Subjects;
   data: any;
 }
 
 export abstract class Publisher<T extends Event> {
   abstract subject: T['subject'];
-  constructor(private client: Stan) { }
+  constructor(private client: Stan) {}
 
   publish(data: T['data']): Promise<void> {
-
     return new Promise((resolve, reject) => {
       this.client.publish(this.subject, data, (err) => {
         if (err) {
@@ -12728,13 +12959,13 @@ export abstract class Publisher<T extends Event> {
         console.log('event published to subject: ', this.subject);
         resolve();
       });
-
     });
-    
   }
 }
 ```
+
 - UPDATED: nats-test/src/publisher.ts
+
 ```ts
 import nats from 'node-nats-streaming';
 import { TicketCreatedPublisher } from './events/ticket-created-publisher';
@@ -12742,7 +12973,7 @@ import { TicketCreatedPublisher } from './events/ticket-created-publisher';
 console.clear();
 
 const stan = nats.connect('ticketing', 'abc', {
-  url: 'http://localhost:4222'
+  url: 'http://localhost:4222',
 });
 
 stan.on('connect', async () => {
@@ -12753,23 +12984,25 @@ stan.on('connect', async () => {
     await publisher.publish({
       id: '123',
       title: 'concert',
-      price: 20
+      price: 20,
     });
-  }
-  catch (err) {
+  } catch (err) {
     console.error(err);
   }
 });
 ```
 
 ### 329. Common Event Definitions Summary
+
 #### testing...
-  - Publishers -> making requests (axios) -> not a lot to test
-  - Listeners -> similar to request handlers -> lots to test
+
+- Publishers -> making requests (axios) -> not a lot to test
+- Listeners -> similar to request handlers -> lots to test
 
 #### architecture
+
 - the common module is where we define list of event names (Subjects)
-- the common module is where we define the different events 
+- the common module is where we define the different events
 - CONS -> the common module is written in typescript -> only works if all our services are written with Typescript
   - ie. if there are multi-languages services
 
@@ -12779,48 +13012,55 @@ width='600'
 />
 
 #### cross-language support
-- alternatives with cross language support 
+
+- alternatives with cross language support
   - JSON schema
   - protobuf
   - apache avro
 
 ### 330. Updating the Common Module
+
 - TODO: update the common library by extracting code from nats-test
 - TODO: rebuild + publish -> common/ project
 - TODO: update nats-test tickets project to use the common module inside there...
 
 #### nats-test
+
 - from nats-test/src/events/ move these files to common module under `events/`
-  - section05-15-ticketing/nats-test/src/events/base-listener.ts 
-  - section05-15-ticketing/nats-test/src/events/base-publisher.ts 
-  - section05-15-ticketing/nats-test/src/events/subjects.ts 
+  - section05-15-ticketing/nats-test/src/events/base-listener.ts
+  - section05-15-ticketing/nats-test/src/events/base-publisher.ts
+  - section05-15-ticketing/nats-test/src/events/subjects.ts
   - section05-15-ticketing/nats-test/src/events/ticket-created-event.ts
 
 #### common module ([repo](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git))
+
 - create events/
 - TODO: update subjects.ts
 
 ```ts
-export enum Subjects{
+export enum Subjects {
   TicketCreated = 'ticket:created',
   TicketUpdated = 'ticket:updated',
 }
 ```
+
 - create src/events/ticket-updated-event.ts
+
 ```ts
 //src/events/ticket-updated-event.ts
 import { Subjects } from './subjects';
 export interface TicketUdpatedEvent {
-  subject: Subjects.TicketUpdated,
+  subject: Subjects.TicketUpdated;
   data: {
     id: string;
     title: string;
     price: number;
     userId: string;
-  }
+  };
 }
 ```
-- src/index.ts -> update by exporting all event files in events/ 
+
+- src/index.ts -> update by exporting all event files in events/
 
 ```ts
 //...
@@ -12831,10 +13071,12 @@ export * from './events/subjects';
 export * from './events/ticket-created-event';
 export * from './events/ticket-updated-event';
 ```
+
 #### publishing common library
+
 - common/ library
 - install `node-nats-streaming` - `pnpm i node-nats-streaming`
-- re-publish: `pnpm run pub` 
+- re-publish: `pnpm run pub`
   - commit
   - build
   - version
@@ -12842,10 +13084,12 @@ export * from './events/ticket-updated-event';
   - publish
 
 #### tickets service
+
 - section05-15-ticketing/tickets/
 - pnpm update @clarklindev/common
 
 ### 331. Restarting NATS to clear NATS history
+
 - restarting nats pod -> will result in a all events that have been emitted to be dumped
 - ticketing/
 
@@ -12855,16 +13099,18 @@ kubectl delete pod nats-depl-958fb4786-p8d9m
 
 ---
 
-
-
 ## section 16 - managing a NATS client (1hr37min)
+
 - the common library has updated and has the events and listeners and common library's `index.ts` exports them
 - tickets service now uses this updated common library -> has access to these updates (events + listeners)
 
 ## Tickets/
+
 ### 332. Publishing Ticket Creation
-- route `tickets/src/routes/new.ts` 
+
+- route `tickets/src/routes/new.ts`
 - TODO: when someone issues a new ticket
+
   1. - ticket is created
   2. - saved to database
   3. - publish an event to notify all other services in app a ticket was just created
@@ -12879,17 +13125,19 @@ kubectl delete pod nats-depl-958fb4786-p8d9m
 //tickets/src/events/publishers/ticket-created-publisher.ts
 import { Publisher, Subjects, TicketCreatedEvent } from '@clarklindev/common';
 
-export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent>{
+export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent> {
   readonly subject = Subjects.TicketCreated;
 }
 ```
 
 ### 333. More on Publishing
+
 - publish an event to notify all other services in app a ticket was just created
 - NOTE: you should pull data off the saved ticket
 - not whats passed through req.body... because the with pre- and post-save hooks the data can be modified so its better to use the same data as what was saved to db.
 
 #### usage of TicketCreatedPublisher
+
 ```ts
 //src/routes/new.ts
 import { TicketCreatedPublisher } from '../events/publishers/ticket-created-publisher';
@@ -12897,41 +13145,40 @@ import { TicketCreatedPublisher } from '../events/publishers/ticket-created-publ
 //...
 const router = express.Router();
 
-router.post('/api/tickets', 
+router.post(
+  '/api/tickets',
   requireAuth,
   [
-    body('title')
-      .not()
-      .isEmpty()
-      .withMessage('Title is required'),
-    
+    body('title').not().isEmpty().withMessage('Title is required'),
+
     body('price')
-      .isFloat({ gt: 0})
-      .withMessage('Price must be greater than 0')
+      .isFloat({ gt: 0 })
+      .withMessage('Price must be greater than 0'),
   ],
   validateRequest,
 
-  async (req: Request, res: Response) => { 
+  async (req: Request, res: Response) => {
     const { title, price } = req.body;
     const ticket = Ticket.build({
       title,
       price,
-      userId: req.currentUser!.id
+      userId: req.currentUser!.id,
     });
-  
+
     await ticket.save();
 
     await new TicketCreatedPublisher(client).publish({
       id: ticket.id,
       title: ticket.title,
       price: ticket.price,
-      userId: ticket.userId
-    })
+      userId: ticket.userId,
+    });
   }
 );
-
 ```
+
 ### 334. NATS Client Singleton
+
 - after successfully set up a publisher (TicketCreatedPublisher(client)) needs a nats client instance to handle publishing.
 - index.ts already has startup logic
 - just like mongodb (which maintains internal connection management)
@@ -12939,7 +13186,7 @@ router.post('/api/tickets',
 - the NATS client is required to successfully publish messages
   - the Nats client works differently—it returns a connection object upon calling Nats.connect()
   - This means `the client must be manually shared across different parts of the application`, unlike Mongoose's behavior.
-  - The issue arises because the dependencies between files could create circular imports. 
+  - The issue arises because the dependencies between files could create circular imports.
   - Specifically, importing the Nats client from index into route handlers (and vice versa) risks cyclical dependencies
 - The solution is to create a new singleton-like file called nats-client
 
@@ -12949,15 +13196,16 @@ router.post('/api/tickets',
 2. Act as a singleton to provide consistent client access across different modules without the risk of circular imports.
 3. Handle connection logic and ensure graceful shutdowns if the connection is lost or the app shuts down.
 
-- create client -> `nats-client.ts` 
+- create client -> `nats-client.ts`
 - By isolating the client initialization in this new file, index will import it for startup logic, while route handlers can import this pre-initialized client as needed—avoiding cyclical imports.
 
 <img src='exercise_files/udemy-microservices-section16-334-singleton-nats-client.png'
 alt='udemy-microservices-section16-334-singleton-nats-client.png'
 width='600'
-/> 
+/>
 
 ### 335. Node Nats Streaming Installation
+
 - folder: `/section05-15-ticketing/tickets/`
 
 ```ts
@@ -12988,24 +13236,27 @@ width='600'
 //tickets/src/nats-wrapper.ts
 import nats, { Stan } from 'node-nats-streaming';
 
-class NatsWrapper{
+class NatsWrapper {
   //create a new client
   //assign to a property of class
-
 }
 
 export const natsWrapper = new NatsWrapper();
 ```
 
 ### 337. TS Error - Did you forget to include 'void' in your type argument
+
 - we will be returning a promise in our natsWrapper class.
 - for lesson 338...
 
 - ERROR
+
 ```cmd
 Expected 1 arguments, but got 0. Did you forget to include 'void' in your type argument to 'Promise'?
 ```
+
 - FIX:
+
 ```ts
 // src/nats-wrapper.ts
 return new Promise<void>((resolve, reject) => {
@@ -13017,22 +13268,23 @@ return new Promise<void>((resolve, reject) => {
 ```
 
 ### 338. Singleton Implementation
+
 - tickets/src/nats-wrapper.ts
 - TODO: create a nats client inside nats-wrapper.ts
 - creating the client will happen in `connect()` so creation can be deffered
-- making a callback a `promise` to allow us to use async/await 
+- making a callback a `promise` to allow us to use async/await
 - by wrapping our callback with a promise then calling resolve from within callback
-- note typescript warns of this._client pottentially being undefined, because we are calling this._client from within a callback function and could have unassigned the._client 
+- note typescript warns of this.\_client pottentially being undefined, because we are calling this.\_client from within a callback function and could have unassigned the.\_client
 - FIX: add !
 
 ```ts
 //tickets/src/nats-wrapper.ts
 import nats, { Stan } from 'node-nats-streaming';
 
-class NatsWrapper{
+class NatsWrapper {
   private _client?: Stan;
 
-  connect(clusterId:string, clientId:string, url:string) {
+  connect(clusterId: string, clientId: string, url: string) {
     this._client = nats.connect(clusterId, clientId, { url });
 
     return new Promise<void>((resolve, reject) => {
@@ -13044,18 +13296,17 @@ class NatsWrapper{
       this._client!.on('error', (err) => {
         reject(err);
       });
-
     });
-    
   }
-
 }
 
 export const natsWrapper = new NatsWrapper();
 ```
+
 ### using natsWrapper
+
 - note the lowercase 'n' , means this is an instance that is shared between our different files
-- connect() 
+- connect()
   - 1st argument -> value of `cluster id` connecting to (infra/k8s/nats-dep.yaml - > args -> -cid -> `ticketing`)
   - 2nd argument is client id (random string)
   - 3rd argumment -> service governing nats deployment (infra/k8s/nats-depl.yaml -> service section -> metadata -> name -> `nats-srv`)
@@ -13066,27 +13317,30 @@ export const natsWrapper = new NatsWrapper();
 import { natsWrapper } from './nats-wrapper';
 
 ///...
-try{
+try {
   await natsWrapper.connect('ticketing', 'laskjf', 'http://nats-srv:4222');
 
   //...
-  await mongoose.connect(
+  await mongoose
+    .connect
     //...
-  );
-}
-catch(err){
+    ();
+} catch (err) {
   console.error(err);
 }
 ```
 
-#### implementation of a Nats (NATS messaging system) client wrapper class 
-- implementation of a Nats client wrapper class with a focus on connecting to the NATS server using async/await syntax. 
+#### implementation of a Nats (NATS messaging system) client wrapper class
+
+- implementation of a Nats client wrapper class with a focus on connecting to the NATS server using async/await syntax.
 
 #### Class Property for Client:
-- A private property `_client` is added to represent the NATS client. 
-- It's marked optional (_client?) because it's not immediately initialized during the class's construction.
+
+- A private property `_client` is added to represent the NATS client.
+- It's marked optional (\_client?) because it's not immediately initialized during the class's construction.
 
 #### Connection Logic:
+
 - A `connect()` function is defined to establish a connection with the NATS server.
 - This method accepts `cluster ID`, `client ID`, and `URL` as arguments.
 - The `connection` is established using NatsWrapper's instance `.connect({ cluster ID, client ID, URL })`.
@@ -13094,21 +13348,25 @@ catch(err){
 - Error handling is implemented using the on('error') event, rejecting the promise on failure.
 
 #### Error Handling:
+
 - Errors are caught and rejected during the connection attempt.
 
 #### Testing the Connection:
+
 - The connect method is invoked from an index file with required connection settings (`ticketing`, `a random client ID`, and the `NATS server` URL http://nats-crv:4222).
 - After starting the application, a successful connection logs "Connected to NATS" in the console.
 
 #### Cluster ID and Connection Details:
+
 - The cluster ID (ticketing) comes from the deployment configuration in Kubernetes.
 - The client ID should be random to avoid conflicts.
 - The URL points to the service nats-crv:4222, which is defined in the deployment.
 
 ### 339. Accessing the NATS Client
+
 - TODO: using client from `natsWrapper` inside 'new' route -> `tickets/src/routes/new.ts`
 - NOTE: it is marked as private
-  - exposing _client to outside but should throw error if still undefined
+  - exposing \_client to outside but should throw error if still undefined
   - FIX: add a getter `get client()`
   - FIX: updated get client() so src/nats-wrapper.ts `connect()` can access client via `this.client` instead of `this._client!`
 
@@ -13118,7 +13376,7 @@ catch(err){
 get client() {
   if (!this._client) {
     throw new Error('Cannot access NATS client before connecting');
-  } 
+  }
   return this._client;
 }
 
@@ -13136,11 +13394,11 @@ connect(clusterId:string, clientId:string, url:string) {
     });
 
   });
-  
+
 }
 
 ```
-  
+
 - USAGE: access .client via `natsWrapper`
 
 ```ts
@@ -13148,21 +13406,19 @@ connect(clusterId:string, clientId:string, url:string) {
 import { TicketCreatedPublisher } from '../events/publishers/ticket-created-publisher';
 import { natsWrapper } from '../nats-wrapper';
 
-router.post('/api/tickets',
+router.post(
+  '/api/tickets',
   requireAuth,
   [
-    body('title')
-      .not()
-      .isEmpty()
-      .withMessage('Title is required'),
-    
+    body('title').not().isEmpty().withMessage('Title is required'),
+
     body('price')
-      .isFloat({ gt: 0})
-      .withMessage('Price must be greater than 0')
+      .isFloat({ gt: 0 })
+      .withMessage('Price must be greater than 0'),
   ],
   validateRequest,
 
-  async (req: Request, res: Response) => { 
+  async (req: Request, res: Response) => {
     //...
     await ticket.save();
 
@@ -13170,41 +13426,43 @@ router.post('/api/tickets',
       id: ticket.id,
       title: ticket.title,
       price: ticket.price,
-      userId: ticket.userId
+      userId: ticket.userId,
     });
 
     res.status(201).send(ticket);
-
   }
 );
-
-
-
 ```
 
 ### 340. Graceful Shutdown
+
 - similar to to handling shutdown in `nats-test/src/listener.ts`
 
 #### move logic into index.ts
-- less ideal implementation that embeds shutdown logic directly into a method, which could lead to bad design. 
+
+- less ideal implementation that embeds shutdown logic directly into a method, which could lead to bad design.
 - Specifically, having hidden methods arbitrarily exit the program isn't advisable, as it could create problems when shared across services.
 - attempt graceful exit by moving shutdown logic to index.ts for better control, centralizing the exit handling.
 - This prevents unexpected program exits from being triggered in unintended places.
 
 #### TESTING graceful shutdown
+
 - restart skaffold
 - simulating Nats connection loss and ensuring graceful shutdown
 
 #### deleting the pod
+
 - deleting the Nats pod : `section05-15-ticketing/`
+
 ```
 kubectl get pods
 kubectl delete pod ...
 
 ```
-#### container restarts
-- triggering a close event, and observing that the container restarts (due to the process exiting and Kubernetes’ auto-recovery). This confirms the shutdown logic works as expected.
 
+#### container restarts
+
+- triggering a close event, and observing that the container restarts (due to the process exiting and Kubernetes’ auto-recovery). This confirms the shutdown logic works as expected.
 
 ```
 kubectl get pods
@@ -13215,36 +13473,35 @@ alt='udemy-microservices-section16-340-restarts-tickets-depl-when-losing-connect
 width='600'
 />
 
-
 ```ts
 //tickets/src/index.ts
 //...
-    await natsWrapper.connect('ticketing', 'laskjf', 'http://nats-srv:4222');
+await natsWrapper.connect('ticketing', 'laskjf', 'http://nats-srv:4222');
 
-    natsWrapper.client.on('close', () => {
-      console.log('NATS connection closed!');
-      process.exit();
-    });
-    process.on('SIGINT', () => natsWrapper.client.close());
-    process.on('SIGTERM', () => natsWrapper.client.close());
+natsWrapper.client.on('close', () => {
+  console.log('NATS connection closed!');
+  process.exit();
+});
+process.on('SIGINT', () => natsWrapper.client.close());
+process.on('SIGTERM', () => natsWrapper.client.close());
 
 //...
 ```
 
 ### 341. Successful Listen!
+
 - checking if new ticket route handler (tickets/routes/new.ts) that events are being published event publisher (TicketCreatedPublisher) successfully publishes an event.
-- in `nats-test/src/listener.ts` 
+- in `nats-test/src/listener.ts`
   - we are importing `TicketCreatedListener` from './events/ticket-created-listener';
   - `TicketCreatedListener` listening to events of type `Subjects.TicketCreated`
-
 
 ```ts
 //nats-test/src/events/ticket-created-listener.ts
 
-import { Message } from "node-nats-streaming";
-import { Listener, TicketCreatedEvent, Subjects} from "@clarklindev/common";
+import { Message } from 'node-nats-streaming';
+import { Listener, TicketCreatedEvent, Subjects } from '@clarklindev/common';
 
-export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
+export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
   readonly subject = Subjects.TicketCreated;
   queueGroupName = 'payments-service';
 
@@ -13257,21 +13514,24 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
 
     msg.ack();
   }
-
 }
 ```
 
 #### TEST
 
 ## TERMINAL WINDOW 1
+
 - skaffold dev
 
 ## TERMINAL WINDOW 2
+
 ### update nats-test dependencies
+
 - update the nats-test/package.json so it uses @clarklindev/common
   - pnpm update @clarklindev/common
 
 ### create port forwarding
+
 - nats-test/ -
   - `kubectl get pods`
 
@@ -13280,51 +13540,58 @@ alt='udemy-microservices-section16-341-create-port-forward.png'
 width='600'
 />
 
-  - `kubectl port-forward [podname] [port-local]:[port-to-access]`
-    - eg. kubectl port-forward nats-depl-79cd79cc87-cjxh8 4222:4222
+- `kubectl port-forward [podname] [port-local]:[port-to-access]`
+  - eg. kubectl port-forward nats-depl-79cd79cc87-cjxh8 4222:4222
 
 <img src='exercise_files/udemy-microservices-section16-341-nats-test-listener.png'
 alt='udemy-microservices-section16-341-nats-test-listener.png'
 width='600'
 />
 
-  - see [298. Port-Forwarding with Kubectl](#298-port-forwarding-with-kubectl)
-    - this will cause cluster to behave as if it has a nodePort service running inside of it 
-    - will expose the pod (port) to outside world
-    - allows to connect from local machine
+- see [298. Port-Forwarding with Kubectl](#298-port-forwarding-with-kubectl)
+  - this will cause cluster to behave as if it has a nodePort service running inside of it
+  - will expose the pod (port) to outside world
+  - allows to connect from local machine
 
 ## TERMINAL WINDOW 3
+
 ### run nats-test -> listen
+
 - new terminal window
 - nats-test/ directory
 - `pnpm run listen`
-- OUTCOME: 
+- OUTCOME:
 
 ```cmd
 Listener connected to NATS
 ```
 
 ## POSTMAN
+
 ### postman create ticket
+
 - create a ticket from POSTMAN
 - NOTE: you need to be authenticated to create a ticket
 - GET -> https://ticketing.dev/api/users/currentuser
 
 #### sign in if not authenticated
-- POST -> https://ticketing.dev/api/users/signin 
+
+- POST -> https://ticketing.dev/api/users/signin
 - POST -> https://ticketing.dev/api/users/signup
 
   - headers -> Content-Type - application/json
   - body -> RAW -> JSON
-  {
-      "email":"test@test.com",
-      "password":"password"
-  }
+    {
+    "email":"test@test.com",
+    "password":"password"
+    }
 
 ### verify the listener receives the event
+
 - verify that the nats-test `ticket-created-listener`
 
 ### create a ticket
+
 - POST -> https://ticketing.dev/api/tickets/
 - body -> raw -> JSON ->
 
@@ -13334,6 +13601,7 @@ Listener connected to NATS
   "price": 50
 }
 ```
+
 ### sucess
 
 - post man successfully created ticket
@@ -13362,12 +13630,14 @@ width='600'
 />
 
 #### troubleshoot
+
 - was complaining about userId not in `TicketCreatedEvent` even though i published common/ repo
 - FIX: delete nats-test/node_modules and re-install dependencies: `pnpm i`
 
 ---
 
 ### 342. Ticket Update Publishing
+
 - `tickets/src/events/publishers/ticket-updated-publisher.ts`
 - publishes that a ticket was updated
 
@@ -13375,13 +13645,14 @@ width='600'
 //tickets/src/events/publishers/ticket-updated-publisher.ts
 import { Publisher, Subjects, TicketUpdatedEvent } from '@clarklindev/common';
 
-export class TicketUpdatedPublisher extends Publisher<TicketUpdatedEvent>{
+export class TicketUpdatedPublisher extends Publisher<TicketUpdatedEvent> {
   readonly subject = Subjects.TicketUpdated;
 }
 ```
 
 - tickets/src/routes/update.ts
 - UPDATES..
+
 ```ts
 //...
 import { TicketUpdatedPublisher } from '../events/publishers/ticket-updated-publisher';
@@ -13403,25 +13674,30 @@ new TicketUpdatedPublisher(natsWrapper.client).publish({
 
 );
 ```
+
 #### Postman
+
 - ensure loggedin - check with GET https://ticketing.dev/api/users/currentuser
 - Postman PUT https://ticketing.dev/api/tickets/
 - use ticket id from creating a ticket (eg. 675dad175b8e62713cb7ac9c)
 
 - POSTMAN -> PUT https://ticketing.dev/api/tickets/675dad175b8e62713cb7ac9c
+
   - update eg. price -> 10
 
 - TEST -> scaffold terminal -> should see: `[tickets] event published to subject:  ticket:updated`
 
 #### Tests
+
 - if you try run tests, wont work because tests dont have connection to NATS
- 
+
 ### 343. Failed Event Publishing
 
 #### no await
+
 - tickets/src/routes/update.ts -> update ticket event, there is no `await` keyword
   - `new TicketUpdatedPublisher(natsWrapper.client).publish({})`
-- if there is no await -> and a response is sent immediately after publishing to nats... 
+- if there is no await -> and a response is sent immediately after publishing to nats...
 - if an error occurs when publishing event to NATS... you already sent a response...
 
 <img src='exercise_files/udemy-microservices-section16-343-failed-event-publishing-no-await.png'
@@ -13430,6 +13706,7 @@ width='600'
 />
 
 #### with await
+
 - tickets/src/routes/new.ts for creating -> creating ticket event, this IS an `await` keyword
   - `await new TicketCreatedPublisher(natsWrapper.client).publish({})`
 - if anything goes wrong -> and because we have `await` -> if anything goes wrong -> throwing error will be caught by error handling middleware.
@@ -13440,6 +13717,7 @@ width='600'
 />
 
 ### Data-integrity issue
+
 - user makes a transaction to deposit money
 - the transaction gets saved to Transactions database (+ $70)
 - in normal circumstances, event is emitted and accounts database is updated..
@@ -13457,11 +13735,14 @@ width='600'
 />
 
 ### 344. Handling Publish Failures
+
 - FIX -> fixing lesson 343 design...
 
 #### using an events collection db and a saved flag
+
 - instead of saving transtion to db and then emitting an event, the event is stored in an `events collection db`
-- then with the event, we record whether the event has been published (sent) 
+- then with the event, we record whether the event has been published (sent)
+
   - initially when saved to database -> `sent` will be: `NO`
 
   <img src='exercise_files/udemy-microservices-section16-344-using-events-collection-with-sent-flag.png'
@@ -13469,7 +13750,8 @@ width='600'
   width='600'
   />
 
-- have separate code to watch events collection - that notes when an event is saved to `events collection db` 
+- have separate code to watch events collection - that notes when an event is saved to `events collection db`
+
   - it will extract this event
   - publish it off to NATS
 
@@ -13485,22 +13767,25 @@ width='600'
   width='600'
   />
 
-#### rollback when failed saving to db 
+#### rollback when failed saving to db
+
 - if inserting to any db fails, ALL inserts should be reverted (rollback)
 - most db's have this feature implemented (called a `transaction`)
 - database transaction is a 'set of changes' and if any of the changes fail, do not make any of the changes
-- TODO: wrapping events in a database transaction ensuring: 
-  - a record is saved to transactions collection
-  - AND the event is recorded in events collection 
+- TODO: wrapping events in a database transaction ensuring:
 
-- NOTE: this idea of 'transactions' is NOT part of the course - adds complexity (but it should be considered for reallife production env) 
+  - a record is saved to transactions collection
+  - AND the event is recorded in events collection
+
+- NOTE: this idea of 'transactions' is NOT part of the course - adds complexity (but it should be considered for reallife production env)
 
 ### 345. Fixing a Few Tests
 
 #### failed tests
-- The test suite for the ticketing service is failing, primarily due to issues with the NATS client not being initialized. 
-- This problem arose after adding event publishing functionality. 
-- In development, the NATS client is initialized within a NATS wrapper Singleton, allowing publishers to access it. 
+
+- The test suite for the ticketing service is failing, primarily due to issues with the NATS client not being initialized.
+- This problem arose after adding event publishing functionality.
+- In development, the NATS client is initialized within a NATS wrapper Singleton, allowing publishers to access it.
 
 <img src='exercise_files/udemy-microservices-section16-345-development-environment-natswrapper.png'
 alt='udemy-microservices-section16-345-development-environment-natswrapper.png'
@@ -13515,15 +13800,18 @@ width='600'
 />
 
 ### resolve failed tests
+
 - two approaches are considered:
 
-#### Connecting to a real NATS server during tests: 
+#### Connecting to a real NATS server during tests:
+
 - This is not ideal, as it would require a running NATS server locally or via another mechanism, complicating the test environment.
 
 #### implement the Jest mocking approach:
-- Jest can intercept import statements in the test environment and redirect them to a fake NATS wrapper. 
+
+- Jest can intercept import statements in the test environment and redirect them to a fake NATS wrapper.
 - This fake wrapper will include a "fake" initialized NATS client, tricking the application into thinking the client is real without actually connecting to a NATS server.
-- preffered method -> avoids dependency on a real NATS server while simplifying test execution. 
+- preffered method -> avoids dependency on a real NATS server while simplifying test execution.
 
 <img src='exercise_files/udemy-microservices-section16-345-jest-intercept-import-statements.png'
 alt='udemy-microservices-section16-345-jest-intercept-import-statements.png'
@@ -13539,14 +13827,13 @@ width='600'
 
 - the file we want to fake is `tickets/src/nats-wrapper.ts`
 - create `__mocks__` folder: `tickets/src/__mocks__`
-- create an identical file inside `__mocks__`:  `tickets/src/__mocks__/nats-wrapper.ts`
+- create an identical file inside `__mocks__`: `tickets/src/__mocks__/nats-wrapper.ts`
   - this file will fake the functionality of real nats-wrapper: `tickets/src/nats-wrapper.ts`
   - the real nats-wrapper.ts file exports `natsWrapper` (essentially an object) a single instance of class `NatsWrapper`
 
 ```ts
 //tickets/src/__mocks__/nats-wrapper.ts
-export const natsWrapper = {
-}
+export const natsWrapper = {};
 ```
 
 - the other tests that are referencing nats should use the `mock nats-wrapper`
@@ -13558,18 +13845,20 @@ export const natsWrapper = {
 //tickets/src/routes/new.ts
 //...
 jest.mock('../../nats-wrapper');
-
 ```
+
 - jest will see that we want to mock this file and use the implementation inside `src/__mocks__/` with the same name
 
 ### 347. Providing a Mock Implementation
+
 ## Summary
-- This process involves creating a mock implementation for the Nats wrapper to test the new ticket route handler. 
+
+- This process involves creating a mock implementation for the Nats wrapper to test the new ticket route handler.
 - The goal is to isolate dependencies and simulate their behavior.
 
 ### Understand the Real Nats Wrapper:
 
-- The real wrapper contains a client property, connect function, and private _client property.
+- The real wrapper contains a client property, connect function, and private \_client property.
 - The new ticket route handler only uses the client property, so the mock only needs to simulate this.
 
 ### Creating the Mock Implementation:
@@ -13604,6 +13893,7 @@ width='600'
 />
 
 #### New Ticket Route handler
+
 - does not care about `_client` (as it is private)
 - does not care about `connect()` as it is invoked in index.ts when starting project creating NATS client (not in test environment)
 - only cares about `client:Stan` -> so this is what we need to define in our fake implementation
@@ -13619,26 +13909,26 @@ width='600'
 //tickets/src/routes/new.ts
 import { natsWrapper } from '../nats-wrapper';
 
-router.post('/api/tickets', ()=>{
+router.post('/api/tickets', () => {
   //...
   await new TicketCreatedPublisher(natsWrapper.client).publish({
     id: ticket.id,
     title: ticket.title,
     price: ticket.price,
-    userId: ticket.userId
+    userId: ticket.userId,
   });
 });
-
 ```
 
 #### client is used in TicketCreatedPublisher which extends Publisher
+
 - `tickets/src/events/publisher/ticket-created-publisher.ts`
 - looking at TicketCreatedPublisher -> it doesnt deal with client directly, need to look at `Publisher`
 
 ```ts
 //tickets/src/events/publisher/ticket-created-publisher.ts
 import { Publisher, Subjects, TicketCreatedEvent } from '@clarklindev/common';
-export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent>{
+export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent> {
   readonly subject = Subjects.TicketCreated;
 }
 ```
@@ -13661,17 +13951,16 @@ width='600'
 import { Stan } from 'node-nats-streaming';
 import { Subjects } from './subjects';
 
-interface Event{
+interface Event {
   subject: Subjects;
   data: any;
 }
 
 export abstract class Publisher<T extends Event> {
   abstract subject: T['subject'];
-  constructor(private client: Stan) { }
+  constructor(private client: Stan) {}
 
   publish(data: T['data']): Promise<void> {
-
     return new Promise((resolve, reject) => {
       this.client.publish(this.subject, JSON.stringify(data), (err) => {
         if (err) {
@@ -13680,12 +13969,11 @@ export abstract class Publisher<T extends Event> {
         console.log('event published to subject: ', this.subject);
         resolve();
       });
-
     });
-    
   }
 }
 ```
+
 - so we need to make sure that the mock nats-wrapper `tickets/src/__mocks__/nats-wrapper.ts`
   - has a `client`, that is an object
   - client has a `publish()` function that takes: `subject`, `data`, `callback`
@@ -13696,13 +13984,15 @@ export const natsWrapper = {
   client: {
     publish: (subject: string, data: string, callback: () => void) => {
       callback();
-    }
-  }
+    },
+  },
 };
 ```
 
 ### 348. Test-Suite Wide Mocks
+
 - TODO: from `/tickets/src/routes/__test__/new.test.ts`:
+
   - remove `jest.mock('../../nats-wrapper');`
 
 - TODO: `tickets/src/test/setup.ts` -> add jest.mock() before `beforeAll()`
@@ -13712,37 +14002,38 @@ export const natsWrapper = {
 //...
 jest.mock('../nats-wrapper');
 
-let mongo:any;
+let mongo: any;
 
-beforeAll(async ()=>{
+beforeAll(async () => {
   //...
 });
 
 //...
-
 ```
 
 #### Running tests
+
 - ensure docker is running
 - skaffold is running
 - forwarding the port `kubectl port-forward nats-depl-56bb68cdfd-82mxd 4222:4222`
 - nats-test is listening: nats-test/ `pnpm run listen`
 - RUN TEST -> tickets/ `pnpm run test`
 
-
 ### 349. Ensuring Mock Invocations
+
 - ensuring routes are both publishing events:
-  - `tickets/src/routes/new.ts` 
-  - `tickets/src/routes/update.ts` 
+  - `tickets/src/routes/new.ts`
+  - `tickets/src/routes/update.ts`
 
 #### wrapping fake implementation with mock function
+
 - update: syntax
 
 ```ts
 //tickets/src/__mocks__/nats-wrapper.ts
 jest.fn().mockImplementation(
-  ()=>{} //FAKE IMPLEMENTATION
-)
+  () => {} //FAKE IMPLEMENTATION
+);
 ```
 
 - TODO: `tickets/src/__mocks__/nats-wrapper.ts`
@@ -13757,25 +14048,28 @@ jest.fn().mockImplementation(
 //tickets/src/__mocks__/nats-wrapper.ts
 export const natsWrapper = {
   client: {
-    publish: 
-    
-    //FAKE IMPLEMENTATION
-    // (subject: string, data: string, callback: () => void) => {
-    //   callback();
-    // }
+    publish:
+      //FAKE IMPLEMENTATION
+      // (subject: string, data: string, callback: () => void) => {
+      //   callback();
+      // }
 
-    //MOCK FUNCTION
-    jest.fn().mockImplementation(
-      (subject: string, data: string, callback: () => void) => {
-        callback();
-      }
-    )
-  }
+      //MOCK FUNCTION
+      jest
+        .fn()
+        .mockImplementation(
+          (subject: string, data: string, callback: () => void) => {
+            callback();
+          }
+        ),
+  },
 };
 ```
+
 - now, we can then make assertions to ensure the publish function is being invoked
 
 #### using mock implementation
+
 - `tickets/src/routes/__test__/new.test.ts`
 - create a new test making assertions around the mockImplementation
 - the test creates a new ticket
@@ -13784,14 +14078,13 @@ export const natsWrapper = {
 - NOTE: if you log natsWrapper in `new.test.ts`, it will log the fake implementation which means jest swops out the original for the fake.
 - check that publish() was called after creating a ticket: `expect(natsWrapper.client.publish).toHaveBeenCalled();`
 
-
 ```ts
 //tickets/src/routes/__test__/new.test.ts
-import {natsWrapper} from '../../nats-wrapper';
+import { natsWrapper } from '../../nats-wrapper';
 
 it('publishes an event', async () => {
   //create a new ticket
-  const title = "adsfjsdfdslf";
+  const title = 'adsfjsdfdslf';
   const price = 20;
 
   //create ticket
@@ -13800,7 +14093,7 @@ it('publishes an event', async () => {
     .set('Cookie', global.signin())
     .send({
       title,
-      price
+      price,
     })
     .expect(201);
 
@@ -13810,17 +14103,17 @@ it('publishes an event', async () => {
   //check that publish() function gets invoked after creating a ticket
   expect(natsWrapper.client.publish).toHaveBeenCalled();
 });
-
 ```
 
 #### resetting mock function data
+
 - NOTE: the mock implementation in mock natsWrapper gets re-used for all the tests
   - before each test is run, the mockFunction should reset
 - ie. the mock function internally tracks how many times it gets called, arguments it is provided etc. and we should reset this for each test
-- ticketing/src/test/setup.ts 
+- ticketing/src/test/setup.ts
 
 ```ts
-//ticketing/src/test/setup.ts 
+//ticketing/src/test/setup.ts
 beforeEach(async () => {
   jest.clearAllMocks();
 
@@ -13829,26 +14122,27 @@ beforeEach(async () => {
 ```
 
 ### ensure publish gets called in update.test.ts
+
 - `tickets/src/routes/__test__/update.test.ts`
 - ensure that a ticket is updated
 - then ensure that the publish() is called
 
 ```ts
 //tickets/src/routes/__test__/update.test.ts
-import {natsWrapper} from '../../nats-wrapper';
+import { natsWrapper } from '../../nats-wrapper';
 
 //...
-it('publishes an event', async ()=>{
+it('publishes an event', async () => {
   const cookie = global.signin();
 
   //create a ticket
   const response = await request(app)
-  .post(`/api/tickets`)
-  .set('Cookie', cookie)
-  .send({
-    title: 'sfddsfsd',
-    price: 20
-  });
+    .post(`/api/tickets`)
+    .set('Cookie', cookie)
+    .send({
+      title: 'sfddsfsd',
+      price: 20,
+    });
 
   //update ticket
   await request(app)
@@ -13856,16 +14150,16 @@ it('publishes an event', async ()=>{
     .set('Cookie', cookie)
     .send({
       title: 'new title',
-      price: 100
+      price: 100,
     })
     .expect(200);
 
   expect(natsWrapper.client.publish).toHaveBeenCalled();
 });
-
 ```
 
 ### 350. NATS Env Variables
+
 - tickets/src/index.ts
 - NOTE: the connection props are hardcoded... this should go in environment variables
 - move this into: `infra/k8s/tickets-depl.yaml`
@@ -13881,8 +14175,7 @@ const start = async () => {
 
   try {
     await natsWrapper.connect('ticketing', 'laskjf', 'http://nats-srv:4222');
-  }
-  catch (err) {
+  } catch (err) {
     console.error(err);
   }
 };
@@ -13898,10 +14191,10 @@ const start = async () => {
 ```yaml
 # infra/k8s/tickets-depl.yaml
 #...
-  - name: NATS_CLIENT_ID
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.name
+- name: NATS_CLIENT_ID
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.name
 #...
 ```
 
@@ -13909,46 +14202,49 @@ const start = async () => {
 
 ```yaml
 # infra/k8s/tickets-depl.yaml
-          env: 
-            - name: MONGO_URI
-              value: 'mongodb://tickets-mongo-srv:27017/tickets'
-            - name: JWT_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: jwt-secret
-                  key: JWT_KEY
-            - name: NATS_URL
-              value: 'http://nats-srv:4222'
-            - name: NATS_CLUSTER_ID
-              value: ticketing
-            - name: NATS_CLIENT_ID
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
+env:
+  - name: MONGO_URI
+    value: 'mongodb://tickets-mongo-srv:27017/tickets'
+  - name: JWT_KEY
+    valueFrom:
+      secretKeyRef:
+        name: jwt-secret
+        key: JWT_KEY
+  - name: NATS_URL
+    value: 'http://nats-srv:4222'
+  - name: NATS_CLUSTER_ID
+    value: ticketing
+  - name: NATS_CLIENT_ID
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
 ```
 
 #### ensure the environment variables exist
-- in `tickets/src/index.ts` 
+
+- in `tickets/src/index.ts`
 
 ```ts
 //tickets/src/index.ts
 //...
 
-  if (!process.env.NATS_URL) {
-    throw new Error('NATS_URL must be defined');
-  }  
-  if (!process.env.NATS_CLUSTER_ID) {
-    throw new Error('NATS_CLUSTER_ID must be defined');
-  }  
-  if (!process.env.NATS_CLIENT_ID) {
-    throw new Error('NATS_CLIENT_ID must be defined');
-  }  
+if (!process.env.NATS_URL) {
+  throw new Error('NATS_URL must be defined');
+}
+if (!process.env.NATS_CLUSTER_ID) {
+  throw new Error('NATS_CLUSTER_ID must be defined');
+}
+if (!process.env.NATS_CLIENT_ID) {
+  throw new Error('NATS_CLIENT_ID must be defined');
+}
 
 //...
 ```
+
 ---
 
 ## section 17 - cross-service data replication in action (2hr44min)
+
 ### 351. The Orders Service
 
 <img src='exercise_files/udemy-microservices-section17-351-0-cross-service-data-replication-orders-service-overview.png'
@@ -13957,6 +14253,7 @@ width='600'
 />
 
 ## Overview - Orders Service
+
 - creating an order / updating an order
 
 - listing of tickets
@@ -13990,15 +14287,17 @@ width='600'
 />
 
 ### Orders service - Order collection
+
 - userId - user who created order trying to buy this ticket
 - status - expired, paid, pending
 - expiresAt -> timestamp -> time of expiry
 - ticketId -> references ticket collection (Orders service - Ticket collection)
 
 ### Orders service - ticket collection
+
 - orders service will store `collection of tickets` but it will store cut-down ticket data
   - title
-  - price 
+  - price
   - version -> describes the version of the ticket (version updated when ticket updated)
     - used by orders service to ensure correct order of processing events
 
@@ -14007,11 +14306,12 @@ alt='udemy-microservices-section17-351-ticket-version-is-important-as-orders-ser
 width='600'
 />
 
-- because orders service is trying to replicate ticket data it needs to listen for 
+- because orders service is trying to replicate ticket data it needs to listen for
   - ticket:created event
   - ticket:updated event
 
 ### 352. Scaffolding the Orders Service
+
 - installing dependencies
 - routing rules
 - kubernetes deployment file
@@ -14022,6 +14322,7 @@ width='600'
 />
 
 ### TODO's
+
 step 1 - duplicate `tickets` service
 step 2 - install dependencies
 step 3 - build an image out of the orders service (docker)
@@ -14030,6 +14331,7 @@ step 5 - set up file sync options in the skaffold.yaml file
 step 6 - set up routing rules in the ingress service
 
 ### STEP 1 duplicate 'tickets' service
+
 - create `orders/`
   - copy from `tickets/`:
     - .dockerignore
@@ -14046,14 +14348,17 @@ step 6 - set up routing rules in the ingress service
     - nats-wrapper.ts
 
 ### STEP 2 - install dependencies
+
 ```
 pnpm i
 ```
 
 ### step 3 - build an image out of the orders service (docker)
+
 - NOTE: Docker desktop /docker/kubernetes is running...
 - create the docker image
 - `orders/` folder (replace docker-id (with your own docker id)):
+
 ```
 docker build -t clarklindev/orders .
 ```
@@ -14061,37 +14366,40 @@ docker build -t clarklindev/orders .
 ### 353. A Touch More Setup
 
 ### step 4 - create kubernetes deployment
+
 - from infra/ `create orders-depl.yaml`
 - copy contents of `tickets-depl.yaml` and replace term `tickets` with `orders`
 - create `orders-mongo-depl.yaml`copy from `tickets-mongo-depl.yaml`
 
-#### test deployment 
+#### test deployment
+
 - folder: section05-17-ticketing/ run: `skaffold dev`
 
 ### step 5 - set up file sync options in the skaffold.yaml file
+
 - `skaffold.yaml/`
 - copy the ticket service entry for file sync options
 - replace term `tickets` with `orders`
-- NOTE: the image path, if you're hosting in cloud should look like this: 
+- NOTE: the image path, if you're hosting in cloud should look like this:
   - `image: asia.gcr.io/golden-index-441407-u9/orders`
 - otherwise it should just be your dockerhub account: eg. `clarklindev/orders`
 
 ```yaml
 # skaffold.yaml/
 #...
-    - image: asia.gcr.io/golden-index-441407-u9/orders
-      context: orders
-      docker:
-        dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: 'src/**/*.ts'
-            dest: .
+- image: asia.gcr.io/golden-index-441407-u9/orders
+  context: orders
+  docker:
+    dockerfile: Dockerfile
+  sync:
+    manual:
+      - src: 'src/**/*.ts'
+        dest: .
 #...
-
 ```
 
 ### 354. Ingress Routing Rules
+
 - set up routing rules -> `infra/k8s/ingress-srv.yaml`
 - copy the tickets path and paste above the catch all entry (client-srv)
 - serving traffic to orders service..
@@ -14100,21 +14408,23 @@ docker build -t clarklindev/orders .
 # infra/k8s/ingress.srv.yaml
 
 #...
-  - path: /api/orders/?(.*)
-    pathType: ImplementationSpecific
-    backend:
-      service:
-        name: orders-srv
-        port: 
-          number: 3000
+- path: /api/orders/?(.*)
+  pathType: ImplementationSpecific
+  backend:
+    service:
+      name: orders-srv
+      port:
+        number: 3000
 #...
 ```
-#### test deployment 
+
+#### test deployment
+
 - folder: section05-17-ticketing/ run: `skaffold dev`
 
 ### 355. Scaffolding a Few Route Handlers
 
-- orders api: 
+- orders api:
 
 <img src='exercise_files/udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
 alt='udemy-microservices-section17-354-ingress-routing-rules-orders-api.png'
@@ -14122,27 +14432,31 @@ width='600'
 />
 
 #### API Routes:
+
 - GET `/api/orders` (AUTH)
 - GET `/api/orders/:id` (AUTH) - only owner can retrieve
 - POST `/api/orders` - body: {ticketId:string}
 - DELETE `/api/orders/:id`
 
 - create folder: `orders/src/routes`
+
   - index.ts
+
     ```ts
     // orders/src/routes/index.ts
     import express, { Request, Response } from 'express';
 
     const router = express.Router();
 
-    router.get('/api/orders', async (req:Request, res:Response) => {
+    router.get('/api/orders', async (req: Request, res: Response) => {
       res.send({});
     });
 
     export { router as indexOrderRouter };
-      
     ```
+
   - new.ts
+
     ```ts
     // orders/src/routes/delete.ts
 
@@ -14150,14 +14464,15 @@ width='600'
 
     const router = express.Router();
 
-    router.post('/api/orders', async (req:Request, res:Response) => {
+    router.post('/api/orders', async (req: Request, res: Response) => {
       res.send({});
     });
 
     export { router as newOrderRouter };
     ```
-  
+
   - show.ts
+
     ```ts
     // orders/src/routes/delete.ts
 
@@ -14165,15 +14480,15 @@ width='600'
 
     const router = express.Router();
 
-    router.get('/api/orders/:orderId', async (req:Request, res:Response) => {
+    router.get('/api/orders/:orderId', async (req: Request, res: Response) => {
       res.send({});
     });
 
     export { router as showOrderRouter };
-      
     ```
 
   - delete.ts
+
     ```ts
     // orders/src/routes/delete.ts
 
@@ -14181,15 +14496,18 @@ width='600'
 
     const router = express.Router();
 
-    router.delete('/api/orders/:orderId', async (req:Request, res:Response) => {
-      res.send({});
-    });
+    router.delete(
+      '/api/orders/:orderId',
+      async (req: Request, res: Response) => {
+        res.send({});
+      }
+    );
 
     export { router as deleteOrderRouter };
-      
     ```
 
 - update imports in `orders/src/app.ts`
+
 ```ts
 //orders/src/app.ts
 import { newOrderRouter } from './routes/new';
@@ -14205,7 +14523,8 @@ app.use(showOrderRouter);
 app.use(indexOrderRouter);
 ```
 
-#### test deployment 
+#### test deployment
+
 - folder: section05-17-ticketing/ run: `skaffold dev`
 - expected progress running skaffold:
 
@@ -14215,13 +14534,16 @@ width='600'
 />
 
 ### 356. Subtle Service Coupling
+
 - TODO: work on the route handlers
 
 ## CREATE TICKET
+
 - CREATE -> `/api/orders`
-    - include ticketId in body of request (ticket to purchase)
-    - required: Authenticated
-    - `orders/src/routes/new.ts`
+
+  - include ticketId in body of request (ticket to purchase)
+  - required: Authenticated
+  - `orders/src/routes/new.ts`
 
 - validation checks, if we are checking that id is a mongo id, then we assume the ticket service is using mongodb database (which it might not...)
 - but we implement the check anyway (the id should be an mongodb id)
@@ -14231,25 +14553,26 @@ width='600'
 //orders/src/routes/new.ts
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import {body} from 'express-validator';
+import { body } from 'express-validator';
 import { requireAuth, validateRequest } from '@clarklindev/common';
 
 const router = express.Router();
-router.post('/api/orders',
+router.post(
+  '/api/orders',
   requireAuth,
   [
     body('ticketId')
       .not()
       .isEmpty()
       .custom((input: string) => mongoose.Types.ObjectId.isValid(input))
-      .withMessage('Ticket id must be provided')
+      .withMessage('Ticket id must be provided'),
   ],
   validateRequest,
   async (req: Request, res: Response) => {
-  res.send({});
-});
+    res.send({});
+  }
+);
 export { router as newOrderRouter };
-  
 ```
 
 ### 357. Associating Orders and Tickets
@@ -14262,10 +14585,12 @@ export { router as newOrderRouter };
 - TODO: create a mongoose model
 
 ### making relations with mongodb/mongoose
-- relating an order to a ticket: 
-- we choose strategy 2: population feature 
 
-#### strategy 1: embedding 
+- relating an order to a ticket:
+- we choose strategy 2: population feature
+
+#### strategy 1: embedding
+
 - embedding information about 'ticket' in 'order'
 
 <img src='exercise_files/udemy-microservices-section17-357-associating-orders-and-tickets-strategy-1-embedding.png'
@@ -14273,7 +14598,8 @@ alt='udemy-microservices-section17-357-associating-orders-and-tickets-strategy-1
 width='600'
 />
 
-#### CONS: 
+#### CONS:
+
 - when a user creates an order (with ticket embedded) it is difficult to query
 
 <img src='exercise_files/udemy-microservices-section17-357-associating-orders-and-tickets-strategy-1-con-1.png'
@@ -14282,14 +14608,15 @@ width='600'
 />
 
 - have to look at all orders -> look at ticket (embedded in the order) -> check its id -> ensure it is not the same id as incoming request
-  - if other orders have same id, it means `it is in use` 
+  - if other orders have same id, it means `it is in use`
   - NOTE: i think it means there are also other order requests for the ticket that need to be processed in order
-- tricky to make sure ticket is not already reserved    
+- tricky to make sure ticket is not already reserved
 - ticket service creates events like 'ticket created' and 'ticket updated'
 - but every ticket is not assigned an order and needs a database to store the tickets (cant just be a stand-by pool of tickets waiting for purchase orders)
 
-#### strategy 2: ref/population feature 
-- `collection of documents` for Order 
+#### strategy 2: ref/population feature
+
+- `collection of documents` for Order
 - `collection for tickets`
 - collections related to each other using population feature
 - with every order, can have an option to reference a ticket (ticket collection)
@@ -14302,12 +14629,16 @@ width='600'
 ### 358. Order Model Setup
 
 #### Reminder of auth/...
+
 - reminder in auth/src/models/users.ts
 - we have a similar case where we create 3 interfaces in the `users` model
+
   - UserAttrs
+
     - an interface that describes the properties required to create a new User
 
   - UserModel
+
     - an interface that describes the properties that a user model has (overall models collection properties)
     - there is a build() method -> allows typescript to do typechecking of arguments used to create a new document
 
@@ -14316,65 +14647,70 @@ width='600'
 
 - TODO: create `orders/src/models/order.ts`
 - NOTE: the difference between `interface OrderAttrs` and `interface OrderDoc` is that OrderDoc is the properties AFTER saving to db which may end up being different to initial attributes in OrderAttrs.
-- NOTE: interfaces are typescript and types use lower case eg. `string` 
+- NOTE: interfaces are typescript and types use lower case eg. `string`
 - however the schema is javascript that's why the `String` is capitals
 
 ```ts
 //orders/src/models/order.ts
 import mongoose from 'mongoose';
 
-interface OrderAttrs{
+interface OrderAttrs {
   userId: string;
   status: string;
   expiresAt: Date;
   ticket: TicketDoc;
 }
 
-interface OrderDoc extends mongoose.Document{
+interface OrderDoc extends mongoose.Document {
   userId: string;
   status: string;
   expiresAt: Date;
   ticket: TicketDoc;
 }
 
-interface OrderModel extends mongoose.Model<OrderDoc>{
-  build(attrs:OrderAttrs):OrderDoc;
+interface OrderModel extends mongoose.Model<OrderDoc> {
+  build(attrs: OrderAttrs): OrderDoc;
 }
 
-const orderSchema = new mongoose.Schema({
-  useId: {
-    type:String,
-    required: true,
+const orderSchema = new mongoose.Schema(
+  {
+    useId: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      required: true,
+    },
+    expiresAt: {
+      type: mongoose.Schema.Types.Date,
+    },
+    ticket: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Ticket',
+    },
   },
-  status:{
-    type:String,
-    required: true
-  },
-  expiresAt:{
-    type:mongoose.Schema.Types.Date
-  },
-  ticket:{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Ticket'
+  {
+    toJSON: {
+      transform(doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+      },
+    },
   }
-}, {
-  toJSON:{
-    transform(doc, ret){
-      ret.id = ret._id;
-      delete ret._id;
-    }
-  }
-});
+);
 
-orderSchema.statics.build = (attrs:OrderAttrs) =>{
+orderSchema.statics.build = (attrs: OrderAttrs) => {
   return new orderSchema(attrs);
-}
+};
 
-const Order = mongoose.model<OrderDoc, OrderModel>('Order', orderSchema); 
+const Order = mongoose.model<OrderDoc, OrderModel>('Order', orderSchema);
 
-export {Order};
+export { Order };
 ```
+
 ### 359. The Need for an Enum
+
 - status should be an enum:
 - Orders service, Expiration service, Payments service need a shared and exact definition of different statuses an order can have (enum)
   - and no typos
@@ -14392,7 +14728,7 @@ width=600
 //orders/src/models/order.ts
 import mongoose from 'mongoose';
 
-interface OrderAttrs{
+interface OrderAttrs {
   userId: string;
   status: OrderStatus;
   expiresAt: Date;
@@ -14400,9 +14736,10 @@ interface OrderAttrs{
 }
 
 //...
-
 ```
+
 ### 360. Creating an Order Status Enum
+
 - in the `common` [repository](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
 - `common/src/events/types/order-status.ts`
 
@@ -14411,22 +14748,23 @@ interface OrderAttrs{
 
 export enum OrderStatus {
   // when the order has been created, but the ticket it is trying to order has not been reserved, note: race conditions..
-  Created = 'created',  
+  Created = 'created',
 
-  // the ticket the order is trying to reserve has already been reserved, 
+  // the ticket the order is trying to reserve has already been reserved,
   // or when the user has cancelled the order
   // or the order expires before payment
-  Cancelled = 'cancelled', 
+  Cancelled = 'cancelled',
 
   //the order has successfully reserved the ticket
-  AwaitingPayment = 'awaiting:payment', 
+  AwaitingPayment = 'awaiting:payment',
 
   //the order has reserved the ticket and the user has provided payment successfully
-  Complete = 'complete' 
+  Complete = 'complete',
 }
 ```
 
-- update the common module 
+- update the common module
+
   - TROUBLESHOOT
     - note: when you try update the common module and you run `pnpm run pub`, you have to be logged in [npm.js](https://www.npmjs.com/)
     - otherwise it wont push up the update to npm, but your repo will be updated on github then you have to call commands individually
@@ -14435,7 +14773,8 @@ export enum OrderStatus {
 - ticketing/orders/ -> update common module: `pnpm update @clarklindev/common`
 
 #### usage of enum
-- note: 
+
+- note:
   - OrderAttrs interface and OrderDoc interface we update the type for status: `OrderStatus`
   - the schema we add enum for `status` property to restrict the allowed values: `Object.values(OrderStatus)`
   - we set `default: OrderStatus.Created` to have a default value
@@ -14445,14 +14784,14 @@ export enum OrderStatus {
 //...
 import { OrderStatus } from '@clarklindev/common';
 
-interface OrderAttrs{
+interface OrderAttrs {
   userId: string;
   status: OrderStatus;
   expiresAt: Date;
   ticket: TicketDoc;
 }
 
-interface OrderDoc extends mongoose.Document{
+interface OrderDoc extends mongoose.Document {
   userId: string;
   status: OrderStatus;
   expiresAt: Date;
@@ -14461,6 +14800,7 @@ interface OrderDoc extends mongoose.Document{
 ```
 
 ### 361. More on Mongoose Refs
+
 - `TicketDoc` type in the interfaces
 - TODO: replicate all tickets in ticket service into order service as well
 - TODO: on Order document -> give a reference to a ticket (user is trying to purchase)
@@ -14468,13 +14808,15 @@ interface OrderDoc extends mongoose.Document{
 - will access ticket via `populate` system in mongoose
 
 #### there is 3 thing need to do:
+
 - pseudo code below...
 
 1. associate existing Order and ticket together
-  - get ticket from db
-  - get order
-  - attach ticket to order
-  - save
+
+- get ticket from db
+- get order
+- attach ticket to order
+- save
 
 ```ts
 const ticket = await Ticket.findOne({});
@@ -14482,12 +14824,12 @@ const order = await Order.findOne({});
 
 order.ticket = ticket;
 await order.save();
-
 ```
 
 2. associate an existing ticket with a 'new' order
-  - get ticket out of db
-  - create an Order via build -> asign `ticket` we just pulled from db
+
+- get ticket out of db
+- create an Order via build -> asign `ticket` we just pulled from db
 
 ```ts
 const ticket = await Ticket.findOne({});
@@ -14495,16 +14837,17 @@ const order = Order.build({
   ticket: ticket,
   userId: '...',
   status: OrderStatus.Created,
-  expiresAt: tomorrow
-})
+  expiresAt: tomorrow,
+});
 
 //save to db
 await order.save();
 ```
 
 3. fetch an existing order from the database and ticket associated with it.
-  - .populate() puts the thing to populate as part of the caller object (the Order)
-  - access the ticket via the order eg. order.ticket.title
+
+- .populate() puts the thing to populate as part of the caller object (the Order)
+- access the ticket via the order eg. order.ticket.title
 
 ```ts
 const ticket = await Ticket.findOne({});
@@ -14514,10 +14857,11 @@ const order = await Order.findById('...').populate('ticket');
 ```
 
 ### 362. Defining the Ticket Model
+
 - `orders/src/models/ticket.ts`
-- TODO: create a model for Ticket 
-- NOTE: 
-  - NB -> there seems to be code for `model/` in `tickets/src/models/tickets.ts` that looks re-usable for `orders/src/models/tickets.ts` 
+- TODO: create a model for Ticket
+- NOTE:
+  - NB -> there seems to be code for `model/` in `tickets/src/models/tickets.ts` that looks re-usable for `orders/src/models/tickets.ts`
   - BUT it cant be re-used for `orders/` or shared between `orders` and `tickets service` because implementation is service specific
 - the only thing `orders/` service needs to know about a ticket is `title`, `price`, `version`, `ticket id` (not on diagram)
 
@@ -14534,50 +14878,51 @@ width=600
 //orders/src/models/ticket.ts
 import mongoose from 'mongoose';
 
-interface TicketAttrs{
-  title: string
-  price: number;
-}
-
-export interface TicketDoc extends mongoose.Document{
+interface TicketAttrs {
   title: string;
   price: number;
 }
 
-interface TicketModel extends mongoose.Model<TicketDoc>{
+export interface TicketDoc extends mongoose.Document {
+  title: string;
+  price: number;
+}
+
+interface TicketModel extends mongoose.Model<TicketDoc> {
   build(attrs: TicketAttrs): TicketDoc;
 }
 
-const ticketSchema = new mongoose.Schema({
-  title:{
-    type:String,
-    required: true
+const ticketSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
   },
-  price:{
-    type:Number,
-    required:true,
-    min: 0
-  }
-}, 
 
-{
-  toJSON:{
-    transform(doc, ret){
-      ret.id = ret._id;
-      delete ret._id;
-    }
+  {
+    toJSON: {
+      transform(doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+      },
+    },
   }
-}
 );
 
-ticketSchema.statics.build = (attrs:TicketAttrs) => {
+ticketSchema.statics.build = (attrs: TicketAttrs) => {
   return new Ticket(attrs);
-}
+};
 
 //the collection is called `Ticket`
 const Ticket = mongoose.model<TicketDoc, TicketModel>('Ticket', ticketSchema);
 
-export {Ticket}
+export { Ticket };
 ```
 
 - `TicketDoc` needs to be `exported` as order.ts (will import TicketDoc) uses TicketDoc
@@ -14586,19 +14931,21 @@ export {Ticket}
 //orders/src/models/order.ts
 import { TicketDoc } from './ticket';
 //...
-
 ```
 
 ### 363. Order Creation Logic
+
 - TODO: working on route implementation to `create` `new orders` for tickets (already inside db)
   - import `src/models/tickets.ts`
   - import `src/models/order.ts`
 - `orders/src/routes/new.ts`
+
   - find the ticket the user is trying to order in the database
 
   - make sure ticket is not already reserved (expiresAt - caters for high-traffic)
 
   - calculate an expiration date for this order
+
     - ensure orders expire after 15min set Order `expiresAt`
 
   - build the order and save it to the database
@@ -14606,35 +14953,40 @@ import { TicketDoc } from './ticket';
   - publish an event saying that an order was created
     - common module -> create an event to handle order created
     - orders/ project needs a publisher for order created
-  
+
 ```ts
 //orders/src/routes/new.ts
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import {body} from 'express-validator';
+import { body } from 'express-validator';
 
-import { NotFoundError, requireAuth, validateRequest } from '@clarklindev/common';
+import {
+  NotFoundError,
+  requireAuth,
+  validateRequest,
+} from '@clarklindev/common';
 import { Ticket } from '../models/ticket';
 import { Order } from '../models/order';
 
 const router = express.Router();
 
-router.post('/api/orders',
+router.post(
+  '/api/orders',
   requireAuth,
   [
     body('ticketId')
       .not()
       .isEmpty()
       .custom((input: string) => mongoose.Types.ObjectId.isValid(input))
-      .withMessage('Ticket id must be provided')
+      .withMessage('Ticket id must be provided'),
   ],
   validateRequest,
 
   async (req: Request, res: Response) => {
-    const {ticketId} = req.body;
+    const { ticketId } = req.body;
     //find the ticket the user is trying to order in the database
     const ticket = await Ticket.findById(ticketId);
-    if(!ticket){
+    if (!ticket) {
       throw new NotFoundError();
     }
 
@@ -14653,19 +15005,19 @@ router.post('/api/orders',
 );
 
 export { router as newOrderRouter };
-  
 ```
 
-### 364. Finding Reserved Tickets  
+### 364. Finding Reserved Tickets
+
 - see code at lesson 363.
 
 #### A reserved ticket
 
 - for a ticket to be reserved, it has been associated with an order
 - AND order document MUST have a status of "not-cancelled"
-  - run query to look at all orders. 
-  - find an order where the ticket is the ticket we just found *and* the orders status is *not* cancelled.
-  - if we find an order - that mean the ticket *is* reserved
+  - run query to look at all orders.
+  - find an order where the ticket is the ticket we just found _and_ the orders status is _not_ cancelled.
+  - if we find an order - that mean the ticket _is_ reserved
 
 <img src='exercise_files/udemy-microservices-section17-357-associating-orders-and-tickets-strategy-2-mongoose-population-feature.png'
 alt='udemy-microservices-section17-357-associating-orders-and-tickets-strategy-2-mongoose-population-feature.png'
@@ -14673,10 +15025,10 @@ width='600'
 />
 
 - look through orders, which has a ticket equal to the one we just found...
-- AND if it has a status that is one of the things IN the array: 
+- AND if it has a status that is one of the things IN the array:
   - `status: { $in: [OrderStatus.Created, OrderStatus.AwaitingPayment, OrderStatus.Complete ]}`
 - then it means it is already reserved and user making request should not be allowed to continue attempting to reserve the ticket
-- the logic is a lot for a route handler AND there may be other scenarios where we want to find out `if a ticket has been reserved` 
+- the logic is a lot for a route handler AND there may be other scenarios where we want to find out `if a ticket has been reserved`
   - TODO: refactor to own file.. `orders/src/models/ticket.ts`
 
 ```ts
@@ -14684,12 +15036,12 @@ width='600'
 //...
 
 async (req: Request, res: Response) => {
-  const {ticketId} = req.body;
+  const { ticketId } = req.body;
 
   //find the ticket the user is trying to order in the database
   const ticket = await Ticket.findById(ticketId);
 
-  if(!ticket){
+  if (!ticket) {
     throw new NotFoundError();
   }
 
@@ -14699,76 +15051,83 @@ async (req: Request, res: Response) => {
       $in: [
         OrderStatus.Created,
         OrderStatus.AwaitingPayment,
-        OrderStatus.Complete
-      ]
-    }
+        OrderStatus.Complete,
+      ],
+    },
   });
 
-  if(existingOrder) {
+  if (existingOrder) {
     throw new BadRequestError('Ticket is already reserved');
   }
-
-}
+};
 ```
 
 ---
+
 ### about exclaimation mark
+
 - summary -> just know that `!!` makes anything a boolean
 
 - `!!existingOrder` coerces existingOrder `to a boolean value`, ensuring the result is either true or false, depending on whether existingOrder is truthy or falsy.
 
 - The `first` ! is the one `immediately next to existingOrder`, which is the first negation applied to the value of existingOrder.
 - The `second` ! is the one that `negates the result` of the first negation.
-- The expression `!!existingOrder` explicitly converts a value to a boolean (true or false). 
+- The expression `!!existingOrder` explicitly converts a value to a boolean (true or false).
 
 #### the first !
-- First ! (Logical NOT): The first ! converts the value of existingOrder into its opposite boolean value. 
-  - If existingOrder is truthy (e.g., true, an object, non-empty string, number other than 0, etc.), it becomes false. 
+
+- First ! (Logical NOT): The first ! converts the value of existingOrder into its opposite boolean value.
+  - If existingOrder is truthy (e.g., true, an object, non-empty string, number other than 0, etc.), it becomes false.
   - If existingOrder is falsy (e.g., null, undefined, 0, NaN, an empty string, or false itself), it becomes true.
 
 #### the second !
+
 - Second ! (Logical NOT): The second ! negates the result of the first ! (opposite to whatever the result of first ! was)
-  - This converts the result back to a boolean: 
-    - if the first ! gave false, the second ! makes it true; 
+  - This converts the result back to a boolean:
+    - if the first ! gave false, the second ! makes it true;
     - if the first ! gave true, the second ! makes it false.
 
 ### Example 1: When existingOrder is null (falsy)
+
 - First !: !existingOrder → !null → true (because null is falsy).
 - Second !: !!existingOrder → !true → false.
 
 ```ts
 let existingOrder = null;
 
-console.log(!existingOrder);  // First negation: !null -> true
+console.log(!existingOrder); // First negation: !null -> true
 console.log(!!existingOrder); // Second negation: !true -> false
 ```
 
 ### Example 2: When existingOrder is an empty object (truthy)
+
 - First !: !existingOrder → !{} → false (because an empty object is truthy).
 - Second !: !!existingOrder → !false → true.
 
 ```ts
-let existingOrder = {};  // Truthy value
+let existingOrder = {}; // Truthy value
 
-console.log(!existingOrder);  // First negation: !{} -> false
+console.log(!existingOrder); // First negation: !{} -> false
 console.log(!!existingOrder); // Second negation: !false -> true
 ```
 
 ## why?
+
 - why would we want to negate something? because the function is called `.isReserved()` and `existingOrder` needs to relate to isReserved.
   - if there is an exisiting order -> isReserved() is true
   - if there is NOT an existing order -> isReserved() is false
+
 ---
 
 ### 365. Convenience Document Methods
 
-- TODO: extracting logic from route `orders/src/routes/new.ts` to a new method of orders' ticket model: 
+- TODO: extracting logic from route `orders/src/routes/new.ts` to a new method of orders' ticket model:
   - `orders/src/models/ticket.ts` -> `TicketDoc()`
 - to add a static method to the model itself, use `ticketScheme.statics.[method name]` syntax
-- to get information about the ticket document we are working on, we have to refer to `this` 
+- to get information about the ticket document we are working on, we have to refer to `this`
 - we use `function` syntax and not use arrow functions (which messes with scope of `this`)
 - the ticket is going to be 'this'
-- NOTE: this updated code via static method `isReserved()` is easier to understand compared to `orders/src/routes/new.ts` in [364. Finding Reserved Tickets](#364-finding-reserved-tickets) 
+- NOTE: this updated code via static method `isReserved()` is easier to understand compared to `orders/src/routes/new.ts` in [364. Finding Reserved Tickets](#364-finding-reserved-tickets)
 
 ```ts
 //orders/src/models/ticket.ts
@@ -14776,18 +15135,18 @@ import { Order } from './order';
 import { OrderStatus } from '@clarklindev/common';
 
 //...
-export interface TicketDoc extends mongoose.Document{
+export interface TicketDoc extends mongoose.Document {
   title: string;
   price: number;
-  isReserved() : Promise<boolean>;
+  isReserved(): Promise<boolean>;
 }
 //...
 
-ticketSchema.statics.isReserved = async function(){
+ticketSchema.statics.isReserved = async function () {
   //return true or false
   //this === the ticket document that we just called `isReserved` on
   //make sure ticket is not already reserved (expiresAt - caters for high-traffic)
-  
+
   //run query to look at all orders. find an order where the ticket is the ticket we just found *and* the orders status is *not* cancelled.
   //if we find an order - that mean the ticket *is* reserved
   const existingOrder = await Order.findOne({
@@ -14796,16 +15155,16 @@ ticketSchema.statics.isReserved = async function(){
       $in: [
         OrderStatus.Created,
         OrderStatus.AwaitingPayment,
-        OrderStatus.Complete
-      ]
-    }
+        OrderStatus.Complete,
+      ],
+    },
   });
 
   return !!existingOrder; //return existingOrder as a boolean
-  // so if existingOrder is true, first ! (closest to existingOrder) makes it boolean (false), 
+  // so if existingOrder is true, first ! (closest to existingOrder) makes it boolean (false),
   // the next ! negates that... which results true...
   // meaning isReserved is true
-}
+};
 ```
 
 #### using Tickets' static .isReserved() method
@@ -14817,19 +15176,20 @@ const EXPIRATION_WINDOW_SECONDS = 15 * 60;
 
 //...
 
-router.post('/api/orders',
+router.post(
+  '/api/orders',
   //...
   //...
   async (req: Request, res: Response) => {
-    const {ticketId} = req.body;
+    const { ticketId } = req.body;
     //find the ticket the user is trying to order in the database
     const ticket = await Ticket.findById(ticketId);
-    if(!ticket){
+    if (!ticket) {
       throw new NotFoundError();
     }
 
     const isReserved = await ticket.isReserved();
-    if(isReserved) {
+    if (isReserved) {
       throw new BadRequestError('Ticket is already reserved');
     }
 
@@ -14842,8 +15202,8 @@ router.post('/api/orders',
       userId: req.currentUser!.id,
       status: OrderStatus.Created,
       expiresAt: expiration,
-      ticket
-    })
+      ticket,
+    });
 
     await order.save();
 
@@ -14853,13 +15213,15 @@ router.post('/api/orders',
 
     res.status(201).send(order);
   }
-)
+);
 ```
 
 ### 366. Order Expiration Times
+
 - see code above (calculate expiration time)
 
 ### 367. 'globalThis has no index signature' TS Error
+
 - this error may occur in `test/setup.ts`
 - Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.ts(7017)
 - UPDATED FIX:
@@ -14876,7 +15238,7 @@ declare global {
 beforeEach(async () => {
   if (mongoose.connection.db) {
     const collections = await mongoose.connection.db.collections();
- 
+
     for (let collection of collections) {
       await collection.deleteMany({});
     }
@@ -14885,12 +15247,15 @@ beforeEach(async () => {
 ```
 
 ### 368. Test Suite Setup
+
 #### setting up Orders tests...
+
 - copy `tickets/src/test/setup.ts` to `orders/src/test/setup.ts`
 - copy `tickets/src/__mocks__` to `orders/src/__mocks__`
 - run tests: orders/ `pnpm run test`
 
 ### 369. Small Update for "Value of type 'typeof ObjectId' is not callable"
+
 - when running tests -> TS error in your terminal along with a failed test:
 - `Value of type 'typeof ObjectId' is not callable. Did you mean to include 'new'?`
 - FIX: `new mongoose.Types.ObjectId();`
@@ -14899,20 +15264,20 @@ beforeEach(async () => {
 ```ts
 //orders/src/routes/__test__/new.test.ts
 //...
-it("returns an error if the ticket does not exist", async () => {
+it('returns an error if the ticket does not exist', async () => {
   const ticketId = new mongoose.Types.ObjectId();
   //...
 });
 ```
 
 ### 370. Asserting Tickets Exist
+
 - `orders/src/routes/__test__/new.test.ts`
 - 2nd and 3rd test, we have to ensure valid ticket in db (manually save ticket into db) before test runs..
 - NOTE: the body validation in `orders/src/routes/new.ts will still be called via the test so a valid mongodb id needs to be provided...
 
 - recall we call `signin()` from `orders/src/test/setup.ts` to get a cookie which we will use to set cookie header in our request.
 - run tests: orders/ `pnpm run test`
-
 
 ```ts
 //orders/src/routes/new.ts
@@ -14932,26 +15297,26 @@ it("returns an error if the ticket does not exist", async () => {
 //orders/src/routes/__test__/new.test.ts
 //...
 import request from 'supertest';
-import {app} from '../../app';
+import { app } from '../../app';
 import { Order, OrderStatus } from '../../models/order';
 
-it('returns an error if the ticket does not exist', async ()=>{
+it('returns an error if the ticket does not exist', async () => {
   const ticketId = new mongoose.Types.ObjectId();
 
   await request(app)
     .post('/api/orders')
     .set('Cookie', global.signin())
-    .send({ticketId})
+    .send({ ticketId })
     .expect(404);
 });
 
-it('returns an error if the ticket is already reserved', async ()=>{
+it('returns an error if the ticket is already reserved', async () => {
   // 1. create a ticket
   const ticket = Ticket.build({
     title: 'concert',
-    price: 20
+    price: 20,
   });
-  
+
   // 2. save to database
   await ticket.save();
 
@@ -14960,27 +15325,25 @@ it('returns an error if the ticket is already reserved', async ()=>{
     ticket,
     userId: 'sdfksdfldsjf',
     status: OrderStatus.Created,
-    expiresAt: new Date()
-  })
-  
-  // 4. save to database 
+    expiresAt: new Date(),
+  });
+
+  // 4. save to database
   await order.save();
 
   // 5. then make the request
   await request(app)
     .post('/api/orders')
     .set('Cookie', global.signin())
-    .send({ticketId: ticket.id})
+    .send({ ticketId: ticket.id })
     .expect(400);
-
 });
 
-it('reserves a ticket', async ()=>{
-
-});
+it('reserves a ticket', async () => {});
 ```
 
 #### TROUBLESHOOT - problems running tests...
+
 - package.json -> with `mongo-memory-server`, it installs modules that are required, it requires mongodb (500+ mb download)
 - ERROR -> timeout
   - FIX: update the jest `"testTimeout": 600000` properties -> will take a while to download and dont want it to timeout
@@ -14996,20 +15359,22 @@ it('reserves a ticket', async ()=>{
   },
 
 ```
+
 - this should be a once off thing..you can tell MongoMemoryServer to stick to a specific version in `orders/src/test/setup.ts` beforeAll()
 
 ```ts
 //orders/src/test/setup.ts
 const mongo = await MongoMemoryServer.create({
   binary: {
-    version: '7.0.14',  // Specify the desired version of MongoDB
+    version: '7.0.14', // Specify the desired version of MongoDB
   },
 });
 ```
 
 ### 371. Asserting Reserved Tickets
+
 - a ticket is reserved if:
-  1. there is an order in database (with the we looking for) 
+  1. there is an order in database (with the we looking for)
   2. and has a status of `Created`, `AwaitingPayment`, `Complete`
 - setting up for the test:
   1. create a ticket
@@ -15019,12 +15384,13 @@ const mongo = await MongoMemoryServer.create({
   5. then make the request
 
 ### 372. Testing the Success Case
+
 - setting up for the test:
   1. create a ticket
   2. save to database
   3. make a request to attempt to reserve ticket
-    - expect 201
-    - but you can test by checking saved to db
+  - expect 201
+  - but you can test by checking saved to db
 
 ### 373. Fetching a User's Orders
 
@@ -15049,22 +15415,21 @@ import { Order } from '../models/order';
 
 const router = express.Router();
 
-router.get('/api/orders', requireAuth, async (req:Request, res:Response) => {
-
-  const orders = await Order.find({ 
-    userId: req.currentUser!.id
+router.get('/api/orders', requireAuth, async (req: Request, res: Response) => {
+  const orders = await Order.find({
+    userId: req.currentUser!.id,
   }).populate('ticket');
 
   res.send(orders);
 });
 
 export { router as indexOrderRouter };
-  
 ```
 
 ### 374. A Slightly Complicated Test
+
 - `orders/src/routes/__test__/index.test.ts`
-- TODO: 
+- TODO:
   1. create three tickets
   2. create one order as User #1
   3. create 2x orders as User #2
@@ -15078,17 +15443,16 @@ import { Order } from '../../models/order';
 import { Ticket } from '../../models/ticket';
 
 const buildTicket = async () => {
-
   const ticket = Ticket.build({
     title: 'concert',
-    price: 20
+    price: 20,
   });
   await ticket.save();
 
   return ticket;
-}
+};
 
-it('fetches order for a particular user', async ()=>{
+it('fetches order for a particular user', async () => {
   //create three tickets
   const ticketOne = await buildTicket();
   const ticketTwo = await buildTicket();
@@ -15101,26 +15465,26 @@ it('fetches order for a particular user', async ()=>{
   await request(app)
     .post('/api/orders')
     .set('Cookie', userOne)
-    .send({ticketId: ticketOne.id})
+    .send({ ticketId: ticketOne.id })
     .expect(201);
 
   //create 2x orders as User #2
-  //desctruct the returned object from request 
+  //desctruct the returned object from request
   //AND automatically rename as orderOne
-  const {body: orderOne} = await request(app)
+  const { body: orderOne } = await request(app)
     .post('/api/orders')
     .set('Cookie', userTwo)
-    .send({ticketId: ticketTwo.id})
+    .send({ ticketId: ticketTwo.id })
     .expect(201);
 
-  //desctruct the returned object from request 
+  //desctruct the returned object from request
   //AND automatically rename as orderTwo
-  const {body: orderTwo} = await request(app)
+  const { body: orderTwo } = await request(app)
     .post('/api/orders')
     .set('Cookie', userTwo)
-    .send({ticketId: ticketThree.id})
-    .expect(201);      
-    
+    .send({ ticketId: ticketThree.id })
+    .expect(201);
+
   //make request to fetch all orders for User #2
   const response = await request(app)
     .get('/api/orders')
@@ -15140,7 +15504,7 @@ it('fetches order for a particular user', async ()=>{
 });
 ```
 
-- orders/ `pnpm run test` 
+- orders/ `pnpm run test`
 - NOTE: notice the embedded ticket information from calling `populate()`
 
 <img
@@ -15150,49 +15514,51 @@ width=600
 />
 
 ### 375. Fetching Individual Orders
+
 - test is `orders/src/routes/__test__/show.test.ts`
 - api route: `/api/orders:id` GET -> getting information about a specific order
 - only authenticated users can access this route
 - users can only access their own orders
 
 ### 376. Does Fetching Work?
-- test by creating a user and then 2 requests, 
+
+- test by creating a user and then 2 requests,
 - with second using a different user (`global.signin()`)
 
 - test is `orders/src/routes/__test__/show.test.ts`
+
 ```ts
 //...
 
-
-it('returns an error if one user tries to fetch another users order', async ()=>{
+it('returns an error if one user tries to fetch another users order', async () => {
   //create a ticket
   const ticket = Ticket.build({
-    title:'concert',
-    price: 20
+    title: 'concert',
+    price: 20,
   });
 
   await ticket.save();
   const user = global.signin();
 
   //make a request to build an order with this ticket
-  const {body: order} = await request(app)
+  const { body: order } = await request(app)
     .post('/api/orders')
     .set('Cookie', user)
-    .send({ticketId: ticket.id})
+    .send({ ticketId: ticket.id })
     .expect(201);
-  
+
   //make request to fetch the order with a new user
   await request(app)
     .get(`/api/orders/${order.id}`)
     .set('Cookie', global.signin())
     .send()
     .expect(401);
-
 });
 ```
 
 ### 377. Cancelling an Order
-- when deleteing an order, not removing from database 
+
+- when deleteing an order, not removing from database
 - TODO: just marking it as cancelled (OrderStatus.Cancelled)
 
 - `orders/src/routes/delete.ts`
@@ -15204,40 +15570,48 @@ it('returns an error if one user tries to fetch another users order', async ()=>
 ```ts
 //orders/src/routes/delete.ts
 import express, { Request, Response } from 'express';
-import { NotAuthorizedError, NotFoundError, requireAuth } from '@clarklindev/common';
+import {
+  NotAuthorizedError,
+  NotFoundError,
+  requireAuth,
+} from '@clarklindev/common';
 import { Order, OrderStatus } from '../models/order';
 
 const router = express.Router();
 
-router.delete('/api/orders/:orderId', requireAuth, async (req:Request, res:Response) => {
-  const {orderId} = req.params;
+router.delete(
+  '/api/orders/:orderId',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const { orderId } = req.params;
 
-  const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId);
 
-  if(!order){
-    throw new NotFoundError();
+    if (!order) {
+      throw new NotFoundError();
+    }
+    if (order.userId !== req.currentUser!.id) {
+      throw new NotAuthorizedError();
+    }
+    order.status = OrderStatus.Cancelled;
+    await order.save();
+
+    res.status(204).send(order);
   }
-  if(order.userId !== req.currentUser!.id){
-    throw new NotAuthorizedError();
-  }
-  order.status = OrderStatus.Cancelled;
-  await order.save();
-
-  res.status(204).send(order);
-});
+);
 
 export { router as deleteOrderRouter };
-  
 ```
 
 ### 378. Can We Cancel?
+
 - `orders/src/routes/__test__/new.delete.ts`
 - check -> order to delete exists
 - check -> deleting an order that doesnt exist returns a 404
 - successful call route only if authenticated
 - ensure :orderId param in api call is valid
 - ensure user is owner of ticket
- 
+
 - TODO: ensure test can be created -> and then deleted
 
 ```ts
@@ -15245,37 +15619,38 @@ export { router as deleteOrderRouter };
 import request from 'supertest';
 import { app } from '../../app';
 import { Ticket } from '../../models/ticket';
-import {Order, OrderStatus} from '../../models/order';
+import { Order, OrderStatus } from '../../models/order';
 
-it('marks an order as cancelled', async()=>{
-    //creates a ticket with a ticket model
-    const ticket = Ticket.build({
-        title:'concert',
-        price: 20
-    });
-    await ticket.save();
-    const user = global.signin();
-    //make a request to create an order
-    const {body: order} = await request(app)
-        .post('/api/orders')
-        .set('Cookie', user)
-        .send({ticketId: ticket.id})
-        .expect(201);
+it('marks an order as cancelled', async () => {
+  //creates a ticket with a ticket model
+  const ticket = Ticket.build({
+    title: 'concert',
+    price: 20,
+  });
+  await ticket.save();
+  const user = global.signin();
+  //make a request to create an order
+  const { body: order } = await request(app)
+    .post('/api/orders')
+    .set('Cookie', user)
+    .send({ ticketId: ticket.id })
+    .expect(201);
 
-    //make a request to cancel the order
-    await request(app)
-        .delete(`/api/orders/${order.id}`)
-        .set('Cookie', user)
-        .send()
-        .expect(204);
-    
-    //expectation: make sure the thing is cancelled
-    const updatedOrder = await Order.findById(order.id);
-    expect(updatedOrder!.status).toEqual(OrderStatus.Cancelled)
-})
+  //make a request to cancel the order
+  await request(app)
+    .delete(`/api/orders/${order.id}`)
+    .set('Cookie', user)
+    .send()
+    .expect(204);
+
+  //expectation: make sure the thing is cancelled
+  const updatedOrder = await Order.findById(order.id);
+  expect(updatedOrder!.status).toEqual(OrderStatus.Cancelled);
+});
 
 it.todo('emits an order cancelled event');
 ```
+
 ---
 
 ## section 18 - understanding event flow (30min)
@@ -15291,6 +15666,7 @@ width=600
 />
 
 ## the orders service events
+
 ### order:created event
 
 <img
@@ -15299,18 +15675,20 @@ alt='udemy-microservices-section18-379-order-created.png'
 width=600
 />
 
-  - `payment service` needs this info from event:
-    - id of order
-    - and the order needs to be paid
-    - how much order costs (gets this from ticket inside order)
+- `payment service` needs this info from event:
 
-  - `expiration service`
-    - the expiration timer (expiration time from order 'expiresAt')
+  - id of order
+  - and the order needs to be paid
+  - how much order costs (gets this from ticket inside order)
 
-  - `ticket service`
-    - ticket service needs to know when order has been created (lockdown and prevent editing)
-    - this is because once ticket has been reserved the seller cant adjust ticket price
-    - locked until ticket paid for or cancelled
+- `expiration service`
+
+  - the expiration timer (expiration time from order 'expiresAt')
+
+- `ticket service`
+  - ticket service needs to know when order has been created (lockdown and prevent editing)
+  - this is because once ticket has been reserved the seller cant adjust ticket price
+  - locked until ticket paid for or cancelled
 
 ### order:cancelled event
 
@@ -15320,20 +15698,22 @@ alt='udemy-microservices-section18-379-order-cancelled.png'
 width=600
 />
 
-  - `ticket service`
-    - unreserving a ticket (ticket can be reserved again -> ticket owner can update ticket details (price, title, etc))
+- `ticket service`
 
-  - `payment service`
-    - payment service will know incoming payments for this service should be cancelled
-    - payment service will also handle refends
+  - unreserving a ticket (ticket can be reserved again -> ticket owner can update ticket details (price, title, etc))
+
+- `payment service`
+  - payment service will know incoming payments for this service should be cancelled
+  - payment service will also handle refends
 
 ### 380. Creating the Events
-- common [repository](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git) 
+
+- common [repository](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
 - `common/src/events/subjects.ts`
 
 ```ts
 //common/src/events/subjects.ts
-export enum Subjects{
+export enum Subjects {
   TicketCreated = 'ticket:created',
   TicketUpdated = 'ticket:updated',
 
@@ -15346,44 +15726,44 @@ export enum Subjects{
 - src/events/order-created-event.ts
 
 ```ts
-import {Subjects} from './subjects';
+import { Subjects } from './subjects';
 import { OrderStatus } from './types/order-status';
 
 // information each service needs
 // Ticket service
-  // - ticketId
+// - ticketId
 
 //Payment service
-  // - userId (payer)
-  // - price of ticket
+// - userId (payer)
+// - price of ticket
 
 //Expiration service
-  // - order expires at time
-  // - order id
+// - order expires at time
+// - order id
 
 //ticket status
-export interface OrderCreatedEvent{ 
+export interface OrderCreatedEvent {
   subject: Subjects.OrderCreated;
   data: {
     id: string;
     status: OrderStatus;
     userId: string;
     expiresAt: string;
-    ticket:{
-      id:string;
+    ticket: {
+      id: string;
       price: number;
-    }
-  }
+    };
+  };
 }
 ```
 
 - src/events/order-cancelled-event.ts
 
 ```ts
-import { Subjects } from "./subjects";
+import { Subjects } from './subjects';
 
 // information each service needs
-// TicketService 
+// TicketService
 //  - what ticket to unreserve (ticket id)
 
 // PaymentService
@@ -15391,63 +15771,67 @@ import { Subjects } from "./subjects";
 
 export interface OrderCancelledEvent {
   subject: Subjects.OrderCancelled;
-  data:{
-    id:string;
-    ticket:{
+  data: {
+    id: string;
+    ticket: {
       id: string;
-    }
-  }
+    };
+  };
 }
-
-
 ```
 
 #### event events in index.ts
+
 ```ts
 //src/events/index.ts
 //...
 export * from './events/order-created-event';
 export * from './events/order-cancelled-event';
-
 ```
 
 #### republish
-- `pnpm run pub` 
+
+- `pnpm run pub`
 
 #### update main project repo
+
 - orders service -> `pnpm update @clarklindev/common`
 
 ### 381. Implementing the Publishers
+
 - TODO: ensure events are emitted when orders are created or cancelled
 - orders/src/events/publishers/order-created-publisher.ts
+
 ```ts
 //orders/src/events/publishers/order-created-publisher.ts
-import { Publisher, OrderCreatedEvent, Subjects } from "@clarklindev/common";
+import { Publisher, OrderCreatedEvent, Subjects } from '@clarklindev/common';
 /*
 // USAGE:
 new OrderCreatedPublisher(natsClient).publish({id, userId, status, expiresAt, ticket, price})
 */
-export class OrderCreatedPublisher extends Publisher<OrderCreatedEvent>{
+export class OrderCreatedPublisher extends Publisher<OrderCreatedEvent> {
   readonly subject = Subjects.OrderCreated;
 }
-
 ```
+
 - orders/src/events/publishers/order-cancelled-publisher.ts
+
 ```ts
 //orders/src/events/publishers/order-cancelled-publisher.ts
-import {Subjects, Publisher, OrderCancelledEvent} from '@clarklindev/common';
+import { Subjects, Publisher, OrderCancelledEvent } from '@clarklindev/common';
 
-export class OrderCancelledPublisher extends Publisher<OrderCancelledEvent>{
-  readonly subject = Subjects.OrderCancelled
+export class OrderCancelledPublisher extends Publisher<OrderCancelledEvent> {
+  readonly subject = Subjects.OrderCancelled;
 }
 ```
 
 ### 382. Publishing the Order Creation
+
 - the routes have to publish an event saying an order was created/deleted:
   - orders/src/routes/new.ts
   - orders/src/routes/delete.ts
 - to publish an event, we need the `publisher`, and an `active nats client` (`orders/src/nats-wrapper.ts`)
-- NOTE: the timestamp we use a `string`..is usually a `Date()` 
+- NOTE: the timestamp we use a `string`..is usually a `Date()`
   - we use a `string` because it should be standard format across our services (UCT time format)
   - the Date() reflects current timezone you are living in.
 
@@ -15459,7 +15843,8 @@ import { natsWrapper } from '../nats-wrapper';
 
 //..
 
-router.post('/api/orders',
+router.post(
+  '/api/orders',
   //...,
   //...,
   //...
@@ -15475,16 +15860,17 @@ router.post('/api/orders',
       status: order.status,
       userId: order.userId,
       expiresAt: order.expiresAt.toISOString(),
-      ticket:{
+      ticket: {
         id: ticket.id,
-        price: ticket.price
-      }
+        price: ticket.price,
+      },
     });
   }
 );
 ```
 
 ### 383. Publishing Order Cancellation
+
 - orders/src/routes/delete.ts
 - note: when we get information about order, we also populate the ticket:
   - `const order = await Order.findById(orderId).populate('ticket');`
@@ -15494,33 +15880,38 @@ import { OrderCancelledPublisher } from '../events/publishers/order-cancelled-pu
 import { natsWrapper } from '../nats-wrapper';
 
 //...
-router.delete('/api/orders/:orderId', requireAuth, async (req:Request, res:Response) => {
-  const {orderId} = req.params;
-  const order = await Order.findById(orderId).populate('ticket');
+router.delete(
+  '/api/orders/:orderId',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId).populate('ticket');
 
-  //...
-  //publish an event saying this was cancelled
-  new OrderCancelledPublisher(natsWrapper.client).publish({
-    id: order.id,
-    ticket:{
-      id: order.ticket.id
-    }
-  });
+    //...
+    //publish an event saying this was cancelled
+    new OrderCancelledPublisher(natsWrapper.client).publish({
+      id: order.id,
+      ticket: {
+        id: order.ticket.id,
+      },
+    });
 
-  //...
-});
-
+    //...
+  }
+);
 ```
 
 ### 384. Testing Event Publishing
+
 - testing our event publishers are working
-- REMINDER: 
+- REMINDER:
   - nats-wrapper has code we dont want to execute in test environment (because it connects to real nats server)
   - we created a `__mocks__/` directory and jest will `redirect` import statements to the `nats-wrapper.ts` file to: `orders/src/__mocks__/nats-wrapper.ts`
 - the `__mocks__/nats-wrapper.ts` is what we use for testing..
 - NOTE: the import, imports the real natsWrapper, but jest swops this out for the test natsWrapper
 
 - `orders/src/routes/__test__/new.test.ts`
+
 ```ts
 // orders/src/routes/__test__/new.test.ts
 //...
@@ -15531,7 +15922,7 @@ it('emits an order created event', async () => {
   // 1. create a ticket
   const ticket = Ticket.build({
     title: 'concert',
-    price: 20
+    price: 20,
   });
 
   // 2. save to database
@@ -15541,14 +15932,15 @@ it('emits an order created event', async () => {
   await request(app)
     .post('/api/orders')
     .set('Cookie', global.signin())
-    .send({ticketId: ticket.id})
+    .send({ ticketId: ticket.id })
     .expect(201);
 
   expect(natsWrapper.client.publish).toHaveBeenCalled();
-
 });
 ```
+
 - `orders/src/routes/__test__/delete.test.ts`
+
 ```ts
 import { natsWrapper } from '../../nats-wrapper';
 
@@ -15575,21 +15967,25 @@ it('emits an order cancelled event', async () => {
     .send()
     .expect(204);
 
-  expect(natsWrapper.client.publish).toHaveBeenCalled()
+  expect(natsWrapper.client.publish).toHaveBeenCalled();
 });
 ```
 
 ---
+
 ## section 19 - listening for events and handling concurrency issues (4hr13min)
+
 ### 385. Heads Up Regarding Some Mongoose TS Errors
-- in the tests: 
+
+- in the tests:
 - error - `a Value of type 'typeof ObjectId' is not callable. Did you mean to include 'new'? error` is caused by mongoose library (v6) updates
 - fix: add `const orderId = new mongoose.Types.ObjectId().toHexString();`
 
 ### 386. Time for Listeners!
+
 ## Publishers
 
-- we currently have 'tickets' service publishers 
+- we currently have 'tickets' service publishers
 - and 'orders' service publishers
 
 - TODO: adding listeners for 'tickets' and 'orders' services
@@ -15603,10 +15999,12 @@ width=600
 />
 
 ## Ticket service
+
 ### publish event `ticket:created`
-  - USED BY -> `Orders service` Listeners
-    - orders needs to know the valid tickets that can be purchased
-    - orders need to know the price of each ticket
+
+- USED BY -> `Orders service` Listeners
+  - orders needs to know the valid tickets that can be purchased
+  - orders need to know the price of each ticket
 
 <img
 src='exercise_files/udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-created.png'
@@ -15615,9 +16013,10 @@ width=600
 />
 
 ### publish event `ticket: updated`:
-  - USED BY -> `Orders service` Listeners
-    - orders service needs to know when the price of a ticket has changed
-    - orders service needs to know when a ticket has successfully been reserved
+
+- USED BY -> `Orders service` Listeners
+  - orders service needs to know when the price of a ticket has changed
+  - orders service needs to know when a ticket has successfully been reserved
 
 <img
 src='exercise_files/udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-updated.png'
@@ -15625,14 +16024,16 @@ alt='udemy-microservices-section19-386-listening-for-events-and-concurrency-issu
 width=600
 />
 
-## Orders service 
+## Orders service
+
 ### publish event `order:created`
-  - USED BY -> `Ticket service` listeners
-    - ticket service needs to be told that once of its tickets has been reserved, and no further edits to that ticket should be allowed.
-  - USED BY -> `Payment service` listeners
-    - payment service needs to know there is a new order that a user might submit a payment for.
-  - USED BY ->  `Experiration service` listeners
-    - expiration service needs to start a 15 min timer to eventually time out this order
+
+- USED BY -> `Ticket service` listeners
+  - ticket service needs to be told that once of its tickets has been reserved, and no further edits to that ticket should be allowed.
+- USED BY -> `Payment service` listeners
+  - payment service needs to know there is a new order that a user might submit a payment for.
+- USED BY -> `Experiration service` listeners
+  - expiration service needs to start a 15 min timer to eventually time out this order
 
 <img
 src='exercise_files/udemy-microservices-section18-379-order-created.png'
@@ -15641,10 +16042,11 @@ width=600
 />
 
 ### publish event `order:cancelled`
-  - USED BY -> `Ticket Service` listeners
-    - tickets service should unreserve a ticket if the corresponding order has been cancelled so this ticket can be edited again.
-  - USED BY -> `Payments Service` listeners
-    - payments should know that any incoming payments for this order should be rejected.
+
+- USED BY -> `Ticket Service` listeners
+  - tickets service should unreserve a ticket if the corresponding order has been cancelled so this ticket can be edited again.
+- USED BY -> `Payments Service` listeners
+  - payments should know that any incoming payments for this order should be rejected.
 
 <img
 src='exercise_files/udemy-microservices-section18-379-order-cancelled.png'
@@ -15660,41 +16062,43 @@ alt='udemy-microservices-section19-386-ticket-versioning.png'
 width=600
 />
 
-
 ### 387. Reminder on Listeners
-- in common module (repo) 
+
+- in common module (repo)
   - base `Listener` class (abstract class) - `src/events/base-listener.ts`
   - in subclass `extend Listener` and plug in event to listen for..
     - subject
     - queueGroupName
     - onMessage(data, msg)
-    - provide a NATS client 
+    - provide a NATS client
     - listen()
       - subscription = this.client.subscribe()
       - subscription.on('message', (msg:Message)=>{})
 
 ### 388. Blueprint for Listeners
+
 - `orders/src/events/listeners/ticket-created-listener.ts`
 - Listener is a generic so we must provide a type
 - and the type is the type of event we want to listen for 'TicketCreatedEvent'
 - `onMessage` will receive 2 arguments, `data` from our event, and the `message` from Node NATS Streaming library
 
 - `orders/src/events/listeners/queue-group-name.ts`
+
 ```ts
 export const queueGroupName = 'orders-service';
 ```
 
 ```ts
 //orders/src/events/listeners/ticket-created-listener.ts
-import {Message} from 'node-nats-streaming';
-import {Subjects, Listener, TicketCreatedEvent } from '@clarklindev/common';
+import { Message } from 'node-nats-streaming';
+import { Subjects, Listener, TicketCreatedEvent } from '@clarklindev/common';
 import { Ticket } from '../../models/ticket';
 import { queueGroupName } from './queue-group-name';
 
-export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
+export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
   readonly subject = Subjects.TicketCreated;
   queueGroupName = queueGroupName;
-  onMessage(data: TicketCreatedEvent['data'], msg: Message){}
+  onMessage(data: TicketCreatedEvent['data'], msg: Message) {}
 }
 ```
 
@@ -15704,11 +16108,11 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
 src='exercise_files/udemy-microservices-section19-389-publisher-event.png'
 alt='udemy-microservices-section19-389-publisher-event.png'
 width=600
-/> 
+/>
 
 - the diagram inside our listeners:
   - publisher -> event `ticket:created`
-  - 2x `orders service` instances (in queue group `orders-service`) 
+  - 2x `orders service` instances (in queue group `orders-service`)
   - `queue group` ensures event from NATS to listener will only go to ONE of the queue group member
     - queue group (NATS) needs to be unique identifier for subscribers
   - the orders services are listening to a channel `orders-service` on NATS streaming for `ticket:created`
@@ -15716,40 +16120,45 @@ width=600
 - onMessage(data, msg:Message) - `msg:Message` has an `ack()` method which we call once we are `sucessfully` done with processing the message
 
 ### 390. Simple onMessage Implementation
+
 - reminder:
 
 ## Ticket service
+
 ### publish event `ticket:created`
-  - USED BY -> `Orders service` Listeners
-    - orders needs to know the valid tickets that can be purchased
-    - orders need to know the price of each ticket
+
+- USED BY -> `Orders service` Listeners
+  - orders needs to know the valid tickets that can be purchased
+  - orders need to know the price of each ticket
 
 <img
 src='exercise_files/udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-created.png'
 alt='udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-created.png'
 width=600
 />
-- TODO: order service listening for `ticket:created` - to save information about ticket in local collection (data replication between services) 
--... so that when orders service needs to know information about a ticket, it does not need to do synchronous communication over to ticket service to fetch tickets available.
+
+- TODO: order service listening for `ticket:created` - to save information about ticket in local collection (data replication between services)
+  -... so that when orders service needs to know information about a ticket, it does not need to do synchronous communication over to ticket service to fetch tickets available.
 
 - `orders/src/events/listeners/ticket-created-listener.ts`
+
 ```ts
 //orders/src/events/listeners/ticket-created-listener.ts
 
-import {Message} from 'node-nats-streaming';
-import {Subjects, Listener, TicketCreatedEvent } from '@clarklindev/common';
+import { Message } from 'node-nats-streaming';
+import { Subjects, Listener, TicketCreatedEvent } from '@clarklindev/common';
 import { Ticket } from '../../models/ticket';
 import { queueGroupName } from './queue-group-name';
 
-export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
+export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
   readonly subject = Subjects.TicketCreated;
   queueGroupName = queueGroupName;
-  async onMessage(data: TicketCreatedEvent['data'], msg: Message){
-    
-    const {title, price} = data;
-    
+  async onMessage(data: TicketCreatedEvent['data'], msg: Message) {
+    const { title, price } = data;
+
     const ticket = Ticket.build({
-      title, price
+      title,
+      price,
     });
 
     await ticket.save();
@@ -15758,9 +16167,11 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent>{
   }
 }
 ```
+
 ### 391. ID Adjustment
-- `TicketCreatedListener` is taking the (title, price) from event message and saving it directly to ticket db 
-- when saved to db mongodb assigns a random id 
+
+- `TicketCreatedListener` is taking the (title, price) from event message and saving it directly to ticket db
+- when saved to db mongodb assigns a random id
 - but the `order service` ticket id is now inconsistent with `ticket service` ticket id
 
 <img
@@ -15777,13 +16188,13 @@ width=600
 
 ```ts
 //orders/src/models/tickets.ts
-interface TicketAttrs{
+interface TicketAttrs {
   id: string;
   title: string;
   price: number;
 }
-
 ```
+
 - the problem is when we we store records with mongodb it stores it with `_id` property
 - when the record is loaded into TicketService it still has `_id`
 - only when record is converted to JSON to be transmitted over an event, does `_id` get converted to `id`
@@ -15796,25 +16207,26 @@ interface TicketAttrs{
 
 ```ts
 //orders/src/models/tickets.ts
-ticketSchema.statics.build = (attrs:TicketAttrs) => {
+ticketSchema.statics.build = (attrs: TicketAttrs) => {
   const { id, ...rest } = attrs; // Extract 'id' and keep the rest of the properties
   return new Ticket({
-    _id: id,  // Assign 'id' to '_id'
-    ...rest,  // Spread the rest of the properties
+    _id: id, // Assign 'id' to '_id'
+    ...rest, // Spread the rest of the properties
   });
-}
-
-
+};
 ```
 
 ### 392. Ticket Updated Listener Implementation
+
 - NOTE: currently there is concurrency issues that will be fixed
 
 ## Ticket service
+
 ### publish event `ticket: updated`:
-  - USED BY -> `Orders service` Listeners
-    - orders service needs to know when the price of a ticket has changed
-    - orders service needs to know when a ticket has successfully been reserved
+
+- USED BY -> `Orders service` Listeners
+  - orders service needs to know when the price of a ticket has changed
+  - orders service needs to know when a ticket has successfully been reserved
 
 <img
 src='exercise_files/udemy-microservices-section19-386-listening-for-events-and-concurrency-issues-ticket-updated.png'
@@ -15823,41 +16235,43 @@ width=600
 />
 
 - `orders/src/events/listeners/ticket-updated-listener.ts`
+
 ```ts
 //orders/src/events/listeners/ticket-updated-listener.ts
-import { Message } from "node-nats-streaming";
+import { Message } from 'node-nats-streaming';
 
-import { Subjects, Listener, TicketUpdatedEvent } from "@clarklindev/common";
-import { Ticket } from "../../models/ticket";
-import { queueGroupName } from "./queue-group-name";
+import { Subjects, Listener, TicketUpdatedEvent } from '@clarklindev/common';
+import { Ticket } from '../../models/ticket';
+import { queueGroupName } from './queue-group-name';
 
-export class TicketUpdatedListener extends Listener<TicketUpdatedEvent>{
+export class TicketUpdatedListener extends Listener<TicketUpdatedEvent> {
   readonly subject = Subjects.TicketUpdated;
   queueGroupName = queueGroupName;
 
-  async onMessage(data:TicketUpdatedEvent['data'], msg:Message){
+  async onMessage(data: TicketUpdatedEvent['data'], msg: Message) {
     const ticket = await Ticket.findById(data.id);
 
-    if(!ticket){
+    if (!ticket) {
       throw new Error('Ticket not found');
     }
 
-    const {title, price} = data;
-    ticket.set({title, price});
+    const { title, price } = data;
+    ticket.set({ title, price });
     await ticket.save();
-   
+
     msg.ack();
   }
-
 }
 ```
+
 -TODO: make sure the 2x listeners we created are used in the orders services
 
 ### 393. Initializing the Listeners
+
 - create instance of listeners (need to provide it an instance of (Stan) NATS server client)
 - will call listen() method
 - `orders/src/index.ts`
-  - import the listeners 
+  - import the listeners
   - initialize the listeners passing the natsWrapper.client
 - manually test the listeners by triggering `TicketCreatedEvent` and `TicketUpdatedEvent`
   - TODO: create ticket/update ticket using POSTMAN
@@ -15883,11 +16297,11 @@ const start = async () => {
     });
     process.on('SIGINT', () => natsWrapper.client.close());
     process.on('SIGTERM', () => natsWrapper.client.close());
-    
+
     // initialize listeners
     new TicketCreatedListener(natsWrapper.client).listen();
     new TicketUpdatedListener(natsWrapper.client).listen();
-    
+
     //...
 
   }
@@ -15895,13 +16309,16 @@ const start = async () => {
 ```
 
 ### 394. A Quick Manual Test
+
 - TESTING WITH POSTMAN
-  - ensure still signed in: `GET https://ticketing.dev/api/users/currentuser` 
-  - to signup: `POST https://ticketing.dev/api/users/signup` 
-    - body -> raw -> JSON -> `{"email": 'test@test.com', "password": "password"}` 
+  - ensure still signed in: `GET https://ticketing.dev/api/users/currentuser`
+  - to signup: `POST https://ticketing.dev/api/users/signup`
+    - body -> raw -> JSON -> `{"email": 'test@test.com', "password": "password"}`
 
 #### creating a ticket
+
 - `POST https://ticketing.dev/api/tickets`
+
   - body -> raw -> JSON -> `{ "title": "movie", "price": 999 }`
   - expect status 201
 
@@ -15916,6 +16333,7 @@ width=600
 />
 
 #### updating a ticket
+
 - ticketId -> id from the ticket we just created
 - `POST https://ticketing.dev/api/tickets/ticketId`
   - body -> raw -> JSON -> `{ "title": "movie", "price": 10 }`
@@ -15939,8 +16357,9 @@ width=600
 
 ### 395. Clear Concurrency Issues
 
-#### without using ticket versioning 
-- the demo lesson starts with stephan talking about running a script that runs into concurrency issues 
+#### without using ticket versioning
+
+- the demo lesson starts with stephan talking about running a script that runs into concurrency issues
 - each update set (create, update, update) occurs in series
   1. create ticket price 5
   2. update ticket price 10
@@ -15954,10 +16373,10 @@ width=600
 />
 
 - the process of one set (create, update, update)
-- flow diagram: 
-  1. ticket created 
-  2. tickets service (saved to database) 
-  3. event sent to NATS chanel 
+- flow diagram:
+  1. ticket created
+  2. tickets service (saved to database)
+  3. event sent to NATS chanel
   4. one of the (orders service listeners) handles event
   5. saves to orders database
 
@@ -15971,12 +16390,12 @@ width=600
 - because of how many events are being serviced. in some cases the update to 15 happens before update to 10.
 - he runs a check to see how many of the database have value of 10. and there is a lot out of sync ( 7 out of 200)
 
-
-
 ### 396. Reminder on Versioning Records
+
 - NOTE: the outcome is we find out that mongoose can handle all the versioning for us..
 
 #### using ticket versioning
+
 - ticket service saves to database, entry has versioning (first time initates to 1)
 
 <img
@@ -15996,6 +16415,7 @@ width=600
 />
 
 ---
+
 - at 2min 17sec
 - order with price 15 is also processed and updated in ticket database with version now 3.
 - along with ticket database updates: 2 seperate events are also emitted
@@ -16008,15 +16428,17 @@ width=600
 
 ---
 
-### processing these events in correct order 
+### processing these events in correct order
+
 - at 2min:30sec
 - NOTE: we have to update the ticket events (to include ticket version) in the model (common module)
 
 #### processing 2nd event
+
 - an instance of order service will process the next event (CZQ)
 - order service is going to look into the database AND FIND `CZQ`
 - orders database has will look for `CZQ` and look at its version and see it has a version of 1
-- because 1 is processed and incoming is version is 2 
+- because 1 is processed and incoming is version is 2
 - there is no missing versions and order service processes the event
 - the price is set to 10, increment our version to 2
 
@@ -16029,6 +16451,7 @@ width=600
 ---
 
 #### processing 3rd event
+
 - next event to be processed (same as above)
 - search database find ID `CZQ` sees its version 2
 - this is version 3
@@ -16044,6 +16467,7 @@ width=600
 ---
 
 ### processing these events in incorrect order
+
 - at 3min 35sec
 - out of order -> first processing event with version 3 (the update to 15)
 - but because of missing v2 the listener times out (did not call ack() and event was not acknowledged, NATS will re-submit )
@@ -16069,7 +16493,8 @@ width=600
 ---
 
 ### 397. Optimistic Concurrency Control
-- finding out how mongoose and mongodb collaborate to handle versioning 
+
+- finding out how mongoose and mongodb collaborate to handle versioning
 
 ### without version flag
 
@@ -16082,6 +16507,7 @@ width=600
 />
 
 ### with version tracking
+
 - 1min 28sec
 - how mongodb collaborates to handle version tracking
 - record updates with optimistic concurrency control strategy
@@ -16100,7 +16526,7 @@ width=600
 - in the case that we are updating records and event v2 has not been processed but v3 is next to be processed...
   - mongodb will look through all records in Tickets database and look for ticket with same id AND version 2
   - if no record with (id 'CZQ' and v2) found in tickets database
-  - v3's update would then fail and return to application to be handled 
+  - v3's update would then fail and return to application to be handled
 
 <img
 src='exercise_files/udemy-microservices-section19-397-ticket-v3-processing-before-v2.png'
@@ -16108,15 +16534,17 @@ alt='udemy-microservices-section19-397-ticket-v3-processing-before-v2.png'
 width=600
 />
 
-
 ### 398. Mongoose Update-If-Current
+
 - tickets service
   - TODO: adding the versioning to tickets service
   - TODO: and the version numbers get reflected in events
 - orders service
+
   - TODO: also use the ticket versioning
 
-- new package: [mongoose-update-if-current](https://www.npmjs.com/package/mongoose-update-if-current) 
+- new package: [mongoose-update-if-current](https://www.npmjs.com/package/mongoose-update-if-current)
+
   - handles the versioning
 
 - note: mongodb document has a property `__v` which it implements by default (but we arent using it yet)
@@ -16129,17 +16557,18 @@ width=600
 />
 
 - `tickets/` service folder
-- TODO: install `mongoose-update-if-current` 
+- TODO: install `mongoose-update-if-current`
 
 ### 399. Implementing OCC with Mongoose
+
 - we just installed `mongoose-update-if-current` in `tickets/` service
 - TODO: wire it up to ticket model
-- TODO: `ticketSchema.set('versionKey', 'version');` - tell mongoose to track the version using `version` instead of `__v` (default): 
+- TODO: `ticketSchema.set('versionKey', 'version');` - tell mongoose to track the version using `version` instead of `__v` (default):
 - TODO: call `ticketSchema.plugin(updateIfCurrentPlugin);`
-- with this update, make adjustment to interface `TicketDoc` 
-- `TicketDoc` lists all properties (eg. a tickets properties) of an document instance 
+- with this update, make adjustment to interface `TicketDoc`
+- `TicketDoc` lists all properties (eg. a tickets properties) of an document instance
 - one of the properties of Document is `__v`
-- but we set the `versionKey` and the ticket document doesnt reflect this, so update TicketDoc interface 
+- but we set the `versionKey` and the ticket document doesnt reflect this, so update TicketDoc interface
   with `version`
 
 - `tickets/src/models/tickets.ts`
@@ -16148,18 +16577,18 @@ width=600
 // tickets/src/models/tickets.ts
 import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
 
-interface TicketDoc extends mongoose.Document{
+interface TicketDoc extends mongoose.Document {
   //...
-  version: number
+  version: number;
 }
 
 //...
 ticketSchema.set('versionKey', 'version');
 ticketSchema.plugin(updateIfCurrentPlugin);
-
 ```
 
 ### 400. Test functions cannot both take a 'done' callback and return something Error
+
 - if you are using a later version of jest...may get this error
 
 - the error:
@@ -16170,7 +16599,8 @@ ticketSchema.plugin(updateIfCurrentPlugin);
   Returned value: Promise {}
 ```
 
-- FIX: 
+- FIX:
+
 ```ts
 //tickets/src/models/__test__/ticket.test.ts
 
@@ -16188,12 +16618,14 @@ it('implements optimistic concurrency control', async () => {
 ```
 
 ### 401. Testing OCC
+
 - when we saved the ticket, the `mongoose-update-if-current` plugin should have assigned a `version`
 
 - we create 2 references to the ticket (at this point they have the same id and version)
+
   ```ts
-    const firstInstance = await Ticket.findById(ticket.id);
-    const secondInstance = await Ticket.findById(ticket.id);
+  const firstInstance = await Ticket.findById(ticket.id);
+  const secondInstance = await Ticket.findById(ticket.id);
   ```
 
 - we expect the test of 2nd instance save to fail -> the id matches (but the version doesnt - it has outdated version)
@@ -16209,30 +16641,29 @@ width=600
 - if code in catch() is called, the test should pass.
 - when we save a record, we can be sure. if it saves sucessfully, it is saving in the correct order and processing in correct order
 
-
 ```ts
 //tickets/src/models/__test__/ticket.test.ts
 
-import {Ticket} from '../ticket';
+import { Ticket } from '../ticket';
 
 it('implements optimistic concurrency control', async () => {
   //create an instance of a ticket
   const ticket = Ticket.build({
-    title:'concert',
+    title: 'concert',
     price: 5,
-    userId: '123'
+    userId: '123',
   });
-  
+
   //save the ticket to the database
-  await ticket.save();  
+  await ticket.save();
 
   //fetch the ticket twice
   const firstInstance = await Ticket.findById(ticket.id);
   const secondInstance = await Ticket.findById(ticket.id);
-  
+
   //make two separate changes to the tickets we fetched
-  firstInstance!.set({price: 10});
-  secondInstance!.set({price: 15});
+  firstInstance!.set({ price: 10 });
+  secondInstance!.set({ price: 15 });
 
   //save the first fetched ticket
   await firstInstance!.save();
@@ -16246,10 +16677,10 @@ it('implements optimistic concurrency control', async () => {
 
   throw new Error('Should not reach this point');
 });
-
 ```
 
 ### 402. One More Test
+
 - currently we dont have proof that when a document gets saved, the version number gets incremented
 - TODO: test that if we save, fetching the ticket, the version number should increment by one
   - create a new ticket, save it. expect the saved ticket to have version of 0
@@ -16258,12 +16689,12 @@ it('implements optimistic concurrency control', async () => {
 ```ts
 //tickets/src/models/__test__/ticket.test.ts
 
-it('increments the version number on multiple saves', async ()=>{
+it('increments the version number on multiple saves', async () => {
   //create an instance of a ticket
   const ticket = Ticket.build({
-    title:'concert',
+    title: 'concert',
     price: 5,
-    userId: '123'
+    userId: '123',
   });
 
   await ticket.save();
@@ -16272,11 +16703,12 @@ it('increments the version number on multiple saves', async ()=>{
   expect(ticket.version).toEqual(1);
   await ticket.save();
   expect(ticket.version).toEqual(2);
-})
+});
 ```
 
 ### 403. Who Updates Versions?
-- make update to common module (repo) 
+
+- make update to common module (repo)
 - ensure that events communicate the `version` number with the message/event
 
 - [common module](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
@@ -16298,9 +16730,11 @@ width=600
 />
 
 ### revisiting section01-04-blog/
+
 #### correct version updates
+
 - so with this diagram, only primary service responsible for record (common service) should update version number
-- the moderation service should not update the version number when sending message/event 
+- the moderation service should not update the version number when sending message/event
 
 <img
 src='exercise_files/udemy-microservices-section19-403-common-service-responsible-for-event-only-it-should-update-version.png'
@@ -16309,6 +16743,7 @@ width=600
 />
 
 #### incorrect version updates
+
 - this is an example of when version numbers are added by non-primary services (eg. moderation which is NOT primary service responsible for a record)
 - the query service receives wrong version (version 2) when the next sequence should be 1 (but this never got processed by query service it got processed by moderation service)... which causes it not to be processed until it receives version 1 (which it will never...)
 
@@ -16319,55 +16754,60 @@ width=600
 />
 
 ### 404. Including Versions in Events
-- common/ module 
+
+- common/ module
 - [microservices-stephengrider-with-node-and-react-common/](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-common.git)
 - updating events in common module: `/src/events/` to include prop: `version: number;`
-- NOTE: after these updates: 
+- NOTE: after these updates:
+
   1. republish the common module
   2. update the common module package used inside (auth, nats-test, orders, tickets)
 
 - `src/events/order-cancelled-events.ts`
+
 ```ts
 //src/events/order-cancelled-events.ts
-import { Subjects } from "./subjects";
+import { Subjects } from './subjects';
 export interface OrderCancelledEvent {
   subject: Subjects.OrderCancelled;
   data: {
-    id:string;
+    id: string;
     version: number;
-    ticket:{
+    ticket: {
       id: string;
-    }
-  }
+    };
+  };
 }
 ```
 
 - `order-created-event.ts`
+
 ```ts
 //src/events/order-created-events.ts
-import {Subjects} from './subjects';
+import { Subjects } from './subjects';
 import { OrderStatus } from './types/order-status';
-export interface OrderCreatedEvent{ 
+export interface OrderCreatedEvent {
   subject: Subjects.OrderCreated;
   data: {
     id: string;
-    version:number;
+    version: number;
     status: OrderStatus;
     userId: string;
     expiresAt: string;
-    ticket:{
+    ticket: {
       id: string;
       price: number;
-    }
-  }
+    };
+  };
 }
 ```
 
 - `src/events/ticket-created-event.ts`
+
 ```ts
 //src/events/ticket-created-event.ts
-import { Subjects } from "./subjects";
-export interface TicketCreatedEvent{
+import { Subjects } from './subjects';
+export interface TicketCreatedEvent {
   subject: Subjects.TicketCreated;
   data: {
     id: string;
@@ -16375,23 +16815,24 @@ export interface TicketCreatedEvent{
     title: string;
     price: number;
     userId: string;
-  }
+  };
 }
 ```
 
 - `src/events/ticket-updated-event.ts`
+
 ```ts
 //src/events/ticket-updated-event.ts
 import { Subjects } from './subjects';
 export interface TicketUpdatedEvent {
-  subject: Subjects.TicketUpdated,
+  subject: Subjects.TicketUpdated;
   data: {
     id: string;
     version: number;
     title: string;
     price: number;
     userId: string;
-  }
+  };
 }
 ```
 
@@ -16408,7 +16849,9 @@ width=600
 />
 
 ## Tickets service
+
 - TODO: checking `tickets/` service for where we publish events to include version number
+
   - `tickets/src/routes/new.ts` and
   - `tickets/src/routes/update.ts`
 
@@ -16417,36 +16860,34 @@ width=600
   ```ts
   //tickets/src/routes/new.ts
   import express, { Request, Response } from 'express';
-  import {body} from 'express-validator';
+  import { body } from 'express-validator';
 
-  import { requireAuth, validateRequest} from '@clarklindev/common';
+  import { requireAuth, validateRequest } from '@clarklindev/common';
   import { Ticket } from '../models/ticket';
   import { TicketCreatedPublisher } from '../events/publishers/ticket-created-publisher';
   import { natsWrapper } from '../nats-wrapper';
 
   const router = express.Router();
 
-  router.post('/api/tickets',
+  router.post(
+    '/api/tickets',
     requireAuth,
     [
-      body('title')
-        .not()
-        .isEmpty()
-        .withMessage('Title is required'),
-      
+      body('title').not().isEmpty().withMessage('Title is required'),
+
       body('price')
-        .isFloat({ gt: 0})
-        .withMessage('Price must be greater than 0')
+        .isFloat({ gt: 0 })
+        .withMessage('Price must be greater than 0'),
     ],
     validateRequest,
 
-    async (req: Request, res: Response) => { 
+    async (req: Request, res: Response) => {
       const { title, price } = req.body;
 
       const ticket = Ticket.build({
         title,
         price,
-        userId: req.currentUser!.id
+        userId: req.currentUser!.id,
       });
 
       await ticket.save();
@@ -16456,14 +16897,14 @@ width=600
         title: ticket.title,
         price: ticket.price,
         userId: ticket.userId,
-        version: ticket.version
+        version: ticket.version,
       });
 
       res.status(201).send(ticket);
     }
   );
 
-  export {router as createTicketRouter }
+  export { router as createTicketRouter };
   ```
 
   ```ts
@@ -16506,7 +16947,7 @@ width=600
         throw new NotAuthorizedError();
       }
 
-      //apply update 
+      //apply update
       ticket.set({
         title: req.body.title,
         price: req.body.price
@@ -16533,6 +16974,7 @@ width=600
 ---
 
 ## Orders service
+
 - 2min 12sec
 - `orders/src/models/ticket.ts`
 - TODO: update orders' `ticket model` (this replicated version of ticket model) which should now include property `version`
@@ -16543,14 +16985,16 @@ width=600
 src='exercise_files/udemy-microservices-section19-405-reminder-orders-service-orders-database.png'
 alt='udemy-microservices-section19-405-reminder-orders-service-orders-database.png'
 width=600
-/> 
+/>
 
 ---
 
 ### 406. Property 'version' is missing TS Errors After Running Skaffold
+
 - upcoming lessons -> TS errors when re-running skaffold dev to test our services with Postman
 
 - the error:
+
 ```
 [orders] Compilation error in /app/src/routes/delete.ts
 [orders] [ERROR] 23:45:07 ⨯ Unable to compile TypeScript:
@@ -16558,6 +17002,7 @@ width=600
 [orders]   Property 'version' is missing in type '{ id: any; ticket: { id: any; }; }' but required in type '{ id: string; version: number; ticket: { id: string; }; }'
 
 ```
+
 - TODO FIXES: need to add a version property to the Order model interface:
 
 ```ts
@@ -16570,10 +17015,11 @@ interface OrderDoc extends mongoose.Document {
   version: number;
 }
 ```
+
 - update `delete` and `new` routes (include version):
   - orders/src/routes/delete.ts
   - orders/src/routes/new.ts
-  
+
 ```ts
 //orders/src/routes/delete.ts
 new OrderCancelledPublisher(natsWrapper.client).publish({
@@ -16601,12 +17047,15 @@ new OrderCreatedPublisher(natsWrapper.client).publish({
 ```
 
 ### 407. Applying a Version Query
+
 - STATUS: events now have version numbers
 
 #### Orders service:
-- `section05-19-ticketing/orders/` 
+
+- `section05-19-ticketing/orders/`
 
 - orders/src/models/order.ts
+
   - TODO: add `mongoose-update-if-current` node module
 
 - orders/src/models/ticket.ts
@@ -16616,14 +17065,13 @@ new OrderCreatedPublisher(natsWrapper.client).publish({
   - TODO: add `version` to TicketDoc interface
   - TODO: tell ticketSchema to use `version` instead of `__v`
 
-
 ```ts
 //orders/src/models/ticket.ts
 import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
 
-export interface TicketDoc extends mongoose.Document{
+export interface TicketDoc extends mongoose.Document {
   //...
-  version:number;
+  version: number;
 }
 
 //...
@@ -16635,10 +17083,10 @@ ticketSchema.set('versionKey', `version`);
 ticketSchema.plugin(updateIfCurrentPlugin);
 
 //...
-
 ```
 
 #### listener
+
 - `orders/src/events/listeners/ticket-updated-listener.ts`
   - @ 2min 40sec
   - TODO: make listener work
@@ -16647,26 +17095,29 @@ ticketSchema.plugin(updateIfCurrentPlugin);
     - apply updates to database and the version gets automatically updated in db
 
 ```ts
-export class TicketUpdatedListener extends Listener<TicketUpdatedEvent>{
+export class TicketUpdatedListener extends Listener<TicketUpdatedEvent> {
   //UPDATE:
-  const ticket = await Ticket.findOne({
+  ticket = await Ticket.findOne({
     _id: data.id,
-    version: data.version - 1
+    version: data.version - 1,
   });
   //...
 }
 ```
 
 ### test with postman
+
 - NOTE: you are authenticated
 - DOCKER is running
 - testing with postman
 
-#### create ticket 
+#### create ticket
+
 - create ticket POST `https://ticketing.dev/api/tickets/` -> {"title": "movie", "price":15}
 - note the returned data from api call -> id eg. `5reotjrotietuoertof9c9c9c9`
 
-#### update ticket 
+#### update ticket
+
 - TODO: get the `id` from returned data from create ticket (eg. `5reotjrotietuoertof9c9c9c9`)
 - PUT `http://ticketing.dev/api/tickets/5reotjrotietuoertof9c9c9c9` -> {"title": "movie", "price":999}
 
@@ -16681,8 +17132,9 @@ width=600
 ---
 
 ### 408. Did it Work?
+
 - testing with the updated code
-- events processed out-of-order are retried 
+- events processed out-of-order are retried
 - testing by checking final price of `tickets in orders` with `15` count is same as `tickets in final` price tickets count
 
 <img
@@ -16692,6 +17144,7 @@ width=600
 />
 
 ### 409. Abstracted Query Method
+
 - currently `Ticket.findOne({_id:data.id, version:data.version-1})` but `_id` and `-1` bit is not ideal, refactor
 - TODO: in orders Ticket model - create a wrapper method for the data received by the listener (hide implementation)
   - create `findByEvent() in TicketModel`
@@ -16699,24 +17152,28 @@ width=600
 
 ```ts
 // orders/src/models/ticket.ts
-interface TicketModel extends mongoose.Model<TicketDoc>{
+interface TicketModel extends mongoose.Model<TicketDoc> {
   build(attrs: TicketAttrs): TicketDoc;
-  findByEvent(event:{id:string, version:number}):Promise<TicketDoc | null>;
+  findByEvent(event: {
+    id: string;
+    version: number;
+  }): Promise<TicketDoc | null>;
 }
 
 //...
 
-ticketSchema.statics.findByEvent = (event: {id:string, version:number}) => {
+ticketSchema.statics.findByEvent = (event: { id: string; version: number }) => {
   return Ticket.findOne({
     _id: event.id,
-    version: event.version - 1
-  })
-}
+    version: event.version - 1,
+  });
+};
 
-ticketSchema.statics.build = (attrs:TicketAttrs) => {
+ticketSchema.statics.build = (attrs: TicketAttrs) => {
   //...
-}
+};
 ```
+
 - update to use TicketModel: `orders/src/events/listeners/ticket-updated-listener.ts`
 
 ```ts
@@ -16728,28 +17185,32 @@ async onMessage(data:TicketUpdatedEvent['data'], msg:Message){
   if(!ticket){
     throw new Error('Ticket not found');
   }
-  
+
   //...
 }
 ```
 
 ### test with postman
+
 - NOTE: you are authenticated
 - DOCKER is running
 - testing with postman:
   - create ticket
-  - make update 
+  - make update
   - make update
 
-#### create ticket 
+#### create ticket
+
 - create ticket POST `https://ticketing.dev/api/tickets/` -> {"title": "movie", "price":15}
 - note the returned data from api call -> id eg. `5reotjrotietuoertof9c9c9c9`
 
-#### update ticket 
+#### update ticket
+
 - TODO: get the `id` from returned data from create ticket (eg. `5reotjrotietuoertof9c9c9c9`)
 - PUT `http://ticketing.dev/api/tickets/5reotjrotietuoertof9c9c9c9` -> {"title": "movie", "price":999}
 
 #### test results
+
 - no concurrency issues
 
 <img
@@ -16759,46 +17220,52 @@ width=600
 />
 
 ### 410. (Optional) Versioning Without Update-If-Current
+
 - tracking versions without using the `mongoose-update-if-current` module by building it
-- NOTE: the changes from this lesson will be reverted 
+- NOTE: the changes from this lesson will be reverted
 
 ## mongoose-update-if-current behaviors
+
 - these are the behaviors we need to replace to use our own version update behavior
 
-1. updates version number before save 
+1. updates version number before save
 
-  ### other db versioning
-  - both services use this module and has common version semantics
-  - however, we assume that version number is incremented by 1 when version updates as we know where the events are coming from and that they have the same version semantics (format/increment) but other information stores might not have exact same version semantics as `mongoose-update-if-current` module. ie. other db might have different version tracking eg timestamp
+### other db versioning
 
-  ### without mongoose-update-if-current behaviors
-  - note: events all have versions included...from 
-  - and we were updating order records in database using event version
-  - to do this with code...we destruct the version from the event data  
+- both services use this module and has common version semantics
+- however, we assume that version number is incremented by 1 when version updates as we know where the events are coming from and that they have the same version semantics (format/increment) but other information stores might not have exact same version semantics as `mongoose-update-if-current` module. ie. other db might have different version tracking eg timestamp
 
-  ```ts
-  //orders/src/events/listeners/ticket-udpated-listener.ts
-    async onMessage(data:TicketUpdatedEvent['data'], msg:Message) {
-      // const ticket = await Ticket.findById(data.id);
+### without mongoose-update-if-current behaviors
 
-      //UPDATE:
-      const ticket = await Ticket.findByEvent(data);
+- note: events all have versions included...from
+- and we were updating order records in database using event version
+- to do this with code...we destruct the version from the event data
 
-      if(!ticket){
-        throw new Error('Ticket not found');
-      }
+```ts
+//orders/src/events/listeners/ticket-udpated-listener.ts
+  async onMessage(data:TicketUpdatedEvent['data'], msg:Message) {
+    // const ticket = await Ticket.findById(data.id);
 
-      //also get version from data (event)
-      const {title, price, version} = data;
-      ticket.set({title, price, version});
-      await ticket.save();
-    
-      msg.ack();
+    //UPDATE:
+    const ticket = await Ticket.findByEvent(data);
+
+    if(!ticket){
+      throw new Error('Ticket not found');
     }
-  ```
+
+    //also get version from data (event)
+    const {title, price, version} = data;
+    ticket.set({title, price, version});
+    await ticket.save();
+
+    msg.ack();
+  }
+```
 
 2. customizes find-and-update (save) to look for the correct version
-- mongoose -> the Model class has a `.$where` property 
+
+- mongoose -> the Model class has a `.$where` property
+
   - `.$where` -> additional properties to attach to the query when calling `save()` and `IsNew` is false
   - ie. use `.$where` when querying, to not only search by id, but also some additional properties
 
@@ -16808,6 +17275,7 @@ width=600
 - `done()` should be called once we have done what we needed.
 
 #### @10min.23sec
+
 - TODO: we overwrite by dynamically (on the fly) re-assign the `$where` property, putting additional criteria on 'save' operation
 - Notice how we reference the current document with `this.` because we used function() call instead of arrow function (which would change execution context)
 - we add `//@ts-ignore` above `this.$where` because typescript doesnt pickup this from mongoose type definitions.
@@ -16821,21 +17289,23 @@ width=600
 ticketSchema.set('versionKey', `version`);
 // ticketSchema.plugin(updateIfCurrentPlugin);
 
-ticketSchema.pre('save', function(done){
+ticketSchema.pre('save', function (done) {
   //@ts-ignore
   this.$where = {
-    version: this.get('version') - 1
-  }
+    version: this.get('version') - 1,
+  };
 
   done();
-})
-
+});
 ```
+
 ### Confirmation of saved data
+
 - `kubectl get pods`
-- to look inside orders service -> `order-mongo-depl-xxxxxxx`: 
+- to look inside orders service -> `order-mongo-depl-xxxxxxx`:
 
 #### running commands in mongodb database
+
 - open up mongo shell -> `kubectl exec -it orders-mongo-depl-xxxxxxx mongo`
 - list all dbs -> `show dbs;`
 - select orders database -> `use orders;`
@@ -16843,15 +17313,18 @@ ticketSchema.pre('save', function(done){
 - db.tickets.find({price: 2000}) -> note the version updated (incremented by 1)
 
 TODO -> reverse the removing of the `mongoose-update-if-current` plugin
+
 - uncomment: `ticketSchema.plugin(updateIfCurrentPlugin);`
 - remove middleware: `ticketSchema.pre('save', function(done){}`
 - in listener: `orders/src/events/listeners/ticket-updated-listener.ts` remove reference to version
 
 ### 411. Testing Listeners
+
 - TODO: writing tests around the listeners
+
   - `orders/src/events/listeners/TicketCreatedListener`
   - create an instance of the listener
-  - fabricate fake data object 
+  - fabricate fake data object
   - fabricate fake msg object
   - pass them into the listener
   - should result in eg. valid ticket
@@ -16863,14 +17336,14 @@ TODO -> reverse the removing of the `mongoose-update-if-current` plugin
 
 ```ts
 //orders/src/events/listeners/__test__/ticket-created-listener.test.ts
-
 ```
 
 ### 412. A Complete Listener Test
+
 - the fake `data` needs to satisfy the `TicketCreatedEvent`'s data interface
 - with fake `msg`, create a fake mock function which you can track if it was called
 - call the onMessage function with the data object + message object
-- writing a query to find a ticket in db with id and then assert ticket exists 
+- writing a query to find a ticket in db with id and then assert ticket exists
 
 - expect -> passing test
 
@@ -16881,14 +17354,15 @@ width=600
 />
 
 ### 413. Testing the Ack Call
+
 - `orders/src/events/listeners/__test__/ticket-created-listener.ts`
 
 ```ts
 //orders/src/events/listeners/__test__/ticket-created-listener.ts
 
-it('acks the message', async ()=>{
-  const {listener, data, msg} = await setup();
-  
+it('acks the message', async () => {
+  const { listener, data, msg } = await setup();
+
   //call the onMessage function with the data object + message object
   await listener.onMessage(data, msg);
 
@@ -16907,9 +17381,9 @@ import mongoose from 'mongoose';
 import { Message } from 'node-nats-streaming';
 
 import { TicketUpdatedEvent } from '@clarklindev/common';
-import { TicketUpdatedListener } from "../ticket-updated-listener";
-import { natsWrapper } from "../../../nats-wrapper";
-import { Ticket } from "../../../models/ticket";
+import { TicketUpdatedListener } from '../ticket-updated-listener';
+import { natsWrapper } from '../../../nats-wrapper';
+import { Ticket } from '../../../models/ticket';
 
 const setup = async () => {
   //create a listener
@@ -16919,7 +17393,7 @@ const setup = async () => {
   const ticket = Ticket.build({
     id: new mongoose.Types.ObjectId().toHexString(),
     title: 'concert',
-    price: 20
+    price: 20,
   });
 
   await ticket.save();
@@ -16930,22 +17404,22 @@ const setup = async () => {
     version: ticket.version + 1,
     title: 'new concert',
     price: 999,
-    userId: 'asdasdasdafsdf'
-  }
+    userId: 'asdasdasdafsdf',
+  };
 
   //create a fake msg object
   //@ts-ignore
   const msg: Message = {
-    ack: jest.fn()
-  }
+    ack: jest.fn(),
+  };
 
   //return all of this stuff
-  return {msg, data, ticket, listener};
-}
+  return { msg, data, ticket, listener };
+};
 
-it('finds, updates, and saves a ticket', async ()=>{
-  const {msg, data, ticket, listener} = await setup();
-  
+it('finds, updates, and saves a ticket', async () => {
+  const { msg, data, ticket, listener } = await setup();
+
   await listener.onMessage(data, msg);
 
   const updatedTicket = await Ticket.findById(ticket.id);
@@ -16953,19 +17427,19 @@ it('finds, updates, and saves a ticket', async ()=>{
   expect(updatedTicket!.title).toEqual(data.title);
   expect(updatedTicket!.price).toEqual(data.price);
   expect(updatedTicket!.version).toEqual(data.version);
-  
 });
 
-it('acks the message', async ()=>{
-
-});
-
+it('acks the message', async () => {});
 ```
+
 ### 415. Success Case Testing
+
 - see code at lesson 414: `it('finds, updates, and saves a ticket', async ()=>{});`
 
 ### 416. Out-Of-Order Events
+
 - TODO:
+
   - create an instance of listener
   - create data event
   - give it a version far in future (accidentally process event that's NOT the next version order)
@@ -16976,23 +17450,20 @@ it('acks the message', async ()=>{
 ```ts
 //orders/src/events/listeners/__test__/ticket-updated-listener.test.ts
 
-it('acks the message', async ()=>{
-  const {msg, data, listener} = await setup();
+it('acks the message', async () => {
+  const { msg, data, listener } = await setup();
   await listener.onMessage(data, msg);
   expect(msg.ack).toHaveBeenCalled();
 });
 
 it('does not call ack if the event has a skipped version number', async () => {
-  const {msg, data, listener, ticket} = await setup();
-  data.version = 10;  //give version futher away from the immediate next version number
-  try{
+  const { msg, data, listener, ticket } = await setup();
+  data.version = 10; //give version futher away from the immediate next version number
+  try {
     await listener.onMessage(data, msg);
-  }
-  catch(err){
-  }
+  } catch (err) {}
   expect(msg.ack).not.toHaveBeenCalled();
-})
-
+});
 ```
 
 ### 417. The Next Few Videos
@@ -17005,7 +17476,7 @@ width=600
 
 - TODO:
   - add 'mongoose-update-if-current' module into Orders model
-    - we want version system for orders (just like tickets) 
+    - we want version system for orders (just like tickets)
     - will publish emit events over time and want them processed in correct order
   - FIX some tests
     - currently creating tickets in the `orders/` service without IDs
@@ -17013,30 +17484,32 @@ width=600
     - currently `orders/` publishing events for orders (version not included)
 
 ### starts updates - @2min 14sec
+
 - `orders/src/models/order.ts`
 
 ```ts
 //orders/src/models/order.ts
 import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
 
-interface OrderDoc extends mongoose.Document{
+interface OrderDoc extends mongoose.Document {
   //...
-  version:number
+  version: number;
 }
 //...
 orderSchema.set('versionKey', 'version');
 orderSchema.plugin(updateIfCurrentPlugin);
 
-orderSchema.statics.build = (attrs:OrderAttrs) =>{
+orderSchema.statics.build = (attrs: OrderAttrs) => {
   return new Order(attrs);
-}
-
+};
 ```
 
 ### 418. Fixing a Few Tests
+
 - Fixing some tests (see lesson 417 TODO)
 
 ## UPDATE: Adding 'id' to passed-in object when calling Ticket.build()
+
 - TODO: when creating tickets have to include id with event
 - FIX: use mongoose to generate random id and pass with event to `Ticket.build({})`
 - in all the tests...where you call `Ticket.build()`
@@ -17060,11 +17533,13 @@ orderSchema.statics.build = (attrs:OrderAttrs) =>{
     });
   });
   ```
+
 - `orders/src/routes/__test__/index.test.ts`
 - `orders/src/routes/__test__/new.test.ts`
 - `orders/src/routes/__test__/show.test.ts`
 
 ## UPDATE: Adding 'version' to where we publishing events (routes)
+
 - TODO: need to add version property when publishing events
 - the version flag is primary means for concurrency control
 - `orders/src/routes/delete.ts`
@@ -17077,9 +17552,9 @@ orderSchema.statics.build = (attrs:OrderAttrs) =>{
 new OrderCancelledPublisher(natsWrapper.client).publish({
   id: order.id,
   version: order.version,
-  ticket:{
-    id: order.ticket.id
-  }
+  ticket: {
+    id: order.ticket.id,
+  },
 });
 ```
 
@@ -17091,27 +17566,32 @@ new OrderCreatedPublisher(natsWrapper.client).publish({
   status: order.status,
   userId: order.userId,
   expiresAt: order.expiresAt.toISOString(),
-  ticket:{
+  ticket: {
     id: ticket.id,
-    price: ticket.price
-  }
+    price: ticket.price,
+  },
 });
-
 ```
 
 ### 419. Listeners in the Tickets Service
+
 - revisiting `tickets/` service
 - TODO: ensure we reserve tickets properly (user cannot edit ticket's title or price while reserved)
 
 # Orders Service
+
 - up to now, `orders service` is wired up to `listen` to `ticket:created` event and `ticket:updated` event
 
 ### LISTENING
+
 #### ticket:created
+
 #### ticket:updated
 
 ### CREATING
+
 #### order:created
+
 <img
 src='exercise_files/udemy-microservices-section19-419-orders-service-publish-order-created.png'
 alt='udemy-microservices-section19-419-orders-service-publish-order-created.png'
@@ -17119,6 +17599,7 @@ width=600
 />
 
 #### order:cancelled
+
 <img
 src='exercise_files/udemy-microservices-section19-419-orders-service-publish-order-cancelled.png'
 alt='udemy-microservices-section19-419-orders-service-publish-order-cancelled.png'
@@ -17128,7 +17609,9 @@ width=600
 # Ticket service
 
 ### CREATING
+
 #### ticket:created
+
 <img
 src='exercise_files/udemy-microservices-section19-419-orders-service-listens-ticket-created.png'
 alt='udemy-microservices-section19-419-orders-service-listens-ticket-created.png'
@@ -17136,6 +17619,7 @@ width=600
 />
 
 #### ticket:updated
+
 <img
 src='exercise_files/udemy-microservices-section19-419-orders-service-listens-ticket-updated.png'
 alt='udemy-microservices-section19-419-orders-service-listens-ticket-updated.png'
@@ -17143,42 +17627,48 @@ width=600
 />
 
 ### LISTENING
-- TODO - ticket service needs to listen for events that Order service creates  
+
+- TODO - ticket service needs to listen for events that Order service creates
   - `order:created` -> once ticket has been reserved -> ticket service needs to listen so it can set something to lock down ticket (prevent price change while it is reserved)
   - `order:cancelled` -> unlock and allow editting
 
 #### order:created
+
 ```ts
 //...
 ```
+
 #### order:cancelled
+
 ```ts
 //...
 ```
 
 ### 420. Building the Listener
+
 - `ticket/` service
 - tickets/src/events/listeners
 - `tickets/src/events/listeners/order-created-listener.ts`
 
 ```ts
 //tickets/src/events/listeners/order-created-listener.ts
-
-
 ```
 
 ### 421. Strategies for Locking a Ticket
+
 - TODO: lock down a ticket when order is created for a ticket (order-created-listener is called)
 
 #### locking with boolean
-- using a boolean doesnt give sufficient information
-<img
-src='exercise_files/udemy-microservices-section19-421-strategies-for-locking-down-a-ticket-downside-to-locking-with-just-a-boolean.png'
-alt='udemy-microservices-section19-421-strategies-for-locking-down-a-ticket-downside-to-locking-with-just-a-boolean.png'
-width=600
-/>
 
-#### locking with order id 
+- using a boolean doesnt give sufficient information
+  <img
+  src='exercise_files/udemy-microservices-section19-421-strategies-for-locking-down-a-ticket-downside-to-locking-with-just-a-boolean.png'
+  alt='udemy-microservices-section19-421-strategies-for-locking-down-a-ticket-downside-to-locking-with-just-a-boolean.png'
+  width=600
+  />
+
+#### locking with order id
+
 - using order id as lock, you can get `status` of ticket a lot easier
 - orderid will be used as a lock to prevent editing
 - default orderid will be null (allow edits) , when orderid is NOT null, (DO NOT allow edits)
@@ -17198,6 +17688,7 @@ width=600
 ### 422. Reserving a Ticket
 
 #### Ticket model updates
+
 - TODO: add order id to ticket (schema)
 - `tickets/src/models/ticket.ts`
 - add Schema property orderId: `orderId:{ type:String }` NOTE: not required as it starts off `null`
@@ -17206,7 +17697,7 @@ width=600
 ```ts
 //tickets/src/models/ticket.ts
 //properties that a Ticket has
-interface TicketDoc extends mongoose.Document{
+interface TicketDoc extends mongoose.Document {
   title: string;
   price: number;
   userId: string;
@@ -17216,6 +17707,7 @@ interface TicketDoc extends mongoose.Document{
 ```
 
 #### ticket listener (order created listener)
+
 - `tickets/src/events/listeners/order-created-listener.ts`
 - reach into ticket collection and find ticket order is reserving
 - if no ticket throw an error
@@ -17226,23 +17718,23 @@ interface TicketDoc extends mongoose.Document{
 ```ts
 //tickets/src/events/listeners/order-created-listener.ts
 import { Message } from 'node-nats-streaming';
-import {Listener, Subjects, OrderCreatedEvent} from '@clarklindev/common';
+import { Listener, Subjects, OrderCreatedEvent } from '@clarklindev/common';
 import { queueGroupName } from './queue-group-name';
 import { Ticket } from '../../models/ticket';
 
-export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
+export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   readonly subject = Subjects.OrderCreated;
   queueGroupName = queueGroupName;
-  
-  async onMessage(data:OrderCreatedEvent['data'], msg:Message){
+
+  async onMessage(data: OrderCreatedEvent['data'], msg: Message) {
     //find ticket order is reserving
     const ticket = await Ticket.findById(data.ticket.id);
     //if no ticket throw error
-    if(!ticket){
+    if (!ticket) {
       throw new Error('Ticket not found');
     }
     //mark ticket as reserved setting 'orderId' property
-    ticket.set({orderId: data.id});
+    ticket.set({ orderId: data.id });
     //save the ticket
     await ticket.save();
     //ack the message
@@ -17252,23 +17744,25 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
 ```
 
 ### 423. Setup for Testing Reservation
+
 - this is the setup for the tests
 - `tickets/src/events/listeners/__test__/order-created-listener.ts`
 
 #### testing
+
 - create an instance of the listener
 - create and save a ticket
 - create the fake data event (order created event)
-- note: `msg:Message` for tests, its tellling typscript to ignore (`//@ts-ignore`) because we only need to mock the ack function. 
+- note: `msg:Message` for tests, its tellling typscript to ignore (`//@ts-ignore`) because we only need to mock the ack function.
 
 ```ts
 //tickets/src/events/listeners/__test__/order-created-listener.ts
-import { OrderCreatedEvent, OrderStatus } from "@clarklindev/common";
+import { OrderCreatedEvent, OrderStatus } from '@clarklindev/common';
 import mongoose from 'mongoose';
 
-import { OrderCreatedListener } from "../order-creacted-listener";
-import { natsWrapper } from "../../../nats-wrapper";
-import { Ticket } from "../../../models/ticket";
+import { OrderCreatedListener } from '../order-creacted-listener';
+import { natsWrapper } from '../../../nats-wrapper';
+import { Ticket } from '../../../models/ticket';
 const setup = async () => {
   //create an instance of the listener
   const listener = new OrderCreatedListener(natsWrapper.client);
@@ -17277,13 +17771,13 @@ const setup = async () => {
   const ticket = Ticket.build({
     title: 'concert',
     price: 99,
-    userId: 'asdg'
+    userId: 'asdg',
   });
 
   await ticket.save();
 
   //create the fake data event (order created event)
-  const data:OrderCreatedEvent['data'] = {
+  const data: OrderCreatedEvent['data'] = {
     id: new mongoose.Types.ObjectId().toHexString(),
     version: 0,
     status: OrderStatus.Created,
@@ -17291,21 +17785,21 @@ const setup = async () => {
     expiresAt: 'string',
     ticket: {
       id: ticket.id,
-      price: ticket.price
-    }
+      price: ticket.price,
+    },
   };
 
-  
   //@ts-ignore
-  const msg:Message = {
-    ack: jest.fn()
-  }
+  const msg: Message = {
+    ack: jest.fn(),
+  };
 
-  return {listener, ticket, data, msg};
-}
+  return { listener, ticket, data, msg };
+};
 ```
 
 ### 424. Test Implementation
+
 - writing tests for the `order-created-listener`
 - the goal of what we trying to do is set ticket prop `orderId` to the `order id` of the received `data:OrderCreatedEvent['data']` object
 - look in db
@@ -17324,29 +17818,31 @@ const setup = async () => {
   const ticket = Ticket.build({
     title: 'concert',
     price: 99,
-    userId: 'asdg'
+    userId: 'asdg',
   });
   await ticket.save();
   //...
-}
+};
 
 //tests using initial setup tickets' id and finding the updated version from Ticket collection
 it('sets the userId of the ticket', async () => {
-  const {listener, ticket, data, msg} = await setup();
+  const { listener, ticket, data, msg } = await setup();
   await listener.onMessage(data, msg);
-  const updatedTicket = await Ticket.findById(ticket.id); 
+  const updatedTicket = await Ticket.findById(ticket.id);
   expect(updatedTicket!.orderId).toEqual(data.id);
 });
 
 it('acks the message', async () => {
-  const {listener, ticket, data, msg} = await setup();
+  const { listener, ticket, data, msg } = await setup();
   await listener.onMessage(data, msg);
   expect(msg.ack).toHaveBeenCalled();
 });
 ```
 
 ### 425. Missing Update Event
-#### summary 
+
+#### summary
+
 - ticket updated with version but doesnt emit event to get picked up by orders service
 - FIX: emit event to get picked up by orders service when any changes to ticket (`order created event` or `order cancelled`)
 
@@ -17374,7 +17870,7 @@ width=600
 ---
 
 - ticket updated...
-- ticket version updated to 3 
+- ticket version updated to 3
 
 <img
 src='exercise_files/udemy-microservices-section19-425-missing-update-event-inconsistent-data-slide-3-ticket-updated.png'
@@ -17393,9 +17889,10 @@ alt='udemy-microservices-section19-425-missing-update-event-inconsistent-data-sl
 width=600
 />
 
-
 ### 426. Private vs Protected Properties
+
 #### lesson outcome
+
 - TODO: TicketUpdatedEvent needs an `orderId` property
 - TODO: in `common/src/events/base-listener` mark client as protected
 
@@ -17410,7 +17907,7 @@ width=600
   - pass in nats-client
   - ticket should also have `orderId` property
   - when we update a ticket, want to also tell other services if the ticket is reserved (via `orderId`)
-- TODO: add `orderId` to event definition (`TicketUpdatedEvent`) in `common/` 
+- TODO: add `orderId` to event definition (`TicketUpdatedEvent`) in `common/`
 - usage: `new TicketUpdatedPublisher(natsWrapper.client).publish({});`
 
 - in `tickets/src/events/listeners/order-created-listener.ts`
@@ -17426,10 +17923,10 @@ width=600
 ```ts
 //tickets/src/events/listeners/order-created-listener.ts
 import { natsWrapper } from '../../nats-wrapper';
-import {TicketUpdatedPublisher} from '../publishers/ticket-updated-publisher';
-export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
+import { TicketUpdatedPublisher } from '../publishers/ticket-updated-publisher';
+export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   //...
-  async onMessage(data:OrderCreatedEvent['data'], msg:Message){
+  async onMessage(data: OrderCreatedEvent['data'], msg: Message) {
     await ticket.save();
     new TicketUpdatedPublisher(natsWrapper.client);
   }
@@ -17447,13 +17944,15 @@ width=600
 />
 
 - OrderCreatedListener is a subclass of `Listener` class which has a nats client already (but its marked as private so subclasses cant access this)
-- FIX: mark the Listener base class `client` property as `protected`, 
+- FIX: mark the Listener base class `client` property as `protected`,
 
 ### 427. Publishing While Listening
+
 - common/ repo
 - `common/src/events/base-listener.ts`
   - change client to `protected` modifier
 - `common/src/events/base-publisher.ts`
+
   - change client to `protected` modifier
 
 - `common/src/events/ticket-updated-event.ts`
@@ -17461,22 +17960,26 @@ width=600
   - NOTE: `ticket-created-event.ts` `orderId` is not necessary because it will always be null/undefined when ticket is created
 
 #### common repo
-- TODO: 
+
+- TODO:
   - commit changes
-  - republish common/ module to npm 
+  - republish common/ module to npm
 
 #### main project/tickets/
+
 - TODO:
   - `pnpm update @clarklindev/common`
 
 #### main project/orders/
+
 - TODO:
   - `pnpm update @clarklindev/common`
 
 ---
 
 #### using our updates
-- now that client is `protected` 
+
+- now that client is `protected`
 - now that there is an `.orderId` in common repo `/src/events/ticket-updated-event.ts`
 - UPDATE: `tickets/src/events/listeners/order-created-listener.ts`
 - and because `OrderCreatedListener` extends `Listener` and we have updated the client modifier to `protected` we have access to client on `OrderCreatedListener`
@@ -17484,12 +17987,12 @@ width=600
 
 ```ts
 // import { natsWrapper } from '../../nats-wrapper';
-import {TicketUpdatedPublisher} from '../publishers/ticket-updated-publisher';
+import { TicketUpdatedPublisher } from '../publishers/ticket-updated-publisher';
 
 //...
-export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
+export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   //...
-  async onMessage(data:OrderCreatedEvent['data'], msg:Message){
+  async onMessage(data: OrderCreatedEvent['data'], msg: Message) {
     //...
     //save the ticket
     await ticket.save();
@@ -17499,7 +18002,7 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
       title: ticket.title,
       userId: ticket.userId,
       orderId: ticket.orderId,
-      version: ticket.version
+      version: ticket.version,
     });
 
     msg.ack();
@@ -17508,8 +18011,10 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
 ```
 
 ### 428. Mock Function Arguments
+
 - TODO: we have added a publisher inside a listener, testing that TicketUpdatedPublisher is working
-- in setup() we create an instance of `OrderCreatedListener(natswrapper.client)` 
+- in setup() we create an instance of `OrderCreatedListener(natswrapper.client)`
+
   - natswrapper.client is using the mock client in the tests: `tickets/src/__mocks__/nats-wrapper.ts`
   - specifically, it calls the client.publish that is a jest mock function
   - we should be able to test that .publish was invoked
@@ -17520,12 +18025,11 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
 //tickets/src/events/listeners/__test__/order-created-listener.test.ts
 
 //...
-it('publishes a ticket updated event', async ()=>{
-  const {listener, ticket, data, msg} = await setup();
+it('publishes a ticket updated event', async () => {
+  const { listener, ticket, data, msg } = await setup();
   await listener.onMessage(data, msg);
 
   expect(natsWrapper.client.publish).toHaveBeenCalled();
-  
 });
 ```
 
@@ -17537,14 +18041,15 @@ alt='udemy-microservices-section19-428-mock-function-test-troubleshoot-error.png
 width=600
 />
 
-- if the error comes up `property client is private...` 
+- if the error comes up `property client is private...`
   - this is because jest doesnt always detect updates to npm dependencies
 - FIX: restart the tests
 
 ---
 
-#### continued...Mock Function Arguments 
-- we can also look into the properties being passed into the publish method 
+#### continued...Mock Function Arguments
+
+- we can also look into the properties being passed into the publish method
   - `common/src/events/base-publisher.ts`
     - `publish` receives these arguments: subject, JSON of data passed, callback
     - NOTE: the natsWrapper client is the mock natsWrapper (`tickets/src/__mocks__/nats-wrapper.ts`)
@@ -17555,16 +18060,18 @@ width=600
       [
         [
           'ticket:updated',
-          '{"id":"6770c55adf42c07b70ee5e3b","price":99,"title":"concert","userId":"asdg","orderId":"6770c55adf42c07b70ee5e3d","version":1}',       
+          '{"id":"6770c55adf42c07b70ee5e3b","price":99,"title":"concert","userId":"asdg","orderId":"6770c55adf42c07b70ee5e3d","version":1}',
           [Function (anonymous)]
         ]
       ]
     ```
 
 ### tell typescript something is a mock function instead of using //@ts-ignore
+
 - `(natsWrapper.client.publish as jest.Mock).mock.calls[0][1];`
 
 ### 429. Order Cancelled Listener
+
 - `tickets/src/events/listeners/order-cancelled-listener.ts`
 - order service will at some point emit `order:cancelled` event
 - our aim is to remove the orderId from the ticket (unreserve)
@@ -17599,21 +18106,22 @@ async onMessage(data, msg){
 ```
 
 ### 430. A Lightning-Quick Test
+
 - `tickets/src/events/listeners/__test__/order-cancelled-listener.test.ts`
 - testing order cancelled listener
 
 ```ts
 //tickets/src/events/listeners/__test__/order-cancelled-listener.test.ts
 
-import mongoose from "mongoose";
-import { OrderCancelledEvent } from "@clarklindev/common";
-import { Message } from "node-nats-streaming";
+import mongoose from 'mongoose';
+import { OrderCancelledEvent } from '@clarklindev/common';
+import { Message } from 'node-nats-streaming';
 
-import { natsWrapper } from "../../../nats-wrapper";
-import { OrderCancelledListener } from "../order-cancelled-listener";
-import { Ticket } from "../../../models/ticket";
+import { natsWrapper } from '../../../nats-wrapper';
+import { OrderCancelledListener } from '../order-cancelled-listener';
+import { Ticket } from '../../../models/ticket';
 
-const setup = async ()=>{
+const setup = async () => {
   const listener = new OrderCancelledListener(natsWrapper.client);
   const orderId = new mongoose.Types.ObjectId().toHexString();
 
@@ -17622,27 +18130,27 @@ const setup = async ()=>{
     price: 20,
     userId: 'asdf',
   });
-  ticket.set({orderId});
+  ticket.set({ orderId });
   await ticket.save();
 
   const data: OrderCancelledEvent['data'] = {
     id: orderId,
     version: 0,
     ticket: {
-      id: ticket.id
-    }
+      id: ticket.id,
+    },
   };
 
   //@ts-ignore
-  const msg:Message = {
-    ack: jest.fn()
-  }
+  const msg: Message = {
+    ack: jest.fn(),
+  };
 
-  return {msg, data, ticket, orderId, listener};
-}
+  return { msg, data, ticket, orderId, listener };
+};
 
-it('updates the ticket, publishes an event, and acks the message', async ()=>{
-  const {msg, data, ticket, orderId, listener} = await setup();
+it('updates the ticket, publishes an event, and acks the message', async () => {
+  const { msg, data, ticket, orderId, listener } = await setup();
 
   await listener.onMessage(data, msg);
 
@@ -17651,18 +18159,18 @@ it('updates the ticket, publishes an event, and acks the message', async ()=>{
 
   expect(msg.ack).toHaveBeenCalled();
   expect(natsWrapper.client.publish).toHaveBeenCalled();
-  
 });
 ```
 
 ### 431. Don't Forget to Listen!
+
 - TODO: `tickets/` listen for incoming events
 - `tickets/src/index.ts`
 - import listeners and pass nats-wrapper-client to both
-- instantiate listeners and pass in client and call .listen(): 
+- instantiate listeners and pass in client and call .listen():
   - `new OrderCreatedListener(natsWrapper.client).listen();`
   - `new OrderCancelledListener(natsWrapper.client).listen();`
-- the listeners can now lockdown and unlock a ticket 
+- the listeners can now lockdown and unlock a ticket
 - TODO: we dont prevent ticket from editing while being locked-down
 
 ```ts
@@ -17677,15 +18185,16 @@ const start = async () => {
   new OrderCreatedListener(natsWrapper.client).listen();
   new OrderCancelledListener(natsWrapper.client).listen();
   //..
-}
+};
 ```
 
 ### 432. Rejecting Edits of Reserved Tickets
+
 - `tickets/src/routes/update.ts`
 - TODO: prevent user from editing ticket currently in lock-down
-- look at ticket user is trying to update 
+- look at ticket user is trying to update
   - if reserved (currently in lockdown) -> reject the update request (throw BadRequestError)
-    
+
 ```ts
 //tickets/src/routes/update.ts
 
@@ -17708,14 +18217,15 @@ router.put('/api/tickets/:id',
 
 ```
 
-#### test 
+#### test
+
 - `tickets/src/routes/__test__/update.test.ts`
 - create a cookie (user)
 - create a ticket
   - find ticket (Ticket)
 - edit ticket
   - add orderId to ticket (mongoose generate random id)
-- try edit/update ticket 
+- try edit/update ticket
 - expect follow to result in error (BadRequestError)
 
 ```ts
@@ -17723,20 +18233,20 @@ router.put('/api/tickets/:id',
 
 //...
 
-it('rejects updates if ticket is reserved', async ()=>{
+it('rejects updates if ticket is reserved', async () => {
   const cookie = global.signin();
 
   //create a ticket
   const response = await request(app)
-  .post(`/api/tickets`)
-  .set('Cookie', cookie)
-  .send({
-    title: 'sfddsfsd',
-    price: 20
-  });
+    .post(`/api/tickets`)
+    .set('Cookie', cookie)
+    .send({
+      title: 'sfddsfsd',
+      price: 20,
+    });
 
   const ticket = await Ticket.findById(response.body.id);
-  ticket!.set({orderId: new mongoose.Types.ObjectId().toHexString()});
+  ticket!.set({ orderId: new mongoose.Types.ObjectId().toHexString() });
   await ticket!.save();
 
   //update ticket
@@ -17745,15 +18255,18 @@ it('rejects updates if ticket is reserved', async ()=>{
     .set('Cookie', cookie)
     .send({
       title: 'new title',
-      price: 100
+      price: 100,
     })
     .expect(400);
 });
 ```
 
 ---
+
 ## section 20 - worker services (1hr36min)
+
 ### 433. The Expiration Service
+
 - orders / tickets is done (listeners, publishers, route handlers)
 - rest of this course is backend with minor frontend code
 - TODO: expiring an order
@@ -17786,28 +18299,32 @@ width=600
 />
 
 - NOTE: the orders' `expiresAt` property `orders/src/routes/new.ts` is set when calling `new OrderCreatedPublisher()`
+
   - this `expiresAt` is a timestamp, and we say it 'expired' if the timestamp goes from `future` to the `past`.
   - once expired, we emit `expiration:complete`
 
 - TODO: keeping track of timer and ensuring event is emitted after 15min
 - 4 options:
 
-  #### OPTION 1 
+  #### OPTION 1
+
   - `setTimeout` stores timer in memory, if expiration service restarts, all timers are lost and events will not send.
-  
-  #### OPTION 2 
+
+  #### OPTION 2
+
   - rely on NATS redelivery mechanism
-  - setup listener for `order:created` 
-  - every time event comes in, see if `expiresAt` time is in the past  (rely on `NATS redelivery mechanism` 5 seconds in the future - retry)
-  - if it is in the past, emit `expiration:complete` 
+  - setup listener for `order:created`
+  - every time event comes in, see if `expiresAt` time is in the past (rely on `NATS redelivery mechanism` 5 seconds in the future - retry)
+  - if it is in the past, emit `expiration:complete`
   - if it is NOT in past, just dont ack() the msg
 
-  - CONS (3min 27sec) 
+  - CONS (3min 27sec)
     - the downside is we may track events that fail constantly in our app - and track the number of times they get redelivered
       - ie. we may have events we have trouble processing, after trying 5,6,7,8,9 times...throw error
     - and if this redelivery mechanism for logging purpose AND is mixed with business logic wont work well together (confusing)
 
-  #### OPTION 3 
+  #### OPTION 3
+
   - scheduled event/message (not supported by NATS)
 
   <img
@@ -17816,23 +18333,23 @@ width=600
   width=600
   />
 
-  - this implementation (not NATS but other event bus): once receiving `order:created` event 
+  - this implementation (not NATS but other event bus): once receiving `order:created` event
   - immediately send out the `expiration:complete` event and tell event bus to not send out for 15min (delayed/scheduled message)
 
   #### OPTION 4 (OUR CHOICE)
+
   - Bull.js - js library that allows long-lived timers, and give-self notifications
   - general purpose framework (store data, processing, scheduling)
   - bulljs stores theses reminders to do something inside redis server (in-memory db)
   - redis stores a list of jobs (scheduled events)
   - after 15min bulljs receives reminder from redis that timer has elapsed
   - then lastly experation service emits `expiration:complete`
-  
+
   <img
   src='exercise_files/udemy-microservices-section20-434-expiration-options-4-bulljs.png'
   alt='udemy-microservices-section20-434-expiration-options-4-bulljs.png'
   width=600
   />
-
 
 ### 435. Initial Setup
 
@@ -17845,7 +18362,7 @@ width=600
 - `expiration/` directory
 - copy from `tickets/`
 
-- update the expiration package.json dependencies (keep these): 
+- update the expiration package.json dependencies (keep these):
   - dependencies
     - `@clarklindev/common`
     - `node-nats-streaming`
@@ -17873,26 +18390,27 @@ width=600
 ```
 
 ### adding dependencies
+
 ```
 pnpm i bull @types/bull
 ```
 
 ### updated expiration/index
+
 ```ts
 //expiration/index.ts
 import { natsWrapper } from './nats-wrapper';
 
-
 const start = async () => {
   if (!process.env.NATS_URL) {
     throw new Error('NATS_URL must be defined');
-  }  
+  }
   if (!process.env.NATS_CLUSTER_ID) {
     throw new Error('NATS_CLUSTER_ID must be defined');
-  }  
+  }
   if (!process.env.NATS_CLIENT_ID) {
     throw new Error('NATS_CLIENT_ID must be defined');
-  }  
+  }
 
   try {
     await natsWrapper.connect(
@@ -17907,28 +18425,27 @@ const start = async () => {
     });
     process.on('SIGINT', () => natsWrapper.client.close());
     process.on('SIGTERM', () => natsWrapper.client.close());
-
   } catch (err) {
     console.error(err);
   }
-
-
 };
 
 start();
-
 ```
 
 ### TROUBLESHOOT
+
 - `tickets/src/nats-wrapper.ts` errors -> refresh cscode window: `CTRL + SHIFT + P` -> `reload window`
 - OR restart cscode
 
 ### 436. Skaffold errors - Expiration Image Can't be Pulled
+
 - TODO: adding our Expiration and Redis service manifests and then running skaffold dev in the terminal
 - ERROR: ...`failed deployments` (errors are happening because we did not update our Skaffold configuration file):
 
   - pod/expiration-depl-5ff9745876-vx59x: container expiration is waiting to start: cygnetops/expiration can't be pulled
   - deployment/expiration-depl failed. Error: container expiration is waiting to start: cygnetops/expiration can't be pulled.
+
 - FIX: `skaffold.yaml` - add the Expiration service to the bottom of the `skaffold.yaml`
 
 ```yaml
@@ -17944,14 +18461,18 @@ start();
             dest: .
 
 ```
+
 ### 437. A Touch of Kubernetes Setup
+
 - step1: TODO: create Docker image + push to dockerhub
 - step2: kubernetes config files
 - step3: load up as deployment into kubernetes cluster
-- step4: load up instance of redis (in-memory db) 
+- step4: load up instance of redis (in-memory db)
 
 ## step1
+
 ### Docker /Dockerhub
+
 - from expiration/ folder
 - NOTE: steps to ensure successful push to docker hub
   - see section05-20-ticketing/README.md
@@ -17967,9 +18488,12 @@ docker push clarklindev/expiration
 ```
 
 ## step2
+
 ### kubernetes config
+
 - `infra/k8s/expiration-redis-depl.yaml`
-- `expiration-redis-depl.yaml` 
+- `expiration-redis-depl.yaml`
+
   - similar to any of the mongodb deployments .yaml
   - spec -> containers -> image -> `redis` (dockerhub)
   - redis default port `6379`
@@ -17979,15 +18503,17 @@ docker push clarklindev/expiration
   - deployment - `expiration-depl.yaml`
     - similar to tickets-depl.yaml
     - `REDIS_HOST` specifying host name we want to connect to (`expiration-redis-depl.yaml` -> via service `expiration-redis-srv`)
-  - service (`expiration-srv`) -> port is not required (nothing will connect to it directly)  
+  - service (`expiration-srv`) -> port is not required (nothing will connect to it directly)
     - REMOVE -> no network request to service so can delete the service.
 - `skaffold dev`
 - `kubectl get pods`
 
 ### 438. File Sync Setup
+
 - i did this as part of 437
 
 ### 439. Listener Creation
+
 - TODO: create listener for `order:created` event
 - TODO: setup bull js
 - TODO: create publisher for `expiration:complete` event
@@ -17996,23 +18522,22 @@ docker push clarklindev/expiration
 ```ts
 //expiration/src/events/listeners/order-created-listener.ts
 
-import { Listener, OrderCreatedEvent, Subjects } from "@clarklindev/common";
-import { queueGroupName } from "./queue-group-name";
-import { Message } from "node-nats-streaming";
+import { Listener, OrderCreatedEvent, Subjects } from '@clarklindev/common';
+import { queueGroupName } from './queue-group-name';
+import { Message } from 'node-nats-streaming';
 
 export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   readonly subject = Subjects.OrderCreated;
   queueGroupName = queueGroupName;
-  async onMessage(data: OrderCreatedEvent['data'], msg:Message){
-      
-  }
-}   
+  async onMessage(data: OrderCreatedEvent['data'], msg: Message) {}
+}
 ```
 
 ### 440. What's Bull All About?
+
 - traditionally what people use bulljs for...
 - tasks that require processing power (eg. video conversion mp4 to mkv) will use worker server (separate machine/container separate from web server)
-- worker server's goal is to convert the video 
+- worker server's goal is to convert the video
 
 <img
 src='exercise_files/udemy-microservices-section20-440-worker-server.png'
@@ -18024,10 +18549,10 @@ width=600
 - a job is an js object
 - bull.js will send this js object to `redis server` (list of jobs)
 - then worker servers constantly pull redis server, and see if incoming jobs, complete job and send notification back saying job is complete.
-- bulljs (it handles the entire process) gets used in the webserver and worker servers 
+- bulljs (it handles the entire process) gets used in the webserver and worker servers
 - using bulljs we create a `queue` (represents messages we want to queue)
   - we also specify what to do with messages flowing through the queue
-- NOTE: for this project we do NOT have separate web worker servers, everything is contained in expiration service 
+- NOTE: for this project we do NOT have separate web worker servers, everything is contained in expiration service
 - we only have a single server that does everything.
 
 - regarding Bulljs, we are using bull for delayed aspect of messaging and if expiration service server goes down, redis server will probably not also go down..
@@ -18039,16 +18564,17 @@ width=600
 />
 
 ### 441. Creating a Queue
+
 - NOTE: code related to Bull
 - jobs should contain `orderId` so when job expires we know which order expired
 - `expiration/src/queues/expiration-queue.ts`
-- steps: 
+- steps:
   - step 1 -> receive `order:created` event
-  - step 2 -> use expirationQueue (defined in expiration-queue.ts) to queue a job/publish a job 
-  - step 3 -> job is sent to redis server (list of jobs with a specific type eg. `order:expiration`)  
+  - step 2 -> use expirationQueue (defined in expiration-queue.ts) to queue a job/publish a job
+  - step 3 -> job is sent to redis server (list of jobs with a specific type eg. `order:expiration`)
     - job should contain `orderId`
   - step 4 -> jobs are stored in redis-server until 15min lapsed
-  - step 5 -> expirationQueue should process incoming job, should emit `expiration:complete` (job that has lapsed after 15min) 
+  - step 5 -> expirationQueue should process incoming job, should emit `expiration:complete` (job that has lapsed after 15min)
     - the `expiration:complete` event should store the `orderId`
 
 <img
@@ -18058,14 +18584,14 @@ width=600
 />
 
 - `expirationQueue` is what will allow us to publish and process jobs
-- Queue() arguments: 
+- Queue() arguments:
   - first is queue name ('channel') (bucket where we want to store this job in redis)
-  - second is a options object 
-    - configuration that tells queue we want to connect to instance of redis server 
-    - redis server is running in pod (infra/k8s/expiration-depl.yaml -> `env: REDIS_HOST`) 
-    - tell queue we want to use redis: `redis:{ }` 
+  - second is a options object
+    - configuration that tells queue we want to connect to instance of redis server
+    - redis server is running in pod (infra/k8s/expiration-depl.yaml -> `env: REDIS_HOST`)
+    - tell queue we want to use redis: `redis:{ }`
 - create an interface (`interface Payload`) for job that describes what information is being sent.
-- can create a function to process the notification we receive back from complete job 
+- can create a function to process the notification we receive back from complete job
 - the received prop is job (which wraps the data and includes other information relating to job)
 - can access the orderId via: `job.data.orderId`
 - `export {expirationQueue};`
@@ -18074,85 +18600,92 @@ width=600
 //expiration/src/queues/expiration-queue.ts
 import Queue from 'bull';
 
-interface Payload{
+interface Payload {
   orderId: string;
 }
 
 const expirationQueue = new Queue<Payload>('order:expiration', {
   redis: {
-    host: process.env.REDIS_HOST
-  }
+    host: process.env.REDIS_HOST,
+  },
 });
 
 expirationQueue.process(async (job) => {
-  console.log('publish an `expiration:conplete` event for orderId', job.data.orderId);
+  console.log(
+    'publish an `expiration:conplete` event for orderId',
+    job.data.orderId
+  );
 });
 
-export {expirationQueue};
+export { expirationQueue };
 ```
 
 ### 442. Queueing a Job on Event Arrival
+
 - up to this point, we have defined out queue
 - and what to do when we receive a job...
 
 #### listener
+
 - `expiration/src/events/listeners/order-created-listener.ts`
-  - TODO: OrderCreatedListener -> write code for event onMessage() to create a job when receiving `order:created` 
+  - TODO: OrderCreatedListener -> write code for event onMessage() to create a job when receiving `order:created`
   - ie. enqueue a job using queue (`expiration/src/queues/expiration-queue.ts`)
   - we pass into expirationQueue.add({}) the payload (see `expiration/src/queue/expiration-queue.ts` Payload interface)
   - and the orderId value is coming from data property on the event (`data.id`)
   - TODO: add delay between adding job (receiving event OrderCreatedListener) and processing job (`expiration/src/queues/expiration-queue.ts`)
 
 #### index
+
 - TODO: add listener to `expiration/src/index.ts` -> `new OrderCreatedListener(natsWrapper.client).listen();`
 
 ```ts
 //expiration/src/events/listeners/order-created-listener.ts
 
-import { Listener, OrderCreatedEvent, Subjects } from "@clarklindev/common";
-import { queueGroupName } from "./queue-group-name";
-import { Message } from "node-nats-streaming";
-import { expirationQueue } from "../../queues/expiration-queue";
+import { Listener, OrderCreatedEvent, Subjects } from '@clarklindev/common';
+import { queueGroupName } from './queue-group-name';
+import { Message } from 'node-nats-streaming';
+import { expirationQueue } from '../../queues/expiration-queue';
 
 export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   readonly subject = Subjects.OrderCreated;
   queueGroupName = queueGroupName;
 
-  async onMessage(data: OrderCreatedEvent['data'], msg:Message){
+  async onMessage(data: OrderCreatedEvent['data'], msg: Message) {
     await expirationQueue.add({
-      orderId: data.id
+      orderId: data.id,
     });
 
     msg.ack();
   }
-}   
+}
 ```
 
 ```ts
 //expiration/src/index.ts
 import { OrderCreatedListener } from './events/listeners/order-created-listener';
+//...
+try {
+  new OrderCreatedListener(natsWrapper.client).listen();
+} catch (err) {
   //...
-  try{
-    new OrderCreatedListener(natsWrapper.client).listen();
-  }
-  catch(err){
-    //...
-  }
-
+}
 ```
 
 ### 443. Testing Job Processing
+
 - manual test with postman
 - REQUIRED: signed in
   - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
-  
+
 #### create ticket
-  - create a new ticket -> POST `https://ticketing.dev/api/tickets` -> body / Json / `{"title":"movie", "price": 15}`
-  - NOTE: ticketId
-  
+
+- create a new ticket -> POST `https://ticketing.dev/api/tickets` -> body / Json / `{"title":"movie", "price": 15}`
+- NOTE: ticketId
+
 #### create order
-  - POST `https://ticketing/dev/api/orders` -> body / JSON / `{"ticketId": "xasdasdasdfdsfsdf"}`
-  - NOTE: order created
+
+- POST `https://ticketing/dev/api/orders` -> body / JSON / `{"ticketId": "xasdasdasdfdsfsdf"}`
+- NOTE: order created
 
 <img
 src='exercise_files/udemy-microservices-section20-443-testing-job-processing.png'
@@ -18161,68 +18694,74 @@ width=600
 />
 
 ### 444. Delaying Job Processing
+
 - TODO: delay the processing of the job (OrderCreatedListener)
-- add a delay (milliseconds) by using a second argument to add() call 
-  - {delay: 1000}  //1 seconds
-- to delay of 15min, you calculate different between `current time` (time event is received) and `expires at time` 
+- add a delay (milliseconds) by using a second argument to add() call
+  - {delay: 1000} //1 seconds
+- to delay of 15min, you calculate different between `current time` (time event is received) and `expires at time`
   - `const delay = new Date(data.expiresAt).getTime() - new Date().getTime()`
 - NOTE: the delay time `expiresAt` comes from the variable set in `orders/src/routes/new.ts` -> `EXPIRATION_WINDOW_SECONDS` -> `OrderCreatedPublisher(natsWrapper.client).publish({ expiresAt: order.expiresAt.toISOString() })`
 
 ```ts
 //expiration/src/events/listeners/order-created-listener.ts
 
-import { Listener, OrderCreatedEvent, Subjects } from "@clarklindev/common";
-import { queueGroupName } from "./queue-group-name";
-import { Message } from "node-nats-streaming";
-import { expirationQueue } from "../../queues/expiration-queue";
+import { Listener, OrderCreatedEvent, Subjects } from '@clarklindev/common';
+import { queueGroupName } from './queue-group-name';
+import { Message } from 'node-nats-streaming';
+import { expirationQueue } from '../../queues/expiration-queue';
 
 export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   readonly subject = Subjects.OrderCreated;
   queueGroupName = queueGroupName;
 
-  async onMessage(data: OrderCreatedEvent['data'], msg:Message){
-    
+  async onMessage(data: OrderCreatedEvent['data'], msg: Message) {
     const delay = new Date(data.expiresAt).getTime() - new Date().getTime();
     console.log(`waiting this many milliseconds to process the job:`, delay);
 
     await expirationQueue.add(
       {
-        orderId: data.id
-      }, 
+        orderId: data.id,
+      },
       {
-        delay
+        delay,
       }
-  );
+    );
 
     msg.ack();
   }
-}   
+}
 ```
 
 ### testing
-- POSTMAN 
+
+- POSTMAN
 
   #### sign-in (cookie)
-    - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
-    - signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
-    - or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
+
+  - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
+  - signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
+  - or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
 
   #### create ticket
-    - create a new ticket -> POST `https://ticketing.dev/api/tickets` -> body / Json / `{"title":"movie", "price": 15}`
-    - NOTE: ticketId (id)
-    
+
+  - create a new ticket -> POST `https://ticketing.dev/api/tickets` -> body / Json / `{"title":"movie", "price": 15}`
+  - NOTE: ticketId (id)
+
   #### create order using ticket id
-    - POST `https://ticketing/dev/api/orders` -> body / JSON / `{"ticketId": "xasdasdasdfdsfsdf"}`
-    - NOTE: order created
+
+  - POST `https://ticketing/dev/api/orders` -> body / JSON / `{"ticketId": "xasdasdasdfdsfsdf"}`
+  - NOTE: order created
 
   #### result
+
   - bash output: `waiting this many milliseconds to process the job: ...`
-  - then after delay of `EXPIRATION_WINDOW_SECONDS` 
-  - queue can process the job `expirationQueue.process(async (job) => {})` 
+  - then after delay of `EXPIRATION_WINDOW_SECONDS`
+  - queue can process the job `expirationQueue.process(async (job) => {})`
   - should get the message `expiration/src/queues/expiration-queue.ts`
     - `i want to publish an expiration:conplete event for orderId, job.data.orderId`
 
 ### 445. Defining the Expiration Complete Event
+
 - PROGRESS...
   - COMPLETED - receive event
   - COMPLETED - publishing a job
@@ -18231,25 +18770,27 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   - TODO: publish event of `expiration:complete`
 
 #### ExpirationCompleteEvent
+
 - add `expiration:complete` event to `common/` module
 - `common/src/events/expiration-complete-event.ts`
 - every event file exports an interface named after event
-  - TODO: `subject` -> set as the enum `Subjects.ExpirationComplete` 
+  - TODO: `subject` -> set as the enum `Subjects.ExpirationComplete`
   - TODO: `data` -> set as `{orderId: string}`
 
 ```ts
 //common/src/events/expiration-complete-event.ts
-import { Subjects } from "./subjects"
+import { Subjects } from './subjects';
 
 export interface ExpirationCompleteEvent {
   subject: Subjects.ExpirationComplete;
   data: {
     orderId: string;
-  }
+  };
 }
 ```
 
 #### common/index
+
 - `common/src/index.ts`
 - export the `ExpirationCompleteEvent`
 - `common/` publish updates (NOTE: you have to first successfully `pnpm login`)
@@ -18261,40 +18802,48 @@ export * from './events/expiration-complete-event';
 ```
 
 #### troubleshoot
+
 - after making sure you are authenticated with `pnpm login` and version has been pushed to npm
 - otherwise the npm module is not published (even though git has committed)
 - if the package fails to update, then... uninstall with `pnpm uninstall @clarklindev/common` and reinstall
 - `pnpm @clarklindev/common`
 
 #### skaffold
+
 - `skaffold dev`
- - expect deployment with status message similar to this: `asia.gcr.io/golden-index-441407-u9/expiration: Not found. Building`
+- expect deployment with status message similar to this: `asia.gcr.io/golden-index-441407-u9/expiration: Not found. Building`
 
 ### 446. Publishing an Event on Job Processing
+
 - `expiration/src/events/publishers/expiration-complete-publisher.ts`
-- we can create a publisher to publish the  `ExpirationCompleteEvent` (common/src/events/expiration-complete-event)  
+- we can create a publisher to publish the `ExpirationCompleteEvent` (common/src/events/expiration-complete-event)
 - TODO: in expiration -> create a publisher
   - create a class, extend base `Publisher` class and put in the type of event to publish (as an example look at `orders/src/events/publishers/`)
   - then for `subject` use the Subjects enum
 
 ```ts
 //expiration/src/events/publishers/expiration-complete-publisher.ts
-import { Publisher, Subjects, ExpirationCompleteEvent } from "@clarklindev/common";
+import {
+  Publisher,
+  Subjects,
+  ExpirationCompleteEvent,
+} from '@clarklindev/common';
 
-export class ExpirationCompletePublisher extends Publisher<ExpirationCompleteEvent>{
+export class ExpirationCompletePublisher extends Publisher<ExpirationCompleteEvent> {
   readonly subject = Subjects.ExpirationComplete;
 }
 ```
 
 #### ExpirationQueue
+
 - `expiration/src/queues/expiration-queue.ts `
 
 - import the publisher: `import { ExpirationCompletePublisher } from '../events/publishers/expiration-complete-publisher';`
   - it is in the subclass of Publisher `ExpirationCompletePublisher` that we define the event it should send `ExpirationCompleteEvent`
-- whenever we processed a job (received from Redis), publisher specifies the subject/channel we want to send `Subjects.ExpirationComplete` -> `expiration:complete` 
+- whenever we processed a job (received from Redis), publisher specifies the subject/channel we want to send `Subjects.ExpirationComplete` -> `expiration:complete`
 - we get `orderId` from the job
 - when job from redis has been processed -> we we emit `expiration:complete`
-- job has a `data` property, is an object matching the Payload interface which will contain all information we store inside 
+- job has a `data` property, is an object matching the Payload interface which will contain all information we store inside
 
 <img
 src='exercise_files/udemy-microservices-section20-446-redis-job-processed-send-expiration-complete.png'
@@ -18311,36 +18860,39 @@ import { natsWrapper } from '../nats-wrapper';
 expirationQueue.process(async (job) => {
   // console.log('i want to publish an `expiration:conplete` event for orderId', job.data.orderId);
 
-  new ExpirationCompletePublisher(natsWrapper.client).publish(
-    {
-      orderId: job.data.orderId
-    }
-  );
+  new ExpirationCompletePublisher(natsWrapper.client).publish({
+    orderId: job.data.orderId,
+  });
 });
 
-export {expirationQueue};
+export { expirationQueue };
 ```
 
 ## testing using Postman @4min 50sec
+
 - just for testing purposes -> first remove the delay (15min) -> `expiration/src/events/listeners/order-created-listener.ts`
 
 ### sign-in (cookie)
+
 - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
 - signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
 - or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
 
 ### Create ticket
-- POSTMAN -> create a new ticket 
-  - POST `https://ticketing.dev/api/tickets` 
+
+- POSTMAN -> create a new ticket
+  - POST `https://ticketing.dev/api/tickets`
   - headers -> Content-Type `application/json`
   - body -> raw json -> `{"title": "movie", "price": 15}`
-  - (get the ticket id) 
+  - (get the ticket id)
 
 ### create order
+
 - POSTMAN -> use ticket id to create new order `https://ticketing.dev/api/orders`
   - body -> raw json -> `{"ticketId": "eru4398t4390u843"}`
 
 ### terminal output
+
 - looking for `expiration/` `event published to subject expiration:complete` (ExpirationCompletePublisher extends Publisher which has this log)
 
 <img
@@ -18357,7 +18909,7 @@ alt='udemy-microservices-section20-447-order-service-should-listen-for-expiratio
 width=600
 />
 
-- TODO: 
+- TODO:
 - `expiration/` emits `expiration:complete` event,
 - `order/` service listener should listen for `expiration:complete`
 - when order is cancelled, also emit an `order:cancelled` event from `orders/` service
@@ -18369,11 +18921,12 @@ width=600
 />
 
 ### order service listener
+
 - the common module now has an expiration complete event
-- the order service needs to update its npm module to use it: `pnpm update @clarklindev/common` 
-- after receiving ExpirationCompleteEvent -> `order/` service -> we find the `order` 
+- the order service needs to update its npm module to use it: `pnpm update @clarklindev/common`
+- after receiving ExpirationCompleteEvent -> `order/` service -> we find the `order`
 - and mark it as `cancelled`
-- and order has a reference to ticket and it is not necessary to set the orders' ticket reference to null as it is not a deciding factor for isReserved `orders/src/models/ticket.ts` 
+- and order has a reference to ticket and it is not necessary to set the orders' ticket reference to null as it is not a deciding factor for isReserved `orders/src/models/ticket.ts`
 - `ticketSchema.methods.isReserved()` only checks:
   - `OrderStatus.Created`,
   - `OrderStatus.AwaitingPayment`,
@@ -18381,23 +18934,27 @@ width=600
 - as soon as order is in `OrderStatus.Cancelled` status, it is not reserved
 - `orders/src/events/listeners/expiration-complete-listener.ts`
 
-
 ```ts
 //orders/src/events/listeners/expiration-complete-listener.ts
-import {ExpirationCompleteEvent, Listener, OrderStatus, Subjects} from '@clarklindev/common';
+import {
+  ExpirationCompleteEvent,
+  Listener,
+  OrderStatus,
+  Subjects,
+} from '@clarklindev/common';
 import { queueGroupName } from './queue-group-name';
 import { Message } from 'node-nats-streaming';
-import {Order} from '../../models/order';
+import { Order } from '../../models/order';
 import { OrderCancelledPublisher } from '../publishers/order-cancelled-publisher';
 
 export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent> {
   queueGroupName = queueGroupName;
   readonly subject = Subjects.ExpirationComplete;
-  async onMessage(data: ExpirationCompleteEvent['data'], msg:Message){
+  async onMessage(data: ExpirationCompleteEvent['data'], msg: Message) {
     const order = await Order.findById(data.orderId).populate('ticket');
 
-    if(!order){
-      throw new Error('Order not found')
+    if (!order) {
+      throw new Error('Order not found');
     }
 
     order.set({
@@ -18410,8 +18967,8 @@ export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent
       id: order.id,
       version: order.version,
       ticket: {
-        id: order.ticket.id
-      }
+        id: order.ticket.id,
+      },
     });
 
     msg.ack();
@@ -18420,6 +18977,7 @@ export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent
 ```
 
 ### 448. Emitting the Order Cancelled Event
+
 - after updating order status
 - should publish (`orders/src/events/publishers/order-cancelled-publisher -> OrderCancelledPublisher`) and emit event to say order has been cancelled
   - ticket service should listen for this
@@ -18427,51 +18985,53 @@ export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent
 - see code above lesson 447
 
 ### 449. Testing the Expiration Complete Listener
+
 - `orders/src/events/listeners/__test__/expiration-complete-listener.test.ts`
 
 ```ts
 //orders/src/events/listeners/__test__/expiration-complete-listener.test.ts
 import mongoose from 'mongoose';
 import { Message } from 'node-nats-streaming';
-import { OrderStatus, ExpirationCompleteEvent} from '@clarklindev/common';
-import { ExpirationCompleteListener } from "../expiration-complete-listener";
-import { natsWrapper } from "../../../nats-wrapper";
-import { Order } from "../../../models/order";
-import { Ticket } from "../../../models/ticket";
+import { OrderStatus, ExpirationCompleteEvent } from '@clarklindev/common';
+import { ExpirationCompleteListener } from '../expiration-complete-listener';
+import { natsWrapper } from '../../../nats-wrapper';
+import { Order } from '../../../models/order';
+import { Ticket } from '../../../models/ticket';
 
-const setup = async () =>{
+const setup = async () => {
   //create an instance of the listener
   const listener = new ExpirationCompleteListener(natsWrapper.client);
 
   const ticket = Ticket.build({
     id: new mongoose.Types.ObjectId().toHexString(),
     title: 'concert',
-    price: 15
+    price: 15,
   });
   await ticket.save();
 
   const order = Order.build({
     status: OrderStatus.Created,
-    userId: '32423fcdsfs',  //dont matter
-    expiresAt: new Date(),  //dont matter
-    ticket
+    userId: '32423fcdsfs', //dont matter
+    expiresAt: new Date(), //dont matter
+    ticket,
   });
   await order.save();
 
-  const data:ExpirationCompleteEvent['data'] = {
-    orderId: order.id
-  }
-  
+  const data: ExpirationCompleteEvent['data'] = {
+    orderId: order.id,
+  };
+
   //@ts-ignore
   const msg: Message = {
-    ack: jest.fn()
-  }
+    ack: jest.fn(),
+  };
 
   return { listener, order, ticket, data, msg };
 };
 ```
 
 ### 450. A Touch More Testing
+
 - the actual tests...
   - ensure onMessage() is called
   - update order status + save
@@ -18482,18 +19042,18 @@ const setup = async () =>{
 //orders/src/events/listeners/__test__/expiration-complete-listener.test.ts
 //...
 
-it('updates the orders status to cancelled', async ()=>{
-  const {listener, order, ticket, data, msg} = await setup();
+it('updates the orders status to cancelled', async () => {
+  const { listener, order, ticket, data, msg } = await setup();
   await listener.onMessage(data, msg);
   const updatedOrder = await Order.findById(order.id);
-  expect(updatedOrder!.status)
+  expect(updatedOrder!.status);
 });
 
-it('emits an OrderCancelled event', async ()=>{
-  const {listener, order, ticket, data, msg} = await setup();
+it('emits an OrderCancelled event', async () => {
+  const { listener, order, ticket, data, msg } = await setup();
   await listener.onMessage(data, msg);
 
-  expect(natsWrapper.client.publish).toHaveBeenCalled();  
+  expect(natsWrapper.client.publish).toHaveBeenCalled();
 
   //publish should be invoked once, so we look at calls[0]
   //and we access calls[0][1] because 1st argument is subject, 2nd arg is msg object
@@ -18504,8 +19064,8 @@ it('emits an OrderCancelled event', async ()=>{
   expect(eventData.id).toEqual(order.id);
 });
 
-it('acks the message', async ()=>{
-  const {listener, order, ticket, data, msg} = await setup();
+it('acks the message', async () => {
+  const { listener, order, ticket, data, msg } = await setup();
   await listener.onMessage(data, msg);
 
   expect(msg.ack).toHaveBeenCalled();
@@ -18513,36 +19073,42 @@ it('acks the message', async ()=>{
 ```
 
 ### 451. Listening for Expiration
+
 - index.ts is where we intiate listeners
 - so we have to import listener and tell it to listen for incoming events
 
 ```ts
 //orders/src/index.ts
-import {ExpirationCompleteListener} from './events/listeners/expiration-complete-listener'
+import { ExpirationCompleteListener } from './events/listeners/expiration-complete-listener';
 
 new ExpirationCompleteListener(natsWrapper.client).listen();
 ```
 
 #### testing
+
 - code you can test with POSTMAN
 
 ### sign-in (cookie)
+
 - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
 - signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
 - or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
 
 ### Create ticket
-- POSTMAN -> create a new ticket 
-  - POST `https://ticketing.dev/api/tickets` 
+
+- POSTMAN -> create a new ticket
+  - POST `https://ticketing.dev/api/tickets`
   - headers -> Content-Type `application/json`
   - body -> raw json -> `{"title": "movie", "price": 15}`
-  - (get the ticket id) 
+  - (get the ticket id)
 
 ### create order
+
 - POSTMAN -> use ticket id to create new order `https://ticketing.dev/api/orders`
   - body -> raw json -> `{"ticketId": "eru4398t4390u843"}`
 
 ### outcome
+
 - eventually the `order:cancelled` event should get published
 - expecting: `[orders] event published to subject:  order:cancelled`
 
@@ -18552,10 +19118,11 @@ new ExpirationCompleteListener(natsWrapper.client).listen();
 
 ### 452. The Payments Service
 
-#### TODO: ExpirationComplete sets 'OrderStatus.Cancelled' but, should be 'OrderStatus.Complete' 
-- NOTE: `ExpirationComplete` event sets order status to "Cancelled" 
+#### TODO: ExpirationComplete sets 'OrderStatus.Cancelled' but, should be 'OrderStatus.Complete'
+
+- NOTE: `ExpirationComplete` event sets order status to "Cancelled"
 - `orders/src/events/listeners/expiration-complete-listener.ts`
-- we should change this, so that orders that have been paid for, should be "complete" and should not be "cancelled" 
+- we should change this, so that orders that have been paid for, should be "complete" and should not be "cancelled"
 
 ```ts
 //orders/src/events/listeners/expiration-complete-listener.ts
@@ -18572,6 +19139,7 @@ async onMessage(data:ExpirationCompleteEvent['data'], msg: Message){
 ### The payments service
 
 ### payments service (Listening for these events)
+
 - `order:created` -> Payments service listens for this event
   - goal: payment service needs to know how much money it should be receiving
 
@@ -18590,7 +19158,8 @@ alt='udemy-microservices-section21-452-payment-service-listens-for-order-cancell
 width=600
 />
 
-### payments service (emit these events) 
+### payments service (emit these events)
+
 - `charge-created` - order service needs to know an order has been paid for (mark as paid (complete))
 
 <img
@@ -18600,6 +19169,7 @@ width=600
 />
 
 ### 453. globalThis has no index signature TS Error
+
 - Payments service...
 - you may end up seeing a TS error like this in your test/setup.ts file:
 - This is caused by a recent change in the `@types/node` library which is a dependency of `ts-node-dev`
@@ -18607,7 +19177,8 @@ width=600
 ```
 Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.ts(7017)
 ```
-- FIX: 
+
+- FIX:
 
 ```ts
 // payments/src/test/setup.ts
@@ -18617,10 +19188,10 @@ declare global {
   var signin: () => string[];
 }
 //...
-
 ```
 
 ### 454. Payments - Initial Setup
+
 - a lot of `payments/` service is similar to `tickets/` (so copy from tickets/) and `orders/`
 - `.dockerignore`
 - `Dockerfile`
@@ -18633,39 +19204,43 @@ declare global {
 - `src/nats-wrapper.ts`
 
 - payments will have:
-  - `processing` events, 
+  - `processing` events,
   - `publish` events
   - express routing (route handler)
   - different from expiration service (where no network requests required)
 
 #### build docker image
+
 - `payments/` -> `docker build -t clarklindev/payments .`
 - NOTE: docker command's (user id eg. clarklindev) does NOT have @ infront
 - `docker push clarklindev/payments`
 
 #### troubleshoot
+
 - `kubectl get pods` -> gives list of pods
 - `kubectl delete pod [podname]` -> reset a specific pod
 
 #### add to skaffold.yaml
+
 - add payments to skaffold `artifacts` to code-sync
 
 ```yaml
 # section05-21-ticketing/skaffold.yaml
-  # ...
-  artifacts:
-    #...
-    - image: asia.gcr.io/golden-index-441407-u9/payments
-      context: payments
-      docker:
-        dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: 'src/**/*.ts'
-            dest: .
-
+# ...
+artifacts:
+  #...
+  - image: asia.gcr.io/golden-index-441407-u9/payments
+    context: payments
+    docker:
+      dockerfile: Dockerfile
+    sync:
+      manual:
+        - src: 'src/**/*.ts'
+          dest: .
 ```
+
 #### create a infra/k8s/payments deployment also requires payments mongodb deployment
+
 - `section05-21-ticketing/infra/k8s/payments-depl.yaml` copy from `section05-21-ticketing/infra/k8s/tickets-depl.yaml`
 
 ```yaml
@@ -18689,7 +19264,7 @@ spec:
         - name: payments
           # image: clarklindev/payments:latest/payments
           image: asia.gcr.io/golden-index-441407-u9/payments:latest
-          env: 
+          env:
             - name: MONGO_URI
               value: 'mongodb://payments-mongo-srv:27017/payments'
             - name: JWT_KEY
@@ -18718,9 +19293,10 @@ spec:
       protocol: TCP
       port: 3000
       targetPort: 3000
-
 ```
+
 - section05-21-ticketing/infra/k8s/payments-mongo-depl.yaml
+
 ```yaml
 # section05-21-ticketing/infra/k8s/payments-mongo-depl.yaml
 apiVersion: apps/v1
@@ -18753,11 +19329,12 @@ spec:
       protocol: TCP
       port: 27017
       targetPort: 27017
-
 ```
+
 - section05-21-ticketing/ `skaffold dev`
 
 #### expected outcome
+
 - expect -> payments pods (depl and mongo-dpl) to be running (see example below)
 
 ```
@@ -18801,16 +19378,17 @@ width=600
 />
 
 ### 456. Another Order Model!
+
 - this order model is for payments service
 
 ```ts
 //payments/src/models/order.ts
 import { OrderStatus } from '@clarklindev/common';
 import mongoose from 'mongoose';
-import {updateIfCurrentPlugin } from 'mongoose-update-if-current';
+import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
 
-//properties -> properties for building an order 
-interface OrderAttrs{
+//properties -> properties for building an order
+interface OrderAttrs {
   id: string;
   version: number;
   userId: string;
@@ -18819,7 +19397,7 @@ interface OrderAttrs{
 }
 
 //properties -> properties an order has
-interface OrderDoc extends mongoose.Document{
+interface OrderDoc extends mongoose.Document {
   version: number;
   userId: string;
   price: number;
@@ -18827,31 +19405,34 @@ interface OrderDoc extends mongoose.Document{
 }
 
 //properties -> properties a model contains
-interface OrderModel extends mongoose.Model<OrderDoc>{
-  build(attrs:OrderAttrs):OrderDoc;
+interface OrderModel extends mongoose.Model<OrderDoc> {
+  build(attrs: OrderAttrs): OrderDoc;
 }
 
-const orderSchema = new mongoose.Schema({
-  userId: {
-    type: String,
-    required: true,
+const orderSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    status: {
+      type: String,
+      required: true,
+    },
   },
-  price: {
-    type: Number,
-    required: true
-  },
-  status: {
-    type: String,
-    required: true
+  {
+    toJSON: {
+      transform(doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+      },
+    },
   }
-}, {
-  toJSON: {
-    transform(doc, ret){
-      ret.id = ret._id;
-      delete ret._id;
-    }
-  }
-});
+);
 
 orderSchema.statics.build = (attrs: OrderAttrs) => {
   return new Order({
@@ -18859,9 +19440,9 @@ orderSchema.statics.build = (attrs: OrderAttrs) => {
     version: attrs.version,
     price: attrs.price,
     userId: attrs.userId,
-    status: attrs.status
-  })
-}
+    status: attrs.status,
+  });
+};
 
 orderSchema.set('versionKey', 'version');
 orderSchema.plugin(updateIfCurrentPlugin);
@@ -18869,13 +19450,13 @@ orderSchema.plugin(updateIfCurrentPlugin);
 const Order = mongoose.model<OrderDoc, OrderModel>('Order', orderSchema);
 
 export { Order };
-
 ```
 
 - TODO: payments service listeners for `order:created` or `order:cancelled`
 - then we will create or cancel an order inside payment service `orders` collection
 
 ### 457. Update-If-Current
+
 - payments/
 - `pnpm i mongoose-update-if-current`
 - add to model file (see 456)
@@ -18883,7 +19464,7 @@ export { Order };
 ```ts
 //payments/src/models/order.ts
 
-import {updateIfCurrentPlugin } from 'mongoose-update-if-current';
+import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
 
 //...
 
@@ -18892,6 +19473,7 @@ orderSchema.plugin(updateIfCurrentPlugin);
 ```
 
 ### 458. Replicating Orders
+
 - TODO: create a listener for `order:created` event
 - `payments/src/events/listeners`
 - `onMessage(data, msg){}` -> extra information off data object
@@ -18905,18 +19487,18 @@ import { queueGroupName } from './queue-group-name';
 import { Message } from 'node-nats-streaming';
 import { Order } from '../../models/order';
 
-export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
+export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
   readonly subject = Subjects.OrderCreated;
-  
+
   queueGroupName = queueGroupName;
 
-  async onMessage(data:OrderCreatedEvent['data'], msg:Message){
+  async onMessage(data: OrderCreatedEvent['data'], msg: Message) {
     const order = Order.build({
       id: data.id,
       price: data.ticket.price,
       status: data.status,
       userId: data.userId,
-      version: data.version
+      version: data.version,
     });
 
     await order.save();
@@ -18927,12 +19509,15 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
 ```
 
 ### 459. Testing Order Creation
+
 - `payments/src/events/listeners/__test__/order-created-listener.test.ts`
 
 #### testing
+
 - `payments/`
 - `pnpm run test`
-- `it('replicates the order info', async () => {});` 
+- `it('replicates the order info', async () => {});`
+
   - try find an order inside orders collection (with correct price)
 
 - `it('acks the message', async ()=>{});`
@@ -18942,15 +19527,15 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
 //payments/src/events/listeners/__test__/order-created-listener.test.ts
 
 import mongoose from 'mongoose';
-import { OrderCreatedEvent, OrderStatus } from "@clarklindev/common";
-import { natsWrapper } from "../../../nats-wrapper";
-import { OrderCreatedListener } from "../order-created-listener";
+import { OrderCreatedEvent, OrderStatus } from '@clarklindev/common';
+import { natsWrapper } from '../../../nats-wrapper';
+import { OrderCreatedListener } from '../order-created-listener';
 import { Message } from 'node-nats-streaming';
 import { Order } from '../../../models/order';
 
 const setup = async () => {
   const listener = new OrderCreatedListener(natsWrapper.client);
-  
+
   const data: OrderCreatedEvent['data'] = {
     id: new mongoose.Types.ObjectId().toHexString(),
     version: 0, //anything - not using
@@ -18959,31 +19544,28 @@ const setup = async () => {
     status: OrderStatus.Created,
     ticket: {
       id: 'tickid', //anything - not using
-      price: 10
-    }
-  }
+      price: 10,
+    },
+  };
 
   //@ts-ignore
-  const msg:Message = {
-    ack: jest.fn()
-  }
+  const msg: Message = {
+    ack: jest.fn(),
+  };
 
-  return { listener, data, msg};
+  return { listener, data, msg };
 };
 
-
 it('replicates the order info', async () => {
-  const { listener, data, msg} = await setup();
+  const { listener, data, msg } = await setup();
   await listener.onMessage(data, msg);
 
   const order = await Order.findById(data.id);
   expect(order!.price).toEqual(data.ticket.price);
-
 });
 
-
-it('acks the message', async ()=>{
-  const { listener, data, msg} = await setup();
+it('acks the message', async () => {
+  const { listener, data, msg } = await setup();
   await listener.onMessage(data, msg);
 
   expect(msg.ack).toHaveBeenCalled();
@@ -18991,56 +19573,63 @@ it('acks the message', async ()=>{
 ```
 
 ### 460. Marking an Order as Cancelled
+
 - listener for `order:cancelled`
 - TODO: inside the listener, update the status to `OrderStatus.Cancelled`
 - when user makes a payment request an order
   - figure out if order has status of cancelled (search orders collection) and if it does, reject payment.
-  - using id, version, to update status to cancelled -> Subjects.OrderCancelled 
+  - using id, version, to update status to cancelled -> Subjects.OrderCancelled
 - NOTE: we use Order.findOne({}) because we want to find record with `id` AND `version`
 
 - `payments/src/events/listeners/order-cancelled-listener.ts`
 
 ```ts
 //payments/src/events/listeners/order-cancelled-listener.ts
-import { OrderCancelledEvent, Subjects, Listener, OrderStatus } from "@clarklindev/common";
-import { Message } from "node-nats-streaming";
+import {
+  OrderCancelledEvent,
+  Subjects,
+  Listener,
+  OrderStatus,
+} from '@clarklindev/common';
+import { Message } from 'node-nats-streaming';
 
-import { queueGroupName } from "./queue-group-name";
-import { Order } from "../../models/order";
+import { queueGroupName } from './queue-group-name';
+import { Order } from '../../models/order';
 
 export class OrderCancelledListener extends Listener<OrderCancelledEvent> {
-  
   readonly subject = Subjects.OrderCancelled;
   queueGroupName = queueGroupName;
 
-  async onMessage(data: OrderCancelledEvent['data'], msg:Message) {
+  async onMessage(data: OrderCancelledEvent['data'], msg: Message) {
     const order = await Order.findOne({
       _id: data.id,
-      version: data.version - 1
+      version: data.version - 1,
     });
 
-    if(!order){
+    if (!order) {
       throw new Error('Order not found');
     }
-    
+
     order.set({
-      status: OrderStatus.Cancelled
+      status: OrderStatus.Cancelled,
     });
 
     await order.save();
 
     msg.ack();
   }
-
 }
 ```
 
 ### 461. Cancelled Testing
+
 - `payments\src\events\listeners\__test__\order-cancelled-listener.test.ts`
 
 #### testing
+
 - `it('updates the status of the order', async ()=>{});`
-  - re-fetch order out the database 
+
+  - re-fetch order out the database
   - ...ensure status was updated to cancelled
 
 - `it('acks the msg', async ()=>{});`
@@ -19048,13 +19637,13 @@ export class OrderCancelledListener extends Listener<OrderCancelledEvent> {
 
 ```ts
 //payments\src\events\listeners\__test__\order-cancelled-listener.test.ts
-import mongoose from "mongoose";
-import { OrderStatus, OrderCancelledEvent } from "@clarklindev/common";
-import { Message } from "node-nats-streaming";
+import mongoose from 'mongoose';
+import { OrderStatus, OrderCancelledEvent } from '@clarklindev/common';
+import { Message } from 'node-nats-streaming';
 
-import { OrderCancelledListener } from "../order-cancelled-listener";
-import { natsWrapper } from "../../../nats-wrapper";
-import { Order } from "../../../models/order";
+import { OrderCancelledListener } from '../order-cancelled-listener';
+import { natsWrapper } from '../../../nats-wrapper';
+import { Order } from '../../../models/order';
 
 const setup = async () => {
   const listener = new OrderCancelledListener(natsWrapper.client);
@@ -19063,53 +19652,54 @@ const setup = async () => {
     status: OrderStatus.Created,
     price: 10,
     userId: 'assdfsdfds',
-    version: 0
+    version: 0,
   });
 
   await order.save();
 
-  const data:OrderCancelledEvent['data'] = {
+  const data: OrderCancelledEvent['data'] = {
     id: order.id,
-    version: 1,   //order version + 1
+    version: 1, //order version + 1
     ticket: {
-      id: 'asdadasd'
-    }
-  }
+      id: 'asdadasd',
+    },
+  };
 
   //@ts-ignore
   const msg: Message = {
-    ack: jest.fn()
+    ack: jest.fn(),
   };
 
-  return { listener, data, msg, order};
-}
+  return { listener, data, msg, order };
+};
 
-it('updates the status of the order', async ()=>{
-  const {listener, data, msg, order} = await setup();
+it('updates the status of the order', async () => {
+  const { listener, data, msg, order } = await setup();
   await listener.onMessage(data, msg);
   const updatedOrder = await Order.findById(order.id);
 
   expect(updatedOrder!.status).toEqual(OrderStatus.Cancelled);
 });
 
-it('acks the message', async ()=>{
-  const {listener, data, msg, order} = await setup();
+it('acks the message', async () => {
+  const { listener, data, msg, order } = await setup();
   await listener.onMessage(data, msg);
 
   expect(msg.ack).toHaveBeenCalled();
-})
-
+});
 ```
 
 ### 462. Starting the Listeners
+
 - now that we have created the listeners,
-- we have to create instances and tell them to start listening for incoming events when application (index.ts) starts up 
+- we have to create instances and tell them to start listening for incoming events when application (index.ts) starts up
 - `payments/src/index.ts`
 
 #### running the app
+
 - remember we have been creating a couple of different orders
 - everytime we create an order, everytime we cancelled it, those events have been getting saved by `net streaming server` (unless you have restarted the streaming server and dumped the events)
-- when you save `index.ts` the service will restart and create a subscription 
+- when you save `index.ts` the service will restart and create a subscription
 - listen for all the events on the `order created` and `order cancelled` channels
 - we will then start receiving all the events missed (previously published events) out on over time.
 - EXPECT to see the expiration service starting to backfill all the relevant data.
@@ -19124,17 +19714,16 @@ import { OrderCreatedListener } from './events/listeners/order-created-listener'
 //...
 new OrderCancelledListener(natsWrapper.client).listen();
 new OrderCreatedListener(natsWrapper.client).listen();
-
 ```
 
-#### postman 
+#### postman
+
 - 2min 40sec
 - POSTMAN - create an order
 - ensure authenticated
 - create ticket
 - create order for the ticket (you should see: `message received: order:created / payments-service`)
 - then if you wait...delay... (you should see: `message received: order:cancelled / payments-service`)
-
 
 ### 463. Payments Flow with Stripe
 
@@ -19152,6 +19741,7 @@ width=600
 - buy button
 
 #### Stripejs
+
 - opens up dialog modal created by stripe.js (take credit card payment details)
 - delegates handling of payment to 3rd party (Stripe)
 
@@ -19173,7 +19763,7 @@ width=600
 - user enters credit card details
 - initial connecting to stripe api returns a token (think of it like pre-authorisation - allows a follow up request to charge money)
 - token is one-time use (once charged, no-more access to credit card)
-- stripejs gives token 
+- stripejs gives token
 - token is sent with request to payment service
 - inside payment service -> ensure user is trying to pay for a valid order
 - verify price
@@ -19181,83 +19771,268 @@ width=600
 - TODO: implement above process and test apis with jest
 
 ### 464. Implementing the Create Charge Handler
+
+<img
+src='exercise_files/udemy-microservices-section21-464-implementing-the-create-charge-handler_request-handler.png'
+alt='udemy-microservices-section21-464-implementing-the-create-charge-handler_request-handler.png'
+width=600
+/>
+
+- stripejs has provided the token
+- the token is sent with request to payments service
+- payment service makes request (attaching token) to strip api
+
+<img
+src='exercise_files/udemy-microservices-section21-464-payment-service-request-handler.png'
+alt='udemy-microservices-section21-464-payment-service-request-handler.png'
+width=600
+/>
+
+- with the request, include `token` and `orderId`
+- in payment service request handler:
+  - find order user trying to pay for
+  - make sure payer of this order is the same person who originally created the order
+  - make sure order is still valid (`created` state / not `cancelled` state)
+  - make sure order price matches the amount that was authorized by user to charge credit card
+  - bill the user (verify payment with Stripe api)
+  - create `charge` record in db to record successful payment (a record in db - successfully billed user for money)
+
+#### testing
+
+- @2min 10sec
+- testing entire flow with only jest
+
+#### create router
+
+- `payments/src/routes/new.ts`
+- todo: implement the actual route handler function for `/api/payments`... this lesson only returns true if validation passes
+
+```ts
+//payments/src/routes/new.ts
+import express, { Request, Response } from 'express';
+import { body } from 'express-validator';
+import {
+  requireAuth,
+  validateRequest,
+  BadRequestError,
+  NotFoundError,
+} from '@clarklindev/common';
+
+import { Order } from '../models/order';
+
+const router = express.Router();
+
+router.post(
+  '/api/payments',
+  requireAuth,
+  [body('token').not().isEmpty(), body('orderId').not().isEmpty()],
+  validateRequest,
+  async (req: Request, res: Response) => {
+    res.send({ success: true });
+  }
+);
+
+export { router as createChargeRouter };
+```
+
+#### wire up router
+
+- then wire up inside app.ts
+
+```ts
+//payments/app.ts
+
+//...
+import { createChargeRouter } from './routes/new';
+//...
+app.use(createChargeRouter);
+```
+
+#### ingress/nginx route
+
+- configuring ingress/nginx so routing from `/api/payments` get directed to `payments-srv` cluster ip service
+- `infra/k8s/ingress-srv.yaml`
+
+```yaml
+#infra/k8s/ingress-srv.yaml
+#...
+paths:
+  - path: /api/payments/?(.*)
+    pathType: ImplementationSpecific
+    backend:
+      service:
+        name: payments-srv
+        port:
+          number: 3000
+```
+
+#### testing
+
+- POSTMAN
+- ensure logged in
+  - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
+  - signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
+  - or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
+- POST `https://ticketing.dev/api/payments`
+
+  - headers -> `Content-Type: application/json`
+  - body -> raw/json -> {}
+
+- make a request to /api/payments
+- expect -> return error due to invalid request body missing `token` and `orderId`
+
+<img
+src='exercise_files/udemy-microservices-section21-464-testing-with-postman-request-body-invalid.png'
+alt='udemy-microservices-section21-464-testing-with-postman-request-body-invalid.png'
+width=600
+/>
+
 ### 465. Validating Order Payment
+
 ### 466. Testing Order Validation Before Payment
+
 ### 467. Testing Same-User Validation
+
 ### 468. Stripe Setup
+
 ### 469. Creating a Stripe Secret
+
 ### 470. Creating a Charge with Stripe
+
 ### 471. Manual Testing of Payments
+
 ### 472. Automated Payment Testing
+
 ### 473. Mocked Stripe Client
+
 ### 474. A More Realistic Test Setup
+
 ### 475. Realistic Test Implementation
+
 ### 476. Tying an Order and Charge Together
+
 ### 477. Testing Payment Creation
+
 ### 478. Publishing a Payment Created Event
+
 ### 479. More on Publishing
+
 ### 480. Marking an Order as Complete
+
 ### 481. Important Info About the Next Lecture - Don't Skip
+
 ### 482. Don't Cancel Completed Orders!
 
 ---
 
 ## section 22 - back to the client (1hr43min)
+
 ### 483. A Few More Pages
+
 ### 484. Reminder on Data Fetching with Next
+
 ### 485. Two Quick Fixes
+
 ### 486. Scaffolding a Form
+
 ### 487. Sanitizing Price Input
+
 ### 488. Ticket Creation
-### 489. Listing All Ticketst
-### 490. Reminder on Invalid `<Link>` with `<a>` child Errors
+
+### 489. Listing All Tickets
+
+### 490. Reminder on Invalid '<Link>' with '<a>' child Errors
+
 ### 491. Linking to Wildcard Routes
+
 ### 492. Creating an Order
+
 ### 493. Programmatic Navigation to Wildcard Routes
+
 ### 494. The Expiration Timer
+
 ### 495. Displaying the Expiration
+
 ### 496. Showing a Stripe Payment Formt
+
 ### 497. Module not found: Can't resolve 'prop-types'
+
 ### 498. Configuring Stripe
+
 ### 499. Test Credit Card Numbers
+
 ### 500. Paying for an Order
+
 ### 501. Filtering Reserved Tickets
+
 ### 502. Header Links
+
 ### 503. Rendering a List of Orders
 
 ---
 
 ## section 23 - CI/CD (2hr17min)
+
 ### 504. Development Workflow
+
 ### 505. Git Repository Approaches
+
 ### 506. Creating a GitHub Action
+
 ### 507. Adding a CI Test Script
+
 ### 508. Tests in GitHub Actions Hang - Jest did not exit
+
 ### 509. Running Tests on PR Creation
+
 ### 510. Output of Failing Tests
+
 ### 511. Running Tests in Parallel
+
 ### 512. Verifying a Test Run
+
 ### 513. Selective Test Execution
+
 ### 514. Deployment Options
+
 ### 515. Creating a Hosted Cluster
+
 ### 516. Reminder on Kubernetes Context
+
 ### 517. Reminder on Swapping Contexts
+
 ### 518. The Deployment Plan
+
 ### 519. Building an Image in an Action
+
 ### 520. Testing the Image Build
+
 ### 521. Restarting the Deployment
+
 ### 522. Applying Kubernetes Manifests
+
 ### 523. Prod vs Dev Manifest Files
+
 ### 524. Manual Secret Creation
+
 ### 525. Don't Forget Ingress-Nginx!
+
 ### 526. Testing Automated Deployment
+
 ### 527. Additional Deploy Files
+
 ### 528. A Successful Deploy!
+
 ### 529. Buying a Domain Name
+
 ### 530. Three Important Changes Needed to Deploy - Do Not Skip!
+
 ### 531. Configuring the Domain Name
+
 ### 532. I Really Hope This Works
+
 ### 533. Next Steps
+
 ---
 
 ## section 24 - basics of Docker (3hr3min)
