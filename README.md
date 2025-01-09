@@ -20009,6 +20009,29 @@ global.signin = (id?: string) => {
 
 ### 468. Stripe Setup
 
+<img
+src='exercise_files/udemy-microservices-section21-468-stripe-setup.png'
+alt='udemy-microservices-section21-468-stripe-setup.png'
+width=600
+/>
+
+- Payment service -> up till now, we have the `token` (to use to charge the credit card)
+- TODO: install nodejs stripe sdk
+- payments/
+
+```bash
+pnpm i stripe
+```
+
+- call method from module, pass (`token`, `api key`)
+
+### Stripe
+- sign up for account
+- verify email 
+- get api key (https://dashboard.stripe.com/test/apikeys)
+  - publishable key
+  - secret key
+
 ### 469. Creating a Stripe Secret
 
 ### 470. Creating a Charge with Stripe
