@@ -1,11 +1,11 @@
-import {MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 
 import jwt from 'jsonwebtoken';
 
 //UPDATE
 declare global {
-  var signin: () => string[];
+  var signin: (id?: string) => string[];
 }
 
 //OLDER
@@ -24,9 +24,9 @@ declare global {
 
 jest.mock('../nats-wrapper');
 
-let mongo:any;
+let mongo: any;
 
-beforeAll(async ()=>{
+beforeAll(async () => {
   process.env.JWT_KEY = 'adsopsdfisd';
 
   //OLD WAY
@@ -35,20 +35,20 @@ beforeAll(async ()=>{
   mongo = await MongoMemoryServer.create();
   const mongoUri = mongo.getUri();
 
-// await mongoose.connect(mongoUri, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// });
+  // await mongoose.connect(mongoUri, {
+  //   useNewUrlParser: true,
+  //   useUnifiedTopology: true,
+  // });
   await mongoose.connect(mongoUri, {});
 });
 
 beforeEach(async () => {
   jest.clearAllMocks();
-  
-  if(mongoose.connection.db){
+
+  if (mongoose.connection.db) {
     const collections = await mongoose.connection.db?.collections();
-  
-    for(let collection of collections){
+
+    for (let collection of collections) {
       await collection.deleteMany({});
     }
   }
@@ -62,25 +62,24 @@ afterAll(async () => {
 });
 
 //get cookie
-global.signin = ()=> {
+global.signin = (id?: string) => {
   //1. build a jwt payload {id, email}
   const payload = {
-    id: new mongoose.Types.ObjectId().toHexString(),
-    email: 'test@test.com'
-  }
+    id: id || new mongoose.Types.ObjectId().toHexString(),
+    email: 'test@test.com',
+  };
   //2. create the jwt (need process.env.JWT_KEY)
   const token = jwt.sign(payload, process.env.JWT_KEY!);
 
-   //3. build sesion object {jwt: MY_JWT}
-   const session = {jwt: token};
+  //3. build sesion object {jwt: MY_JWT}
+  const session = { jwt: token };
 
-   //4. turn session into JSON
-   const sessionJSON = JSON.stringify(session);
- 
-   //5. take JSON and encode it as base64
-   const base64 = Buffer.from(sessionJSON).toString('base64');
- 
-   //6. return a string with cookie: express:sess=cookie 
-   return [`session=${base64}`];
+  //4. turn session into JSON
+  const sessionJSON = JSON.stringify(session);
 
-}
+  //5. take JSON and encode it as base64
+  const base64 = Buffer.from(sessionJSON).toString('base64');
+
+  //6. return a string with cookie: express:sess=cookie
+  return [`session=${base64}`];
+};

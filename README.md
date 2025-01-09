@@ -19902,13 +19902,110 @@ width=600
 
 #### testing with jest
 
-- `payments/src/routes/**test**/new.test.ts`
+- `payments/src/routes/__test__/new.test.ts`
 - testing the route handler
 - make use of request/`supa` test library
 - get express app -> make request to express app
 
+```ts
+//payments/src/routes/__test__/new.test.ts
+
+import { OrderStatus } from '@clarklindev/common';
+import request from 'supertest';
+import mongoose from 'mongoose';
+
+import { Order } from '../../models/order';
+import { app } from '../../app';
+//throw an error if purchase an error that does not exist
+
+it('throws a 404 when purchasing an order that does not exist', async () => {
+  await request(app)
+    .post('/api/payments')
+    .set('Cookie', global.signin())
+    .send({
+      token: 'asdasdasd',
+      orderId: new mongoose.Types.ObjectId().toHexString(),
+    })
+    .expect(404);
+});
+
+it('returns a 401 when purchasing an order that doesnt belong to a user', async () => {
+  const order = Order.build({
+    id: new mongoose.Types.ObjectId().toHexString(),
+    userId: new mongoose.Types.ObjectId().toHexString(),
+    version: 0,
+    price: 20,
+    status: OrderStatus.Created,
+  });
+
+  await order.save();
+
+  await request(app)
+    .post('/api/payments')
+    .set('Cookie', global.signin())
+    .send({
+      token: 'asdasdasd',
+      orderId: order.id,
+    })
+    .expect(401);
+});
+
+it('returns a 400 when purchasing a cancelled order', async () => {
+  const userId = new mongoose.Types.ObjectId().toHexString();
+
+  const order = Order.build({
+    id: new mongoose.Types.ObjectId().toHexString(),
+    userId,
+    version: 0,
+    price: 20,
+    status: OrderStatus.Cancelled,
+  });
+  await order.save();
+
+  await request(app)
+    .post('/api/payments')
+    .set('Cookie', global.signin(userId))
+    .send({
+      orderId: order.id,
+      token: 'asdasdasd',
+    })
+    .expect(400);
+});
+```
 
 ### 467. Testing Same-User Validation
+
+- see code lesson 466 -> `it('returns a 400 when purchasing a cancelled order', async () => {});`
+- this test implies we will pass the test:
+- ...where person making request is same person who originally created the order
+- `if(order.userId !== req.currentUser!.id){ throw new NotAuthorizedError}`
+
+#### create cancelled order (passing in userId AND status: OrderStatus.Cancelled)
+
+- what that means is when we create the order, have to pass-in a `userId` OR assign `userId` to the `order`
+- `payments/src/test/setup.ts` -> global.signin() needs to be updated to receive a prop `global.signin(userId)`
+- `payments/src/routes/__test__/new.test.ts`
+- then in actual test, we have a `userId`
+- create an order (using `userId`)
+- and ensure status for order is updated to cancelled `status: OrderStatus.Cancelled`
+
+#### request to purchase cancelled order (setting signed-in user as userId)
+
+- create POST request to purchase the order -> `/api/payments` and set the cookie with `userId`
+- `await request(app).post('/api/payments').set('Cookie', global.signin(userId));`
+- note: global.signin() updated
+
+```ts
+//get cookie
+global.signin = (id?: string) => {
+  //1. build a jwt payload {id, email}
+  const payload = {
+    id: id || new mongoose.Types.ObjectId().toHexString(),
+    email: 'test@test.com',
+  };
+  //...
+};
+```
 
 ### 468. Stripe Setup
 
