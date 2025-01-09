@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: client-depl
-spec: 
+spec:
   replicas: 1
   selector:
     matchLabels:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: asia.gcr.io/golden-index-441407-u9/client:latest   #asia.gcr.io/golden-index-441407-u9/client:latest
+          image: asia.gcr.io/elite-advice-447211-j0/client:latest #asia.gcr.io/elite-advice-447211-j0/client:latest
 ---
 apiVersion: v1
 kind: Service

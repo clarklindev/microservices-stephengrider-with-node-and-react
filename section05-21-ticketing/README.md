@@ -2,28 +2,43 @@
 
 ### TODO:
 
-0. docker login
+0. make sure docker is loggedin
 
-- make sure docker is loggedin
+- `docker login`
 
 1. start docker desktop (ensure docker + kubernetes started)
 
-- NOTE: docker logged-in
+- NOTE: docker should be logged-in
 
 2. ensure correct kubernetes context selected
    - right click docker-desktop app, select kubernetes context
 
+### Login with google cloud cli
+
+```bash
+gcloud auth login
+gcloud auth application-default login
+```
+
 - NOTE: gcloud project has already been created
 - NOTE: gcloud kubernetes context already created (see readme)
 - NOTE: you already have a gcloud project id (configured in infra/k8s/ yaml files)
-- NOTE: you set the project id in gcloud cli - eg. `gcloud config set project golden-index-441407-u9`
+
+### NB: Set glcloud project
+
+- NOTE: you set the project id in gcloud cli
+- eg: `gcloud config set project golden-index-441407-u9`
+- eg: `gcloud config set project elite-advice-447211-j0`
 
 ### 122. kubernetes cluster creation
 
 3. kubernetes engine -> clusters -> switch to standard -> config -> create
 
 - config: zonal -> asia-east1-a (pick whats closest)
-- node pools -> nodes -> machine family: `(E2) (E2 is Low cost, day-to-day computing)` -> machine type: `shared core (e2-micro)` -> bootdisk size (83gb)
+- node pools -> nodes -> machine family: `(E2) (E2 is Low cost, day-to-day computing)`
+  -> machine type: `shared core (e2-micro)` -> bootdisk size (83gb)
+  -> //...
+  -> (CHOSEN TYPE) machine type: `shared core (e2-medium)` -> bootdisk size (83gb)
 
   - NOTE: for the course Stephen chooses -> N1-> g1-small : `N1	Balanced price & performance	0.5 - 96	1.7 - 624 GB	Intel Skylake`
   - clusters -> default pool -> size -> number of `nodes -> 3`
@@ -40,37 +55,39 @@
 NOTE: you have downloaded gcloud and installed gcloud cli -> `GoogleCloudSDKInstaller.exe`
 
 - ensure this is the correct google account...
+- usage: `gcloud container clusters get-credentials [cluster-name]`
 
-```
+```bash
 gcloud container clusters get-credentials ticketing-dev
-
 ```
+
+### gcloud project quota
+
+usage: `gcloud auth application-default set-quota-project QUOTA_PROJECT_ID`
+example:`gcloud auth application-default set-quota-project elite-advice-447211-j0`
 
 ### TROUBLESHOOT gcloud
+
 see `### 124. initializing GCloud Sdk`
 
-- ERROR: 
-`
-gcloud : File C:\Users\admin\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.ps1 cannot be loaded because running scripts is 
-disabled on this system. For more information, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
-`
+- ERROR:
+  `gcloud : File C:\Users\admin\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.ps1 cannot be loaded because running scripts is 
+disabled on this system. For more information, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.`
 - FIX:
-`
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-`
+  `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
 - Install required plugins:
 
-`
-gcloud components install gke-gcloud-auth-plugin
-gke-gcloud-auth-plugin --version
-`
+`gcloud components install gke-gcloud-auth-plugin gke-gcloud-auth-plugin --version`
 
 ---
 
+### Login with google cloud cli
 
-
+```bash
+gcloud auth login
 gcloud auth application-default login
+```
 
 5. ensure cluster-admin permissions
 
@@ -105,18 +122,29 @@ gcloud console -> view all products -> networking -> network services -> load ba
 
 9. paste in host (save as administrator)
 
-- redirect url ticketing.dev to loadbalancer ip eg `34.80.20.175`
+- redirect url ticketing.dev to loadbalancer ip eg `35.194.144.87`
 
 - c:\Windows\System32\drivers\etc\hosts
 
 eg.
+
 - NOTE: you need to get the ip address of the load balancer from gcloud
 
 ```
-34.80.20.175 ticketing.dev
+35.194.144.87 ticketing.dev
 ```
+
 ### troubleshoot
+
 - if windows/system32/drivers/etc/host is not setup, you will get redirected to `https://ticketing.dev/lander`
+
+#### troubleshoot error: Cloud Build
+
+- Build [asia.gcr.io/elite-advice-447211-j0/client] failed: error creating build: googleapi: Error 403: Access Not Configured. Cloud Build has not been used in project 446519669855 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudbuild.googleapis.com/overview?project=446519669855 then retry.
+
+- FIX: gcloud -> enable cloud build
+  - under SERVICE ACCOUNT
+  - enable `Kubernetes Engine (Kubernetes Engine Developer) role`
 
 #### REQUIRED -> ADD SECRET (env variables)
 
@@ -147,19 +175,19 @@ skaffold dev
 https://ticketing.dev/api/users/currentuser
 ```
 
---------------------------------------------------------------
+---
+
 ## Running Tickets/ app
-- search main README.md for 
-`TERMINAL WINDOW 1`
-`TERMINAL WINDOW 2`
-`TERMINAL WINDOW 3`
-`TERMINAL WINDOW 4`
+
+- search main README.md for
+  `TERMINAL WINDOW 1`
+  `TERMINAL WINDOW 2`
+  `TERMINAL WINDOW 3`
+  `TERMINAL WINDOW 4`
 
 `### 298. Port-Forwarding with Kubectl` -> `# STEPS TO PUBLISHING`
 
-
-
----------------------------------------------------------------
+---
 
 #### TROUBLESHOOT
 

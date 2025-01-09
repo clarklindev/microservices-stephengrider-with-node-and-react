@@ -7,10 +7,10 @@ build:
   # local:
   #   push: false
   googleCloudBuild:
-    projectId: golden-index-441407-u9
+    projectId: elite-advice-447211-j0
   artifacts:
     # - image: clarklindev/auth
-    - image: asia.gcr.io/golden-index-441407-u9/auth
+    - image: asia.gcr.io/elite-advice-447211-j0/auth
       context: auth
       docker:
         dockerfile: Dockerfile
@@ -18,7 +18,7 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-    - image: asia.gcr.io/golden-index-441407-u9/client
+    - image: asia.gcr.io/elite-advice-447211-j0/client
       context: client
       docker:
         dockerfile: Dockerfile
@@ -26,7 +26,7 @@ build:
         manual:
           - src: '**/*.js'
             dest: .
-    - image: asia.gcr.io/golden-index-441407-u9/tickets
+    - image: asia.gcr.io/elite-advice-447211-j0/tickets
       context: tickets
       docker:
         dockerfile: Dockerfile
@@ -34,7 +34,7 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-    - image: asia.gcr.io/golden-index-441407-u9/orders
+    - image: asia.gcr.io/elite-advice-447211-j0/orders
       context: orders
       docker:
         dockerfile: Dockerfile
@@ -42,7 +42,7 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-    - image: asia.gcr.io/golden-index-441407-u9/expiration
+    - image: asia.gcr.io/elite-advice-447211-j0/expiration
       context: expiration
       docker:
         dockerfile: Dockerfile
@@ -50,7 +50,7 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-    - image: asia.gcr.io/golden-index-441407-u9/payments
+    - image: asia.gcr.io/elite-advice-447211-j0/payments
       context: payments
       docker:
         dockerfile: Dockerfile
@@ -58,5 +58,3 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-      
-

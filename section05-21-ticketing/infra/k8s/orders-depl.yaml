@@ -15,8 +15,8 @@ spec:
       containers:
         - name: orders
           # image: clarklindev/orders:latest/orders
-          image: asia.gcr.io/golden-index-441407-u9/orders:latest
-          env: 
+          image: asia.gcr.io/elite-advice-447211-j0/orders:latest
+          env:
             - name: MONGO_URI
               value: 'mongodb://orders-mongo-srv:27017/orders'
             - name: JWT_KEY

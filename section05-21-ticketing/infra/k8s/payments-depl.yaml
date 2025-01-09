@@ -15,8 +15,8 @@ spec:
       containers:
         - name: payments
           # image: clarklindev/payments:latest/payments
-          image: asia.gcr.io/golden-index-441407-u9/payments:latest
-          env: 
+          image: asia.gcr.io/elite-advice-447211-j0/payments:latest
+          env:
             - name: MONGO_URI
               value: 'mongodb://payments-mongo-srv:27017/payments'
             - name: JWT_KEY

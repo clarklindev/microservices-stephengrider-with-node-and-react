@@ -19899,7 +19899,14 @@ width=600
   - create an order, wait minute for order to expire, then try pay for it
 
 ### 466. Testing Order Validation Before Payment
+
 #### testing with jest
+
+- `payments/src/routes/**test**/new.test.ts`
+- testing the route handler
+- make use of request/`supa` test library
+- get express app -> make request to express app
+
 
 ### 467. Testing Same-User Validation
 

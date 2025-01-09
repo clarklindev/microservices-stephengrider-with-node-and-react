@@ -15,8 +15,8 @@ spec:
       containers:
         - name: expiration
           # image: clarklindev/expiration:latest/expiration
-          image: asia.gcr.io/golden-index-441407-u9/expiration:latest
-          env: 
+          image: asia.gcr.io/elite-advice-447211-j0/expiration:latest
+          env:
             - name: NATS_URL
               value: 'http://nats-srv:4222'
             - name: NATS_CLUSTER_ID
