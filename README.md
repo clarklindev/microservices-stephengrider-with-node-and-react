@@ -20033,8 +20033,34 @@ pnpm i stripe
   - secret key
 
 ### 469. Creating a Stripe Secret
+- the secret key is what we use in our project -> it allows us to reach out to api and charge users credit card
+- using terminal (not env variable)
+
+#### setting the stripe secret
+- get stripe api key from [stripe](https://dashboard.stripe.com/test/apikeys)
+- payments/
+
+```bash
+kubectl create secret generic stripe-secret --from-literal STRIPE_KEY=
+```
+
+#### using the stripe secret in deployment yaml
+- add the secret to payments deployment
+- `infra/k8s/payments-depl.yaml`
+- look for `env:`
+- same as jwt secret
+
+```yaml
+  env:
+    - name: STRIPE_KEY
+      valueFrom:
+        secretKeyRef:
+          name: stripe-secret
+          key: STRIPE_KEY
+```
 
 ### 470. Creating a Charge with Stripe
+- TODO: retrieve stripe-secret and initialize stripe sdk
 
 ### 471. Manual Testing of Payments
 

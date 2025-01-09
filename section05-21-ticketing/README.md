@@ -246,3 +246,14 @@ kubectl delete service ingress-nginx-controller --namespace=ingress-nginx
 ##### shutting down
 
 - from gcloud console -> shutdown kubernetes cluster (this costs money to keep running)
+
+
+---
+
+### payments service
+- get stripe api key from [stripe](https://dashboard.stripe.com/test/apikeys)
+- payments/ add secret:
+
+```bash
+kubectl create secret generic stripe-secret --from-literal STRIPE_KEY=
+```
