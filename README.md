@@ -20354,6 +20354,9 @@ export const stripe = new Stripe(process.env.STRIPE_KEY!, {
 ```
 
 #### METHOD: using .env 
+#### REQUIRED
+- REQUIRED: you need to create `payments/.env` with `STRIPE_KEY=` and get stripe secret from stripe dashboard
+
 - install `dotenv` -> `pnpm i dotenv`
 - `payments/src/test/setup.ts` -> `import 'dotenv/config';`
 
@@ -20401,6 +20404,79 @@ width=600
 
 
 ### 475. Realistic Test Implementation
+
+<img
+src='exercise_files/udemy-microservices-section21-474-testing-using-random-generated-amount.png'
+alt='udemy-microservices-section21-474-testing-using-random-generated-amount.png'
+width=600
+/>
+
+- NOTE: when we create the order, our price is in dollars
+- when the charge is sent to stripe api, the amount is in cents (price * 100)
+- when we go through the most recent charges, the result values we search for is also (price * 100)
+- we need to convert the order amount to cents to find this value in the list.
+- NOTE: the responses we get from request will be on `data` property
+
+- `payments/src/routes/__test__/new.test.ts`
+  - generate a random price
+
+#### just the updates
+```ts
+//updates to payments/src/routes/__test__/new.test.ts
+//...
+it('returns a 201 with valid inputs', async () => {
+  //...
+  const price = Math.floor(Math.random() * 100000 ); //generate a random price
+  //...
+
+  const stripeCharges = await stripe.charges.list({limit: 50});
+  const stripeCharge = stripeCharges.data.find(charge => {
+    return charge.amount === price * 100;
+  });
+
+  expect(stripeCharge).toBeDefined();
+  expect(stripeCharge!.currency).toEqual('usd');
+});
+```
+
+### FULL CODE updated 
+```ts
+//payments/src/routes/__test__/new.test.ts
+
+it('returns a 201 with valid inputs', async () => {
+  const userId = new mongoose.Types.ObjectId().toHexString();
+
+  const price = Math.floor(Math.random() * 100000 ); //generate a random price
+
+  const order = Order.build({
+    id: new mongoose.Types.ObjectId().toHexString(),
+    userId,
+    version: 0,
+    price,
+    status: OrderStatus.Created,
+  });
+
+  await order.save();
+
+  await request(app)
+    .post('/api/payments')
+    .set('Cookie', global.signin(userId))
+    .send({
+      token: 'tok_visa',
+      orderId: order.id,
+    })
+    .expect(201);
+
+  const stripeCharges = await stripe.charges.list({limit: 50});
+  const stripeCharge = stripeCharges.data.find(charge => {
+    return charge.amount === price * 100;
+  });
+
+  expect(stripeCharge).toBeDefined();
+  expect(stripeCharge!.currency).toEqual('usd');
+});
+
+```
 
 ### 476. Tying an Order and Charge Together
 
