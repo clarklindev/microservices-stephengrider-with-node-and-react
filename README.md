@@ -20243,6 +20243,59 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
 ```
 
 ### 472. Automated Payment Testing
+- approach 1 -> use actual stripe library
+  - reaches out to stripe api
+  - we created the env variable for kubernetes cluster (but we run tests locally on local machine outside the cluster)
+
+- approach 2 -> create a mock around stripe library
+  - NOTE: we already did this method with `payments/src/__mocks__/nats-wrapper.ts`
+  - TODO: create: `payments/src/__mocks__/stripe.ts`
+    - export `stripe`
+      - which has a `.charges` property 
+        - that property has to have a `.create()` function
+
+```ts
+//payments/src/__mocks__/stripe.ts
+export const stripe = {
+  charges: {
+    create: jest.fn().mockResolvedValue({})
+  }
+}
+```
+
+- `jest.mock('../../stripe')` -> tell code to use `payments/src/__mocks__/stripe.ts`
+
+```ts
+//payments/src/routes/__test__/new.test.ts
+
+jest.mock('../../stripe');
+
+//...
+
+
+it('returns a 204 with valid inputs', async () => {
+  const userId = new mongoose.Types.ObjectId().toHexString();
+
+  const order = Order.build({
+    id: new mongoose.Types.ObjectId().toHexString(),
+    userId,
+    version: 0,
+    price: 20,
+    status: OrderStatus.Created,
+  });
+  await order.save();
+
+  await request(app)
+    .post('/api/payments')
+    .set('Cookie', global.signin(userId))
+    .send({
+      token: 'tok_visa',
+      orderId: order.id
+    });
+});
+
+
+```
 
 ### 473. Mocked Stripe Client
 
