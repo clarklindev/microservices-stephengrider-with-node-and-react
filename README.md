@@ -20041,7 +20041,7 @@ pnpm i stripe
 - payments/
 
 ```bash
-kubectl create secret generic stripe-secret --from-literal STRIPE_KEY=
+kubectl create secret generic stripe-secret --from-literal STRIPE_KEY=x
 ```
 
 #### using the stripe secret in deployment yaml
@@ -20330,6 +20330,75 @@ expect(chargeOptions.currency).toEqual('usd');
 ```
 
 ### 474. A More Realistic Test Setup
+- TODO: allowing our tests to interact with real stripe api
+- `payments/` -> `pnpm run test`
+
+#### undo mock version
+- changing our test to not use mock version
+- TODO: `payments/src/routes/__test__/new.test.ts` -> remove `jest.mock('../../stripe')`
+- change mock file to: `payments/src/__mocks__/stripe.ts.old` (change .ts extension -> not using so dont load up)
+
+### getting access to environment variables 
+- NOTE: with app running, we set up kubernetes to store our key (deployment yaml config) and its only accessible inside kubernetes cluster.
+- for TESTING, the tests run outside the cluster, so dont have access to the environment variable `STRIPE_KEY`
+  - need to give access to the environment variables
+- this `STRIPE_KEY` is then used in `payments/src/stripe.ts`
+
+```ts
+//payments/src/stripe.ts
+import Stripe from "stripe";
+
+export const stripe = new Stripe(process.env.STRIPE_KEY!, {
+    apiVersion: '2024-12-18.acacia'
+});
+```
+
+#### METHOD: using .env 
+- install `dotenv` -> `pnpm i dotenv`
+- `payments/src/test/setup.ts` -> `import 'dotenv/config';`
+
+- create `payments/.env`
+  - add `STRIPE_KEY=` the value should be stripe [secret key](https://dashboard.stripe.com/test/apikeys)
+  - i added a check in `payments/src/index.ts` a check for .environment variable `STRIPE_KEY` 
+    ```ts
+    //payments/src/index.ts
+    if(!process.env.STRIPE_KEY){
+      throw new Error('STRIPE_KEY must be defined');
+    }
+    ``` 
+- use process.env.STRIPE_KEY
+
+#### METHOD: hardcoding secret in setup.ts
+- if you following tutorial, in `payments/src/test/setup.ts`
+- `process.env.STRIPE_KEY` = 'sk_test_...' key is added directly 
+
+### currently details about charge goes to route handler
+- currently a request is made to stripe api
+- the route handler receives the stripe results
+- we could easily return the data to the caller but that would mean we are changing our code just to suite the tests
+
+<img
+src='exercise_files/udemy-microservices-section21-474-currently-routehandler-receives-stripeapi-charge-result.png'
+alt='udemy-microservices-section21-474-currently-routehandler-receives-stripeapi-charge-result.png'
+width=600
+/>
+
+### tests need details about stripe api response
+
+<img
+src='exercise_files/udemy-microservices-section21-474-testing-using-random-generated-amount.png'
+alt='udemy-microservices-section21-474-testing-using-random-generated-amount.png'
+width=600
+/>
+
+- the test file makes a request via route handler to stripe api
+- stripe api responds with `ok` -> once test file receives this
+- test file makes its own request to stripe api to `list most recent charges` 
+- `list most recent charges` result returned to the test 
+- search via distinguishing properties that is unique eg. `charge amount` from the list
+- for the initial charge request, for the amount to be unique, the amount is randomly generated.
+- if this unique amount is found within the list of most recent charges, it means we successfully made a charge.
+
 
 ### 475. Realistic Test Implementation
 

@@ -1,10 +1,12 @@
 import mongoose from 'mongoose';
+
 import {app} from './app';
 import { natsWrapper } from './nats-wrapper';
 
 //TODO: import listeners...
 import { OrderCancelledListener } from './events/listeners/order-cancelled-listener';
 import { OrderCreatedListener } from './events/listeners/order-created-listener';
+
 
 const start = async () => {
   if (!process.env.JWT_KEY) {
@@ -18,12 +20,18 @@ const start = async () => {
   if (!process.env.NATS_URL) {
     throw new Error('NATS_URL must be defined');
   }  
+  
   if (!process.env.NATS_CLUSTER_ID) {
     throw new Error('NATS_CLUSTER_ID must be defined');
-  }  
+  } 
+
   if (!process.env.NATS_CLIENT_ID) {
     throw new Error('NATS_CLIENT_ID must be defined');
   }  
+
+  if(!process.env.STRIPE_KEY){
+    throw new Error('STRIPE_KEY must be defined');
+  }
 
   try {
     await natsWrapper.connect(

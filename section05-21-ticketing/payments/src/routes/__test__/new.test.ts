@@ -4,9 +4,11 @@ import mongoose from 'mongoose';
 
 import { Order } from '../../models/order';
 import { app } from '../../app';
-import {stripe} from '../../stripe';
+import { stripe } from '../../stripe';
 
-jest.mock('../../stripe');
+//lesson 474. a more realistic test setup 
+// TODO: comment out the jest.mock()
+// jest.mock('../../stripe');
 
 //throw an error if purchase an error that does not exist
 it('throws a 404 when purchasing an order that does not exist', async () => {
@@ -64,7 +66,7 @@ it('returns a 400 when purchasing a cancelled order', async () => {
 });
 
 
-it('returns a 204 with valid inputs', async () => {
+it('returns a 201 with valid inputs', async () => {
   const userId = new mongoose.Types.ObjectId().toHexString();
 
   const order = Order.build({

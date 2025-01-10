@@ -252,8 +252,34 @@ kubectl delete service ingress-nginx-controller --namespace=ingress-nginx
 
 ### payments service
 - get stripe api key from [stripe](https://dashboard.stripe.com/test/apikeys)
-- payments/ add secret:
+- `payments/` add secret:
 
 ```bash
-kubectl create secret generic stripe-secret --from-literal STRIPE_KEY=
+kubectl create secret generic stripe-secret --from-literal STRIPE_KEY=x
+```
+
+### using the stripe secret in deployment yaml
+- add the secret to payments deployment
+- `infra/k8s/payments-depl.yaml`
+- look for `env:`
+- same as jwt secret
+
+```yaml
+  env:
+    - name: STRIPE_KEY
+      valueFrom:
+        secretKeyRef:
+          name: stripe-secret
+          key: STRIPE_KEY
+```
+
+- then later... using this env variable
+
+```ts
+//payments/src/stripe.ts
+import Stripe from "stripe";
+
+export const stripe = new Stripe(process.env.STRIPE_KEY!, {
+    apiVersion: '2024-12-18.acacia'
+});
 ```
