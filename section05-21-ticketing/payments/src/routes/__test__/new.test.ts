@@ -4,8 +4,11 @@ import mongoose from 'mongoose';
 
 import { Order } from '../../models/order';
 import { app } from '../../app';
-//throw an error if purchase an error that does not exist
+import {stripe} from '../../stripe';
 
+jest.mock('../../stripe');
+
+//throw an error if purchase an error that does not exist
 it('throws a 404 when purchasing an order that does not exist', async () => {
   await request(app)
     .post('/api/payments')
@@ -78,6 +81,12 @@ it('returns a 204 with valid inputs', async () => {
     .set('Cookie', global.signin(userId))
     .send({
       token: 'tok_visa',
-      orderId: order.id
-    });
+      orderId: order.id,
+    })
+    .expect(201);
+
+  const chargeOptions = (stripe.charges.create as jest.Mock).mock.calls[0][0];
+  expect(chargeOptions.source).toEqual('tok_visa');
+  expect(chargeOptions.amount).toEqual(20 * 100);
+  expect(chargeOptions.currency).toEqual('usd');
 });

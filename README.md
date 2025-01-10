@@ -20267,6 +20267,7 @@ export const stripe = {
 
 ```ts
 //payments/src/routes/__test__/new.test.ts
+import {stripe} from '../../stripe'
 
 jest.mock('../../stripe');
 
@@ -20290,14 +20291,43 @@ it('returns a 204 with valid inputs', async () => {
     .set('Cookie', global.signin(userId))
     .send({
       token: 'tok_visa',
-      orderId: order.id
-    });
+      orderId: order.id,
+    })
+    .expect(201);
 });
 
 
 ```
 
 ### 473. Mocked Stripe Client
+- doesnt test stripe api flow (fakes it)
+- `payments/src/routes/__test__/new.test.ts`
+- `payments/src/routes/new.ts` -> ensure status code turned by adding status -> `res.status(201)`
+- ensure calling stripe library with correct arguments
+- `import {stripe} from '../../stripe';`
+- `jest.mock('../../stripe')` -> tell code to use `payments/src/__mocks__/stripe.ts`
+- chargeOptions is the object passed to .create()
+  - see payments/src/routes/new.ts  
+  ```ts
+    await stripe.charges.create({
+      currency: 'usd',
+      amount: order.price * 100,
+      source: token
+    });
+
+  ```
+- chargeOptions = `(stripe.charges.create as jest.Mock).mock.calls[0][0]` 
+  - checks how many times `create` was called (as array where 0 is first time) 
+  - and the second [0] is the argument position (here first argument)
+
+```ts
+//payments/src/routes/__test__/new.test.ts
+//...
+const chargeOptions = (stripe.charges.create as jest.Mock).mock.calls[0][0];
+expect(chargeOptions.source).toEqual('tok_visa');
+expect(chargeOptions.amount).toEqual(20 * 100);
+expect(chargeOptions.currency).toEqual('usd');
+```
 
 ### 474. A More Realistic Test Setup
 
