@@ -20060,7 +20060,60 @@ kubectl create secret generic stripe-secret --from-literal STRIPE_KEY=
 ```
 
 ### 470. Creating a Charge with Stripe
-- TODO: retrieve stripe-secret and initialize stripe sdk
+- TODO: retrieve stripe-secret 
+- TODO: initialize stripe sdk
+
+- NOTE: `apiVersion` string value is provided by code auto-complete
+
+- `payments/src/stripe.ts`
+```ts
+//payments/src/stripe.ts
+import Stripe from "stripe";
+
+export const stripe = new Stripe(process.env.STRIPE_KEY!, {
+    apiVersion: '2024-12-18.acacia'
+});
+```
+
+#### STRIPE API: CHARGE-> HOW TO CHARGE MONEY TO A CREDIT CARD
+#### create a charge 
+- @2min 15sec
+- https://docs.stripe.com/api/charges/create
+- official documentation (POST `/v1/charges`)
+- NOTE: stripe uses 'smallest currency unit' -> so depending on currency, required to convert eg. cents to dollars
+- `source` optional property -> payment source to be charged: `credit/debitcard id`, `bank acc`, `token`, `connected account`
+- `description` optional property
+- NOTE: we use - `payments/src/stripe.ts`
+- `payments/src/routes/new.ts`
+
+```ts
+//payments/src/routes/new.ts
+
+import {stripe} from '../stripe';
+//...
+router.post(
+  '/api/payments',
+  requireAuth,
+  [body('token').not().isEmpty(), body('orderId').not().isEmpty()],
+  validateRequest,
+  async (req: Request, res: Response) => {
+    const { token, orderId } = req.body;
+
+    //...
+
+    //stripe
+    await stripe.charges.create({
+      currency: 'usd',
+      amount: order.price * 100,
+      source: token,
+    });
+
+    res.send({
+      success: true,
+    });
+  }
+);
+```
 
 ### 471. Manual Testing of Payments
 
