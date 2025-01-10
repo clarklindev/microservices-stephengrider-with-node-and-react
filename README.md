@@ -20116,6 +20116,131 @@ router.post(
 ```
 
 ### 471. Manual Testing of Payments
+- testing it manually
+- NOTE: stripe `test-mode` -> no actual billing
+- How to test in test-mode? - on stripe dashboard -> toggle `viewing test data`
+- NOTE: while in `test-mode` -> there is a special token that can be used (`tok_visa`) -> that will always lead to successful 
+
+### Testing...
+- running: `skaffold dev`
+
+#### POSTMAN
+- ensure logged in
+  - NOTE: check signed-in in postman, GET: `https://ticketing.dev/api/users/currentuser`
+  - signin -> POST `https://ticketing.dev/api/users/signin` `test@test.com` `password` `Content-Type: application/json`
+  - or signup -> POST `https://ticketing.dev/api/users/signup` `test@test.com` `password` `Content-Type: application/json`
+
+#### create ticket
+- create ticket: `https://ticketing.dev/api/tickets`
+  - headers: Content-Type: application/json
+  - body -> raw -> JSON: {"title": "movie", "price":15}
+- get ticket `id`: eg. `6780813ec3b6ab3b62e9e07a`
+```json
+{
+    "title": "movie",
+    "price": 15,
+    "userId": "67807dccfa3637505c15cdeb",
+    "version": 0,
+    "id": "6780813ec3b6ab3b62e9e07a"
+}
+```
+
+#### create order
+- create order (get the `orderId`) using ticket id `6780813ec3b6ab3b62e9e07a`
+- `https://ticketing.dev/api/orders`
+  - headers: Content-Type: application/json
+  - body -> raw -> JSON: {ticketId: "6780813ec3b6ab3b62e9e07a"}
+- output:
+```json
+{
+    "userId": "67807dccfa3637505c15cdeb",
+    "status": "created",
+    "expiresAt": "2025-01-10T02:26:57.626Z",
+    "ticket": {
+        "title": "movie",
+        "price": 15,
+        "version": 0,
+        "id": "6780813ec3b6ab3b62e9e07a"
+    },
+    "version": 0,
+    "id": "678081ed232537df11a23247"
+}
+```
+- get the order `id` eg. `678081ed232537df11a23247`
+
+#### make a payment
+- attempt make payment
+- make a request to endpoint: POST `https://ticketing.dev/api/payments`
+  - headers: Content-Type: application/json
+
+### payment while testing
+- use `tok_visa` token:
+  - body -> raw -> JSON: {"orderId": "678081ed232537df11a23247", "token": "tok_visa"}
+- expect POSTMAN result: `{ "success": true }`
+- also view transaction in stripe dashboard
+
+<img
+src='exercise_files/udemy-microservices-section21-471-manual-testing-payments-postman-test-stripe-charge-success.png'
+alt='udemy-microservices-section21-471-manual-testing-payments-postman-test-stripe-charge-success.png'
+width=600
+/>
+
+- testing using invalid token -> postman
+
+<img
+src='exercise_files/udemy-microservices-section21-471-manual-testing-payments-postman-test-stripe-charge-invalid-token.png'
+alt='udemy-microservices-section21-471-manual-testing-payments-postman-test-stripe-charge-invalid-token.png'
+width=600
+/>
+
+### TROUBLESHOOT - time-limit 
+- if the time limit has timed-out: 
+  - have to re-create a new ticket
+  - create an order
+  - use order-id for payment
+
+```json
+{
+  "errors": [
+    {
+      "message": "Cannot pay for a cancelled order"
+    }
+  ]
+}
+```
+
+### TROUBLESHOOT
+- if anyone keeps getting `Cannot pay for a cancelled order` as the status output..
+
+FIX:
+- check your 'expiration/src/events/listeners/order-created-listener.ts'
+- expirationQueue.add() -> ensure the delay is not commented out, we commented out 'delay' earlier in the lessons to expire the order immediately
+
+```ts
+//expiration/src/events/listeners/order-created-listener.ts
+export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
+  readonly subject = Subjects.OrderCreated;
+  queueGroupName = queueGroupName;
+ 
+  async onMessage(data: OrderCreatedEvent['data'], msg:Message){
+ 
+    const delay = new Date(data.expiresAt).getTime() - new Date().getTime();
+ 
+    console.log(`waiting this many milliseconds to process the job:`, delay);
+ 
+    await expirationQueue.add(
+      {
+        orderId: data.id
+      }, 
+      {
+        delay 
+      }
+    );
+ 
+    msg.ack();
+  }
+}   
+```
 
 ### 472. Automated Payment Testing
 
