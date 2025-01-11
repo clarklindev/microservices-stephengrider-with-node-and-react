@@ -20914,7 +20914,58 @@ start();
 [orders] Message received: expiration:complete / orders-service
 
 ### 482. Don't Cancel Completed Orders!
+- UPDATE: `orders/src/events/listeners/expiration-complete-listener.ts`
+- currently when we receive the ExpirationCompleteEvent, we always mark the order as cancelled
+- what if we receive a cancellation event for an order (OrderStatus.Complete) that has already been paid for... it will be cancelled (OrderStatus.Cancelled)..
+- TODO: add check to ensure we dont cancel orders that has already been paid for
 
+```ts
+if(order.status === OrderStatus.Complete){
+  return msg.ack();
+}
+```
+
+#### full code
+```ts
+//orders/src/events/listeners/expiration-complete-listener.ts
+import {ExpirationCompleteEvent, Listener, OrderStatus, Subjects} from '@clarklindev/common';
+import { queueGroupName } from './queue-group-name';
+import { Message } from 'node-nats-streaming';
+import {Order} from '../../models/order';
+import { OrderCancelledPublisher } from '../publishers/order-cancelled-publisher';
+
+export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent> {
+  queueGroupName = queueGroupName;
+  readonly subject = Subjects.ExpirationComplete;
+  async onMessage(data: ExpirationCompleteEvent['data'], msg:Message){
+    const order = await Order.findById(data.orderId).populate('ticket');
+
+    if(!order){
+      throw new Error('Order not found')
+    }
+
+    if(order.status === OrderStatus.Complete){
+      return msg.ack();
+    }
+
+    order.set({
+      status: OrderStatus.Cancelled,
+    });
+
+    await order.save();
+
+    await new OrderCancelledPublisher(this.client).publish({
+      id: order.id,
+      version: order.version,
+      ticket: {
+        id: order.ticket.id
+      }
+    });
+
+    msg.ack();
+  }
+}
+```
 ---
 
 ## section 22 - back to the client (1hr43min)
