@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { Order } from '../../models/order';
 import { app } from '../../app';
 import { stripe } from '../../stripe';
+import { Payment } from '../../models/payments';
 
 //lesson 474. a more realistic test setup 
 // TODO: comment out the jest.mock()
@@ -96,4 +97,11 @@ it('returns a 201 with valid inputs', async () => {
 
   expect(stripeCharge).toBeDefined();
   expect(stripeCharge!.currency).toEqual('usd');
+
+  const payment = await Payment.findOne({
+    orderId: order.id,
+    stripeId: stripeCharge!.id
+  });
+  
+  expect(payment).not.toBeNull();
 });

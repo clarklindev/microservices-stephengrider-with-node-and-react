@@ -20546,6 +20546,154 @@ export {Payment};
 
 
 ### 477. Testing Payment Creation
+- payments/src/routes/new.ts
+- after creating charge...
+- get response data -> we get the details from charge response (we want the charge `id`)
+- create a new payment record using charge `id`
+- [charge response object](https://docs.stripe.com/api/charges/create?lang=node)
+```json
+//a charge response object
+{
+  "id": "ch_3MmlLrLkdIwHu7ix0snN0B15",
+  "object": "charge",
+  "amount": 1099,
+  "amount_captured": 1099,
+  "amount_refunded": 0,
+  "application": null,
+  "application_fee": null,
+  "application_fee_amount": null,
+  "balance_transaction": "txn_3MmlLrLkdIwHu7ix0uke3Ezy",
+  "billing_details": {
+    "address": {
+      "city": null,
+      "country": null,
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "email": null,
+    "name": null,
+    "phone": null
+  },
+  "calculated_statement_descriptor": "Stripe",
+  "captured": true,
+  "created": 1679090539,
+  "currency": "usd",
+  "customer": null,
+  "description": null,
+  "disputed": false,
+  "failure_balance_transaction": null,
+  "failure_code": null,
+  "failure_message": null,
+  "fraud_details": {},
+  "invoice": null,
+  "livemode": false,
+  "metadata": {},
+  "on_behalf_of": null,
+  "outcome": {
+    "network_status": "approved_by_network",
+    "reason": null,
+    "risk_level": "normal",
+    "risk_score": 32,
+    "seller_message": "Payment complete.",
+    "type": "authorized"
+  },
+  "paid": true,
+  "payment_intent": null,
+  "payment_method": "card_1MmlLrLkdIwHu7ixIJwEWSNR",
+  "payment_method_details": {
+    "card": {
+      "brand": "visa",
+      "checks": {
+        "address_line1_check": null,
+        "address_postal_code_check": null,
+        "cvc_check": null
+      },
+      "country": "US",
+      "exp_month": 3,
+      "exp_year": 2024,
+      "fingerprint": "mToisGZ01V71BCos",
+      "funding": "credit",
+      "installments": null,
+      "last4": "4242",
+      "mandate": null,
+      "network": "visa",
+      "three_d_secure": null,
+      "wallet": null
+    },
+    "type": "card"
+  },
+  "receipt_email": null,
+  "receipt_number": null,
+  "receipt_url": "https://pay.stripe.com/receipts/payment/...",
+  "refunded": false,
+  "review": null,
+  "shipping": null,
+  "source_transfer": null,
+  "statement_descriptor": null,
+  "statement_descriptor_suffix": null,
+  "status": "succeeded",
+  "transfer_data": null,
+  "transfer_group": null
+}
+```
+
+```ts
+//payments/src/routes/new.ts
+import { Payment } from '../models/payments';
+
+//...
+
+  //stripe
+  const charge = await stripe.charges.create({
+    currency: 'usd',
+    amount: order.price * 100,
+    source: token,
+  });
+
+  //payment
+  const payment = Payment.build({
+    orderId,
+    stripeId: charge.id
+  });
+  await payment.save();
+
+  res.status(201).send({success: true});
+
+```
+- TODO: return a better response
+
+### if you need to retrieve a charge object
+- if in furture you want to retrieve a charge from collection: `stripe.charges.retrieve()`
+- GET /v1/charges/:id
+
+```ts
+stripe.charges.retrieve(id, function(err, charge){
+  //asynchronously called
+});
+```
+
+### TEST -> Testing payment creation
+- `payments/src/routes/__test__/new.test.ts`
+- search Payment collection by providing `orderId` and `stripeId` as filter
+- expect something to be found (not null)
+
+```ts
+//payments/src/routes/__test__/new.test.ts
+import { Payment } from '../../models/payments';
+
+it('returns a 201 with valid inputs', async () => {
+  //...
+
+  const payment = await Payment.findOne({
+    orderId: order.id,
+    stripeId: stripeCharge!.id
+  });
+
+  expect(payment).not.toBeNull();
+});
+```
 
 ### 478. Publishing a Payment Created Event
 

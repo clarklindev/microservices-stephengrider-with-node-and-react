@@ -1,7 +1,4 @@
 import express, { Request, Response } from 'express';
-import { body } from 'express-validator';
-import {stripe } from '../stripe';
-
 import {
   requireAuth,
   validateRequest,
@@ -10,7 +7,10 @@ import {
   NotAuthorizedError,
   OrderStatus,
 } from '@clarklindev/common';
+import { body } from 'express-validator';
 
+import {stripe } from '../stripe';
+import { Payment } from '../models/payments';
 import { Order } from '../models/order';
 
 const router = express.Router();
@@ -37,11 +37,17 @@ router.post(
     }
 
     //stripe
-    await stripe.charges.create({
+    const charge = await stripe.charges.create({
       currency: 'usd',
       amount: order.price * 100,
       source: token,
     });
+
+    const payment = Payment.build({
+      orderId,
+      stripeId: charge.id
+    });
+    await payment.save();
 
     res.status(201).send({
       success: true,
