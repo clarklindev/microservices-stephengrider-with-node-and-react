@@ -20480,6 +20480,71 @@ it('returns a 201 with valid inputs', async () => {
 
 ### 476. Tying an Order and Charge Together
 
+<img
+src='exercise_files/udemy-microservices-section21-476-payments-service-tying-an-order-to-charge-in-payments-db.png'
+alt='udemy-microservices-section21-476-payments-service-tying-an-order-to-charge-in-payments-db.png'
+width=600
+/>
+
+- `payments/` services -> linking a payment to a charge in `payments` collection
+- `payments` collection only goal -> aim is to link a charge and a payment
+- usage example - to show list of payments on users dashboard
+- TODO: create Payments mongoose model
+- the payment collection will store `id of charge` AND `id of order`
+- PaymentDoc might be good idea to add `version` attribute incase of updates to payment entry
+- 
+
+```ts
+//payments/src/models/payments.ts
+import mongoose from 'mongoose';
+
+interface PaymentAttrs {
+  orderId: string;
+  stripeId: string;
+}
+
+interface PaymentDoc extends mongoose.Document {
+  orderId: string;
+  stripeId: string;
+  //version
+}
+
+interface PaymentModel extends mongoose.Model<PaymentDoc> {
+  build(attrs: PaymentAttrs) : PaymentDoc;
+}
+
+const paymentSchema = new mongoose.Schema({
+  orderId:{
+    required: true,
+    type: String
+  },
+  stripeId:{
+    required: true,
+    type: String
+  },
+  toJSON:{
+    transform(doc, ret){
+      ret.id = ret._id; //create id property
+      delete ret._id; //delete _id property
+    }
+  }
+});
+
+paymentSchema.statics.build = (attrs:PaymentAttrs) => {
+  return new Payment(attrs);
+}
+
+const Payment = mongoose.model<PaymentDoc, PaymentModel>(
+  'Payment',
+  paymentSchema
+);
+
+export {Payment};
+```
+
+- TODO: after charge, create payment object giving it orderId
+
+
 ### 477. Testing Payment Creation
 
 ### 478. Publishing a Payment Created Event
