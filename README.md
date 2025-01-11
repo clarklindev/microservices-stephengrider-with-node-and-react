@@ -20697,6 +20697,93 @@ it('returns a 201 with valid inputs', async () => {
 
 ### 478. Publishing a Payment Created Event
 
+<img
+src='exercise_files/udemy-microservices-section21-455-payment-service-events.png'
+alt='udemy-microservices-section21-455-payment-service-events.png'
+width=600
+/>
+
+- publishing `payment:created` event
+- updating our event name from `charge:created` to `payment:created`
+- TODO: `common/` create event `payment:created`
+- after payment is created, emit the event `payment:created`
+- some service can listen to this event and do something...like ticket can be release to whoever paid for it
+
+<img
+src='exercise_files/udemy-microservices-section21-478-payments-service-publishing-a-payment-created-event.png'
+alt='udemy-microservices-section21-478-payments-service-publishing-a-payment-created-event.png'
+width=600
+/>
+
+### Common/ module
+
+- TODO: `common/src/events/subjects.ts`
+```ts
+//common/src/events/subjects.ts
+export enum Subjects{
+  //...
+  PaymentCreated = 'payment:created'
+}
+```
+
+- TODO: `common/src/events/payment-created-event.ts`
+```ts
+//common/src/events/payment-created-event.ts
+import { Subjects } from "./subjects";
+
+export interface PaymentCreatedEvent{
+  subject:Subjects.PaymentCreated,
+  data:{
+    id: string;
+    orderId: string;
+    stripeId: string;
+  };
+}
+```
+- export the event
+
+```ts
+//common/src/index.ts
+//...
+export * from './events/payment-created-event';
+```
+
+
+### npm login
+- ensure you are loggedin to npmjs so you can publish
+
+```bash
+npm login
+```
+
+### publish to npm
+- republish module and note version update
+```bash
+pnpm run pub
+```
+
+### update services with updated common module
+- main project -> update where the common/ module is used with updated module (eg. `payments/`, `orders/`, `tickets/`)
+- from `payments/` update `@clarklindev/common` module
+
+```bash
+pnpm update @clarklindev/common
+```
+
+### publish event
+- `payments/src/events/publishers/payment-created-publisher.ts`
+
+```ts
+//payments/src/events/publishers/payment-created-publisher.ts
+import { Subjects, Publisher, PaymentCreatedEvent } from "@clarklindev/common";
+
+export class PaymentCreatedPublisher extends Publisher<PaymentCreatedEvent> {
+  readonly subject = Subjects.PaymentCreated;
+  
+}
+```
+- TODO: after creating a payment, emit the `payment:created` event
+
 ### 479. More on Publishing
 
 ### 480. Marking an Order as Complete
@@ -20723,7 +20810,7 @@ it('returns a 201 with valid inputs', async () => {
 
 ### 489. Listing All Tickets
 
-### 490. Reminder on Invalid '<Link>' with '<a>' child Errors
+### 490. Reminder on Invalid `<Link>` with `<a>` child Errors
 
 ### 491. Linking to Wildcard Routes
 

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@clarklindev/common':
-        specifier: ^1.0.25
-        version: 1.0.28
+        specifier: ^1.0.29
+        version: 1.0.29
       '@types/body-parser':
         specifier: ^1.19.5
         version: 1.19.5
@@ -249,8 +249,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@clarklindev/common@1.0.28':
-    resolution: {integrity: sha512-/XhiBuLpKggDsHkpHeg50T+dU8b6RGncCG1yLK34278IY9jtYHsXXECMeW0zRmAxVuj4eXEMJYkrK6R/ir+1Kw==}
+  '@clarklindev/common@1.0.29':
+    resolution: {integrity: sha512-Yd4/pOTxJtliN7LWepaGXIX+01hBYiI5EprW2bO6RqnYmOXAr9hgvU48xR9jmJ3cRExrfNpP/lsMCUcrVgzuow==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -2214,7 +2214,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@clarklindev/common@1.0.28':
+  '@clarklindev/common@1.0.29':
     dependencies:
       '@types/cookie-session': 2.0.49
       '@types/express': 4.17.21
