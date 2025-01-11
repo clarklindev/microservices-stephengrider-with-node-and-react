@@ -20776,15 +20776,52 @@ pnpm update @clarklindev/common
 ```ts
 //payments/src/events/publishers/payment-created-publisher.ts
 import { Subjects, Publisher, PaymentCreatedEvent } from "@clarklindev/common";
-
 export class PaymentCreatedPublisher extends Publisher<PaymentCreatedEvent> {
   readonly subject = Subjects.PaymentCreated;
-  
 }
 ```
 - TODO: after creating a payment, emit the `payment:created` event
 
 ### 479. More on Publishing
+- import `PaymentCreatedPublisher`
+- publish event after payment (using information from payment just saved)
+- we return the `id` of payment just created `res.status(201).send({id: payment.id});`
+
+```ts
+//payments/src/routes/new.ts
+import { PaymentCreatedPublisher } from '../events/publishers/payment-created-publisher';
+import { natsWrapper } from '../nats-wrapper';
+
+//...
+
+router.post(
+  '/api/payments',
+  requireAuth,
+  [body('token').not().isEmpty(), body('orderId').not().isEmpty()],
+  validateRequest,
+  async (req: Request, res: Response) => {
+    //...
+    const payment = Payment.build({
+      orderId,
+      stripeId: charge.id
+    });
+    
+    await payment.save();
+
+    new PaymentCreatedPublisher(natsWrapper.client).publish({
+      id: payment.id,
+      orderId: payment.orderId,
+      stripeId: payment.stripeId,
+    });
+
+    res.status(201).send({id: payment.id});
+  }
+);
+
+export { router as createChargeRouter };
+
+//...
+```
 
 ### 480. Marking an Order as Complete
 
