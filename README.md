@@ -20824,6 +20824,63 @@ export { router as createChargeRouter };
 ```
 
 ### 480. Marking an Order as Complete
+- `payment:created` event has been emitted, and `orders/` service will receive this
+- TODO: update the orders' status to `OrderStatus.Complete`
+- can use `orderId` from `PaymentCreatedEvent` to search from Order collection
+- note: after the PaymentCreatedListener updates order status to complete (`OrderStatus.Complete`) you can send an order updated event...
+
+<img
+src='exercise_files/udemy-microservices-section21-480-marking-an-order-as-complete.png'
+alt='udemy-microservices-section21-480-marking-an-order-as-complete.png'
+width=600
+/>
+
+### create PaymentCreatedListener
+- `orders/src/events/listeners/payment-created-listener.ts`
+```ts
+//orders/src/events/listeners/payment-created-listener.ts
+import { Message } from 'node-nats-streaming';
+import {Subjects, Listener, PaymentCreatedEvent} from '@clarklindev/common';
+
+import { queueGroupName } from './queue-group-name';
+
+export class PaymentCreatedListener extends Listener<PaymentCreatedEvent>{
+  readonly subject = Subjects.PaymentCreated;
+  queueGroupName = queueGroupName;
+  async onMessage(data:PaymentCreatedEvent['data'], msg:Message){
+    const order = await Order.findById(data.orderId);
+
+    if(!order){
+      throw new Error('order not found');
+    }
+
+    order.set({
+      status: OrderStatus.Complete
+    });
+    await order.save();
+
+    msg.ack();
+  }
+}
+```
+
+### start PaymentCreatedListener
+- `orders/src/index.ts`
+- import `PaymentCreatedListener`
+- tell it to start listening
+
+```ts
+//orders/src/index.ts
+import { PaymentCreatedListener } from './events/listeners/payment-created-listener';
+const start = async () => {
+  //...
+  new PaymentCreatedListener(natsWrapper.client).listen();
+  //...
+};
+
+start();
+```
+
 
 ### 481. Important Info About the Next Lecture - Don't Skip
 
