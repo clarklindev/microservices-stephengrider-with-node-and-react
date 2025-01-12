@@ -21095,7 +21095,32 @@ width=600
 
 ### 484. Reminder on Data Fetching with Next
 
+<img
+src='exercise_files/udemy-microservices-section22-484-data-fetching-with-nextjs-app-component.png'
+alt='udemy-microservices-section22-484-data-fetching-with-nextjs-app-component.png'
+width=600
+/>
+
+- flow when user tries to visit landing page
+- `client/pages/index.js`
+
+<img
+src='exercise_files/udemy-microservices-section22-484-event-and-data-flow-LandingPage-component.png'
+alt='udemy-microservices-section22-484-event-and-data-flow-LandingPage-component.png'
+width=600
+/>
+  - by default nextjs will only call default apps' `getInitialProps`
+  - we manually call LandingPageComponents `getInitialProps()`
+
+### FIXING
+- fixing multiple fetch requests that occur when app starts up (caused by the parent app and the landing page making request in their respective getInitialProps() )
+- FIX: make the app component fetch the current user, and pass this down to landing page component as props
+
 ### 485. Two Quick Fixes
+- TODO: fix calling fetch current user twice
+
+#### Landing page
+- update landing page .getInitialProps() and return an empty object {} 
 
 ### 486. Scaffolding a Form
 
