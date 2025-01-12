@@ -1,5 +1,3 @@
-import buildClient from '../api/build-client';
-
   //url is (nextjs look at folder structure): https://ticketing.dev
 const LandingPage = ({ currentUser }) => {
   console.log('LANDING PAGE');
@@ -10,10 +8,8 @@ const LandingPage = ({ currentUser }) => {
   );
 };
 
-LandingPage.getInitialProps = async (context) => {
-  const client = buildClient(context);
-  const request = await client.get('/api/users/currentuser');
-  return request.data;
+LandingPage.getInitialProps = async (context, client, currentUser) => {
+  return {};
 };
 
 export default LandingPage;

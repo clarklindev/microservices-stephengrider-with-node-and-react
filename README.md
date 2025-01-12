@@ -21119,8 +21119,79 @@ width=600
 ### 485. Two Quick Fixes
 - TODO: fix calling fetch current user twice
 
-#### Landing page
+#### Landing page - duplicate fetch currentUser
 - update landing page .getInitialProps() and return an empty object {} 
+- even if you were signed in, nextjs says you are not signed in, this is because our changes we are no longer returning anything from getInitialProps() so we arent returning anything.
+- TODO: pass the currentUser from App (which is still calling getInitialProps() and fetching currentUser) down to the child component
+
+```ts
+//client/pages/_app.js
+//...
+const AppComponent = ({ Component, pageProps, currentUser }) => {
+  console.log('currentUser: ', currentUser);
+
+  return (
+    <div>
+      <Header currentUser={currentUser} />
+      <Component currentUser={currentUser}  {...pageProps} />
+    </div>
+  );
+};
+```
+
+#### prevent the need to keep importing client by passing this as props in client/pages/_app.js to the Component
+- we import buildClient (`client/api/build-client.ts`)
+- note: we already have access to a client from `buildClient()` 
+  - providing prefix to url if running on kubernetes cluster vs locally
+  - it returns a different copy of axios depending on whether there is access to browser window
+- pass `client` as second prop to `await appContext.Component.getInitialProps(appContext.ctx, client);`
+- the fetch returns an object that has a prop `currentUser` and we access this via data `const { data } = await client.get('/api/users/currentuser')` -> ie. `data.currentUser`  
+
+```ts
+//client/pages/_app.js
+//...
+
+//getInitialProps of this component
+AppComponent.getInitialProps = async (appContext) => {
+  const client = buildClient(appContext.ctx);
+  const { data } = await client.get('/api/users/currentuser');
+
+  let pageProps = {};
+  if (appContext.Component.getInitialProps) {
+    pageProps = await appContext.Component.getInitialProps(appContext.ctx, client, data.currentUser); //getInitialProps of the Component this component tries to render
+  }
+  console.log('pageProps: ', pageProps);
+  return {
+    pageProps,
+    ...data,
+  };
+};
+```
+
+### LandingPage getting access to getInitialProps()
+- without having to fetch currentUser or importing buildClient to build a client
+- `client/pages/index.js`
+  - get access to the props passed from `client/pages/_app.js` 
+  - via `LandingPage.getInitialProps = async (context, client, currentUser)=>{}` as the 2nd and 3rd argument
+
+```ts
+  //url is (nextjs look at folder structure): https://ticketing.dev
+const LandingPage = ({ currentUser }) => {
+  console.log('LANDING PAGE');
+  return currentUser ? (
+    <h1>you are signed in</h1>
+  ) : (
+    <h1>you are NOT signed in</h1>
+  );
+};
+
+LandingPage.getInitialProps = async (context, client, currentUser) => {
+  return {};
+};
+
+export default LandingPage;
+
+```
 
 ### 486. Scaffolding a Form
 
