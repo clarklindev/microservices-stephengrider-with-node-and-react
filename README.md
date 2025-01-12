@@ -3058,25 +3058,61 @@ resources:
 
 ### APP FEATURES
 
-- list a ticket for an event  
-  ![list tickets](exercise_files/udemy-docker-section05-106-screen01-view-ticket-listings.png)
-
 - sign up  
-  ![sign up](exercise_files/udemy-docker-section05-106-screen02-sign-up.png)
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen02-sign-up.png'
+alt='udemy-docker-section05-106-screen02-sign-up.png'
+width=600
+/>
 
 - sign in  
-  ![sign in](exercise_files/udemy-docker-section05-106-screen03-sign-in.png)
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen03-sign-in.png'
+alt='udemy-docker-section05-106-screen03-sign-in.png'
+width=600
+/>
 
 - logged-in  
-  ![logged-in](exercise_files/udemy-docker-section05-106-screen04-logged-in-nav.png)
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen04-logged-in-nav.png'
+alt='udemy-docker-section05-106-screen04-logged-in-nav.png'
+width=600
+/>
+
+- list tickets for an event  
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen01-view-ticket-listings.png'
+alt='udemy-docker-section05-106-screen01-view-ticket-listings.png'
+width=600
+/>
 
 - ticket details  
-  ![ticket details](exercise_files/udemy-docker-section05-106-screen06-ticket-detail.png)
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen06-ticket-detail.png'
+alt='udemy-docker-section05-106-screen06-ticket-detail.png'
+width=600
+/>
 
 - payment  
-  ![payment](exercise_files/udemy-docker-section05-106-screen07-payment.png)
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen07-payment.png'
+alt='udemy-docker-section05-106-screen07-payment.png'
+width=600
+/>
+
 - card details for payment  
-  ![card details for payment](exercise_files/udemy-docker-section05-106-screen08-card-details-for-payment.png)
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen08-card-details-for-payment.png'
+alt='udemy-docker-section05-106-screen08-card-details-for-payment.png'
+width=600
+/>
 
 - others can purchase this ticket
 - anyone can list/buy tickets
@@ -20969,8 +21005,93 @@ export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent
 ---
 
 ## section 22 - back to the client (1hr43min)
+- frontend side (NEXTJS)
+- client/pages/index.js (landing page)
+  - signin
+  - signout
+  - signup
+  
+- sign up -> DONE
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen02-sign-up.png'
+alt='udemy-docker-section05-106-screen02-sign-up.png'
+width=600
+/>
+
+- sign in -> DONE
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen03-sign-in.png'
+alt='udemy-docker-section05-106-screen03-sign-in.png'
+width=600
+/>
+
+- logged-in -> DONE
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen04-logged-in-nav.png'
+alt='udemy-docker-section05-106-screen04-logged-in-nav.png'
+width=600
+/>
+
+- list tickets for an event  
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen01-view-ticket-listings.png'
+alt='udemy-docker-section05-106-screen01-view-ticket-listings.png'
+width=600
+/>
+
+- ticket details  
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen06-ticket-detail.png'
+alt='udemy-docker-section05-106-screen06-ticket-detail.png'
+width=600
+/>
+
+- payment  
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen07-payment.png'
+alt='udemy-docker-section05-106-screen07-payment.png'
+width=600
+/>
+
+- card details for payment  
+
+<img
+src='exercise_files/udemy-docker-section05-106-screen08-card-details-for-payment.png'
+alt='udemy-docker-section05-106-screen08-card-details-for-payment.png'
+width=600
+/>
 
 ### 483. A Few More Pages
+
+- routes
+
+<img
+src='exercise_files/udemy-microservices-section22-483-routes-and-filenames.png'
+alt='udemy-microservices-section22-483-routes-and-filenames.png'
+width=600
+/>
+
+- / 
+  - `/index.js`
+  - show list of tickets
+
+- /tickets/new
+  - `/tickets/new.js`
+  - form to create a new ticket
+
+- /tickets/:ticketId
+  - `/tickets/[ticketId].js`
+  - details about a ticket
+
+- /orders/:orderId
+  - `/orders/[orderId].js`
+  - show info about an order + payment button
 
 ### 484. Reminder on Data Fetching with Next
 
