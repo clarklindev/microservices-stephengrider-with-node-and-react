@@ -21503,6 +21503,14 @@ width=600
 />
 
 ### 490. Reminder on Invalid `<Link>` with `<a>` child Errors
+- reminder that links dont have `<a>` tags after nextjs v13
+
+```js
+// link nextjs 13+
+<Link href="/tickets/[ticketId]" as={`/tickets/${ticket.id}`}>
+  View
+</Link>
+```
 
 ### 491. Linking to Wildcard Routes
 
