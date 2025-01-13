@@ -21418,6 +21418,40 @@ width=600
 />
 
 ### 489. Listing All Tickets
+- after success creating a ticket, redirect back to `list all tickets`
+- client/pages/tickets/new.js
+
+## Redirecting after creating a ticket
+#### nextjs 13
+  - NOTE: tutorial was based off nextjs pre v13. 
+  - `import {Router} from 'next/router';`
+  - TODO: update `onSuccess: () => Router.push('/')`
+
+#### nextjs 13+ - pages router
+  - `import { useRouter } from 'next/router';`
+  - `const router = useRouter();`
+
+```js
+//client/pages/tickets/new.js
+import { useRouter } from 'next/router';
+//...
+const NewTicket = () => {
+  const [title, setTitle] = useState('');
+  const [price, setPrice] = useState('');
+
+  const router = useRouter();
+
+  const { doRequest, errors } = useRequest({
+    url: '/api/tickets',
+    method: 'post',
+    body: {
+      title,
+      price,
+    },
+    onSuccess: () => router.push('/'); // Redirect to the home page
+  });
+}
+```
 
 ### 490. Reminder on Invalid `<Link>` with `<a>` child Errors
 

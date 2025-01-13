@@ -1,34 +1,38 @@
 import { useState } from 'react';
+import { useRouter } from 'next/router';
+
 import useRequest from '../../hooks/use-request';
 
 const NewTicket = () => {
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
-  const {doRequest, errors} = useRequest({
+
+  const router = useRouter();
+
+  const { doRequest, errors } = useRequest({
     url: '/api/tickets',
     method: 'post',
     body: {
-      title, 
-      price
+      title,
+      price,
     },
-    onSuccess: (ticket) => console.log('ticket:', ticket)
+    onSuccess: () => router.push('/') // Redirect to the home page
   });
 
   const onSubmit = (event) => {
     event.preventDefault();
     doRequest();
-  }
+  };
 
   const onBlur = () => {
     const value = parseFloat(price);
-    
-    if(isNaN(value)){
+
+    if (isNaN(value)) {
       return;
     }
 
     setPrice(value.toFixed(2));
-  }
-
+  };
 
   return (
     <div>
