@@ -21195,6 +21195,37 @@ export default LandingPage;
 
 ### 486. Scaffolding a Form
 
+<img
+src='exercise_files/udemy-microservices-section22-486-create-a-ticket.png'
+alt='udemy-microservices-section22-486-create-a-ticket.png'
+width=600
+/>
+
+- client-side -> create-a-ticket (building the form) 
+- implementing route: `client/pages/tickets/new.ts`
+
+```ts
+//client/pages/tickets/new.ts
+const NewTicket = () => {
+  return (
+    <div>
+      <h1>create a ticket</h1>
+    </div>
+  )
+}
+
+export default NewTicket;
+```
+
+- skaffold dev
+- test url: [https://ticketing.dev/tickets/new](https://ticketing.dev/tickets/new)
+
+<img
+src='exercise_files/udemy-microservices-section22-486-tickets-new.png'
+alt='udemy-microservices-section22-486-tickets-new.png'
+width=600
+/>
+
 ### 487. Sanitizing Price Input
 
 ### 488. Ticket Creation
