@@ -21293,6 +21293,129 @@ export default NewTicket;
 
 ```
 ### 488. Ticket Creation
+- TODO: make request to backend `ticket/` service `tickets/src/routes/new.ts`
+  - the request handler: `/api/tickets`
+- to make a request client side we built a helper hook: `client/hooks/use-request.js`
+
+#### reminder on use-request hook
+  - `onSuccess` returns the data we return from the call - `onSuccess(response.data)`
+  - returns a function `doRequest()`
+  - we pass in `url`, `method` (axios method), `body`, `onSuccess`
+
+```js
+  //client/hooks/use-request.js
+  const useRequest = ({ url, method, body, onSuccess }) => { 
+    //...
+    const doRequest = async () => {
+      //..
+      try {
+        setErrors(null);
+        const response = await axios[method](url, body);
+
+        if (onSuccess) {
+          onSuccess(response.data);
+        }
+
+        return response.data;
+      } 
+      catch (err) {
+      }
+    }
+
+    return { doRequest, errors }; 
+  }
+```
+
+#### using the hook
+```js
+//client/pages/tickets/new.js
+import { useState } from 'react';
+import useRequest from '../../hooks/use-request';
+
+const NewTicket = () => {
+  const [title, setTitle] = useState('');
+  const [price, setPrice] = useState('');
+
+  const {doRequest, errors} = useRequest({
+    url: '/api/tickets',
+    method: 'post',
+    body: {
+      title, 
+      price
+    },
+    onSuccess: (ticket) => console.log('ticket:', ticket)
+  });
+
+  const onSubmit = (event) => {
+    event.preventDefault();
+    doRequest();
+  }
+
+  const onBlur = () => {
+    const value = parseFloat(price);
+    
+    if(isNaN(value)){
+      return;
+    }
+
+    setPrice(value.toFixed(2));
+  }
+
+
+  return (
+    <div>
+      <h1>create a ticket</h1>
+      <form onSubmit={onSubmit}>
+        <div className="form-group mb-3">
+          <label>Title</label>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="form-control"
+          />
+        </div>
+        <div className="form-group mb-3">
+          <label>price</label>
+          <input
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            onBlur={onBlur}
+            className="form-control"
+          />
+        </div>
+        {errors}
+        <button className="btn btn-primary">submit</button>
+      </form>
+    </div>
+  );
+};
+
+export default NewTicket;
+
+```
+
+#### testing
+- `skaffold dev`
+- sign-in
+- submit form `https://ticketing.dev/tickets/new`
+  - in browser type `thisisunsafe` (if necessary)
+
+- browser -> network -> XHR
+
+<img
+src='exercise_files/udemy-microservices-section22-488-network-request-tickets.png'
+alt='udemy-microservices-section22-488-network-request-tickets.png'
+width=600
+/>
+
+- testing submit error -> entering negative number
+- testing submit error -> with non-number
+
+<img
+src='exercise_files/udemy-microservices-section22-488-submitting-negative-number.png'
+alt='udemy-microservices-section22-488-submitting-negative-number.png'
+width=600
+/>
 
 ### 489. Listing All Tickets
 
