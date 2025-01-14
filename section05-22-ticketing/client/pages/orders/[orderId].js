@@ -11,7 +11,13 @@ const OrderShow = ({order, currentUser}) => {
     body: {
       orderId: order.id
     },
-    onSuccess: (payment) => console.log('PAYMENT SUCCESS: ', payment)
+    onSuccess: (payment) => {
+      try {
+        console.log('PAYMENT SUCCESS: ', payment);
+      } catch (error) {
+        console.error('Error inside onSuccess:', error);
+      }
+    }
   });
 
   useEffect(()=>{

@@ -11,13 +11,15 @@ const useRequest = ({ url, method, body, onSuccess }) => {
       setErrors(null);
       const response = await axios[method](url, { ...body, ...props });
       console.log('axios response: ', response);
+      console.log('response.data: ', response.data);
 
       if (onSuccess) {
         console.log('SUCCESS');
         onSuccess(response.data);
-        return response.data;
+        console.log('This log is after calling onSuccess'); // Ensure this runs
       }
-
+      
+      return response.data;
       
     } catch (err) {
       setErrors(

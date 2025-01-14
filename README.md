@@ -21807,6 +21807,7 @@ https://stripe.com/docs/payments/checkout/migration
   - the `email` property will automatically show on `StripeCheckout` payment form if added as a prop
 
   ```ts
+  //client/pages/orders/[orderId].js
   //...
 
   const OrderShow = ({order, currentUser}) => {
@@ -21941,6 +21942,7 @@ const OrderShow = ({order, currentUser}) => {
 
 #### troubleshoot
 - note: `client/pages/tickets/[ticketId].js` - when you call doRequest, the first prop passed is actually event 
+  - but because we updated the
 - FIX: use arrow function
 
 ```js
@@ -21949,6 +21951,10 @@ const OrderShow = ({order, currentUser}) => {
   purchase
 </button>
 ```
+
+#### Troubleshoot - payment
+- payment not going through to backend see `482. Don't Cancel Completed Orders!`
+
 
 ### 501. Filtering Reserved Tickets
 
