@@ -21735,7 +21735,35 @@ export default OrderShow;
   //...
 
 ```
-### 496. Showing a Stripe Payment Formt
+### 496. Showing a Stripe Payment Format
+- show the `pay button` when viewing an order
+- and clicking on pay button should show Stripe modal
+- after submit, stripe returns a token
+- then we take this token and send it off with request to payment service
+- npm library - `react-stripe-checkout`
+- stripe dashboard -> get public `stripeKey`
+
+<img
+src='exercise_files/udemy-microservices-section22-496-stripe-dashboard-publishable-key.png'
+alt='udemy-microservices-section22-496-stripe-dashboard-publishable-key.png'
+width=600
+/>
+
+- from `client/` directory:
+```bash
+pnpm i react-stripe-checkout
+```
+
+- usage
+```js
+import StripeCheckout from 'react-stripe-checkout';
+
+//...
+return (
+  //...
+  <StripeCheckout token={this.onToken} stripeKey="MY_PUBLISHABLE_stripekey">
+)
+```
 
 ### 497. Module not found: Can't resolve 'prop-types'
 
