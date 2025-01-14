@@ -21827,6 +21827,63 @@ width=600
 />
 
 ### 499. Test Credit Card Numbers
+- stripe testing credit card numbers
+- https://docs.stripe.com/testing
+
+<img
+src='exercise_files/udemy-microservices-section22-499-test-credit-card-numbers.png'
+alt='udemy-microservices-section22-499-test-credit-card-numbers.png'
+width=600
+/>
+
+### for testing
+- visa `4242424242424242` 
+- any future date 
+- any 3 digit CVC
+
+### testing output (returned stripe token)
+- stripe then returns a `token` for future use when charging to the credit card
+- NB: the most important part is the returned token `id` which gets sent off to payment service
+
+```json
+{
+    "id": "tok_1Qh5tNBnOMsnLYo3ItoKzoMb",
+    "object": "token",
+    "card": {
+        "id": "card_1Qh5tNBnOMsnLYo3CxNO3KVC",
+        "object": "card",
+        "address_city": null,
+        "address_country": null,
+        "address_line1": null,
+        "address_line1_check": null,
+        "address_line2": null,
+        "address_state": null,
+        "address_zip": null,
+        "address_zip_check": null,
+        "brand": "Visa",
+        "country": "US",
+        "cvc_check": "unchecked",
+        "dynamic_last4": null,
+        "exp_month": 3,
+        "exp_year": 2025,
+        "funding": "credit",
+        "last4": "4242",
+        "name": "test@test.com",
+        "networks": {
+            "preferred": null
+        },
+        "regulated_status": "unregulated",
+        "tokenization_method": null,
+        "wallet": null
+    },
+    "client_ip": "118.167.14.158",
+    "created": 1736844873,
+    "email": "test@test.com",
+    "livemode": false,
+    "type": "card",
+    "used": false
+}
+```
 
 ### 500. Paying for an Order
 
