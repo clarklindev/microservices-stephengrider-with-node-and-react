@@ -21513,10 +21513,155 @@ width=600
 ```
 
 ### 491. Linking to Wildcard Routes
+- this is the tickets/ detailed page
+- `ticketing.dev/tickets/:id`
+- reminder nextjs: `client/pages/tickets/[ticketId].js`
+- `ticketId` will be available on getContext object passed into component
+
+```ts
+//client/pages/tickets/[ticketId].js
+const TicketShow = () => {
+  return <div>TicketShow</div>
+}
+
+export default TicketShow;
+```
+
+#### testing
+- `ticketing.dev/tickets/dfsdfsdfdsfsd`
+
+#### handling navigation with dynamic routes
+- this route can be navigated to by click on ticket list items in `ticketing.dev/tickets`
+- this was covered in lesson 490
+  - NOTE: `href` points to generic path 
+  - NOTE: it is the `as={}` that has the dynamic id
+
+- `client/pages/index.js`
+
+```js
+//client/pages/index.js
+//...
+
+  const ticketList = tickets.map(ticket=> {
+    return (<tr key={ticket.id}>
+      <td>{ticket.title}</td>
+      <td>{ticket.price}</td>
+      <td>
+        <Link href="/tickets/[ticketId]" as={`/tickets/${ticket.id}`}>view</Link>
+      </td>
+    </tr>)
+  });
+
+```
 
 ### 492. Creating an Order
 
+#### client -> ticket detailed view
+### fetching data for page (ticket details)
+- detailed view: `client/pages/tickets/[ticketId].js` 
+- NOTE: TicketShow.getInitialProps() tries to reach `/api/tickets/${ticketId}` (file is called `tickets/src/routes/new.ts`)
+- adding the `.getInitialProps()` to client
+- you get the `ticketId` from `context.query` 
+- it is `ticketId` because of path filename `pages/tickets/[ticketId]`
+
+### creating an order for the ticket
+
+- ticketing.dev/tickets/:ticketId
+<img
+src='exercise_files/udemy-microservices-section22-492-view-ticket.png'
+alt='udemy-microservices-section22-492-view-ticket.png'
+width=600
+/>
+
+- clicking (purchase button) creates a new order -> it reaches out to `/api/orders`
+  - file is called `orders/src/routes/new.ts`
+  - and this route needs a `ticketId`
+
+
+```ts
+//client/pages/tickets/[ticketId].js
+import useRequest from '../../hooks/use-request';
+
+const TicketShow = ({ticket}) => {
+
+  const {doRequest, errors} = useRequest({
+    url: '/api/orders',
+    method: 'post',
+    body:{
+      ticketId: ticket.id
+    },
+    onSuccess: (order) => console.log(order);
+  });
+
+  return (
+    <div>
+      <h1>{ticket.title}</h1>
+      <h4>price: {ticket.price}</h4>
+      {errors}
+      <button onClick={doRequest} className="btn btn-primary">purchase</button>
+    </div>
+  );
+}
+
+TicketShow.getInitialProps = async (context, client) => {
+  const { ticketId } = context.query;
+  const { data } = await client.get(`/api/tickets/${ticketId}`);
+  return { ticket: data }
+}
+
+export default TicketShow;
+```
+
+#### testing
+- signin/signup
+- login
+- create ticket
+- view ticket from landing
+- TEST: `https://ticketing.dev/tickets/6785c70b6b081d437fd6119e`
+
+
 ### 493. Programmatic Navigation to Wildcard Routes
+### part 1 - show the order
+- after creating order, navigates to page that `shows order details`
+
+#### frontend
+
+<img
+src='exercise_files/udemy-microservices-section22-493-show-order-details.png'
+alt='udemy-microservices-section22-493-show-order-details.png'
+width=600
+/>
+
+- `client/orders/:orderId`
+- route: `client/pages/orders/[orderId].js`
+
+```js
+//client/pages/orders/[orderId].js
+const OrderShow = () => {
+  return <div>OrderShow</div>
+}
+
+export default OrderShow;
+```
+
+- then back in `client/pages/tickets/[ticketId].js` 
+- we want to navigate to OrderShow page when `onSuccess(order)` is invoked
+- using router.push to navigate to wildcard route
+- navigate programatically
+
+- nextjs 13+ 
+  ```js
+  //client/pages/tickets/[ticketId].js
+
+  import {useRouter} from 'next/router';
+  //...
+  const router = useRouter();
+  //...
+  onSuccess: (order) => router.push('/orders/[orderId]', `/orders/${order.id}`);
+  ```
+
+### part 2 - timer
+- and has timer which counts down how much time left to pay for order
 
 ### 494. The Expiration Timer
 
