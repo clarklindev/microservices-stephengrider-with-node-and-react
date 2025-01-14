@@ -21743,6 +21743,7 @@ export default OrderShow;
 - npm library - `react-stripe-checkout`
 - stripe dashboard -> get public `stripeKey`
 
+
 <img
 src='exercise_files/udemy-microservices-section22-496-stripe-dashboard-publishable-key.png'
 alt='udemy-microservices-section22-496-stripe-dashboard-publishable-key.png'
@@ -21761,7 +21762,7 @@ import StripeCheckout from 'react-stripe-checkout';
 //...
 return (
   //...
-  <StripeCheckout token={this.onToken} stripeKey="MY_PUBLISHABLE_stripekey">
+  <StripeCheckout token={onToken} stripeKey="MY_PUBLISHABLE_stripekey">
 )
 ```
 
@@ -21774,8 +21775,56 @@ return (
 ```
 
 - FIX: client folder: `pnpm install prop-types`
+- FIX: restart skaffold: `skaffold dev`
 
 ### 498. Configuring Stripe
+- `client/pages/orders/[orderId].js`
+- the Stripe component returns a token={} which is a callback function
+- and stripeKey you get from the stripe dashboard -> developers -> apikeys -> publishable keys 
+- NOTE: the stripe warning about upgrade
+
+```console
+You’re using the legacy version of Stripe Checkout.
+
+We released a new version of Checkout in April 2019, which supports mobile wallets and other payment methods:
+https://stripe.com/docs/payments/checkout
+
+Learn how to upgrade to the new version:
+https://stripe.com/docs/payments/checkout/migration
+```
+#### StripeCheckout component
+- NOTE: we put the stripe public sharable key in the code but ideally it should be a nextjs environment variable
+- on the order, we get back the request for the order -> with a `ticket` property -> and inside `price` property
+- StripeCheckout `amount` property 
+  - and STRIPE denomination for orders in `cents` and our `price` is in dollars so *100
+
+- note: StripeCheckout `email` property
+  - the `client/pages/_app.js` -> passes `currentUser` -> `<Component currentUser={currentUser} {...pageProps} />`
+  - so `client/pages/orders/[orderId].js` receives this `currentUser`
+  - the `email` property will automatically show on `StripeCheckout` payment form if added as a prop
+
+  ```ts
+  //...
+
+  const OrderShow = ({order, currentUser}) => {
+    //...
+
+    return (
+      <StripeCheckout
+        token={(token) => console.log(token)}
+        stripeKey="pk_test_51LqAwfBnOMsnLYo3SuEc5nN3Snr5BLri0APynFwQFEmmBJH0VcRxoe2zXQ4aBYqljrjH3JDrnlTlyP0LzLmxI0cw00daSKTD7P"
+        amount={order.ticket.price * 100}
+        email={currentUser.email}
+      />
+    )
+  };
+  ```
+
+<img
+src='exercise_files/udemy-microservices-section22-498-configuring-stripe-component.png'
+alt='udemy-microservices-section22-498-configuring-stripe-component.png'
+width=600
+/>
 
 ### 499. Test Credit Card Numbers
 
