@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import { Order } from '../../models/order';
 import { app } from '../../app';
 import { stripe } from '../../stripe';
-import { Payment } from '../../models/payments';
+import { Payment } from '../../models/payment';
 
 //lesson 474. a more realistic test setup 
 // TODO: comment out the jest.mock()

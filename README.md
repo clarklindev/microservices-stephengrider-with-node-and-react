@@ -20080,6 +20080,9 @@ pnpm i stripe
 kubectl create secret generic stripe-secret --from-literal STRIPE_KEY=x
 ```
 
+#### check on kubectl secrets
+- `kubectl get secrets`
+
 #### using the stripe secret in deployment yaml
 - add the secret to payments deployment
 - `infra/k8s/payments-depl.yaml`
@@ -21886,6 +21889,66 @@ width=600
 ```
 
 ### 500. Paying for an Order
+- frontend will send off request to backend at `/api/payments` (`payments/src/routes/new.ts`)
+  - passing in `returned stripe token id`
+  - `orderId`
+- so in `client/pages/orders/[orderId].js`
+  - the `token` property callback, we receive the `token` but we only need `id` so destruct it off token
+- need to make adjustments to `useRequest` hook, if additional properties are added
+- so we wrote `useRequest` and we need to adjust `doRequest()` so it can receive an object { token }
+  eg. `token={({id}) => doRequest({token: id })}`
+- `doRequest()` - needs to be merge this object with the request body
+
+
+- UPDATE: useRequest by passing in props and merging with body props for the request
+```ts
+//client/hooks/useRequest.js
+const doRequest = async (props = {}) => {
+  try {
+    setErrors(null);
+    const response = await axios[method](url, {...body, ...props});
+    //...
+  }
+}
+```
+
+```js
+//client/pages/orders/[orderId].js
+
+//...
+
+const OrderShow = ({order, currentUser}) => {
+  //...
+  const { doRequest, errors } = useRequest({
+    url: '/api/payments',
+    method: 'post',
+    body: {
+      orderId: order.id
+    },
+    onSuccess: (payment) => console.log(payment)
+  });
+
+  return (
+    <StripeCheckout
+      token={({id}) => doRequest({token: id })}
+      stripeKey="pk_test_51LqAwfBnOMsnLYo3SuEc5nN3Snr5BLri0APynFwQFEmmBJH0VcRxoe2zXQ4aBYqljrjH3JDrnlTlyP0LzLmxI0cw00daSKTD7P"
+      amount={order.ticket.price * 100}
+      email={currentUser.email}
+    />
+  )
+};
+```
+
+#### troubleshoot
+- note: `client/pages/tickets/[ticketId].js` - when you call doRequest, the first prop passed is actually event 
+- FIX: use arrow function
+
+```js
+//client/pages/tickets/[ticketId].js
+<button onClick={() => doRequest} className="btn btn-primary">
+  purchase
+</button>
+```
 
 ### 501. Filtering Reserved Tickets
 

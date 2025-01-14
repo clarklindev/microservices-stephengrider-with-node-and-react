@@ -10,7 +10,7 @@ import {
 import { body } from 'express-validator';
 
 import {stripe } from '../stripe';
-import { Payment } from '../models/payments';
+import { Payment } from '../models/payment';
 import { Order } from '../models/order';
 import { PaymentCreatedPublisher } from '../events/publishers/payment-created-publisher';
 import { natsWrapper } from '../nats-wrapper';
@@ -20,10 +20,15 @@ const router = express.Router();
 router.post(
   '/api/payments',
   requireAuth,
-  [body('token').not().isEmpty(), body('orderId').not().isEmpty()],
+  [
+    body('token').not().isEmpty(), 
+    body('orderId').not().isEmpty()
+  ],
   validateRequest,
   async (req: Request, res: Response) => {
     const { token, orderId } = req.body;
+
+    console.log(`PAYMENTS: token: ${token}, orderId: ${orderId}`)
 
     const order = await Order.findById(orderId);
     if (!order) {
@@ -44,6 +49,8 @@ router.post(
       amount: order.price * 100,
       source: token,
     });
+
+    console.log('charge:' , charge);
 
     const payment = Payment.build({
       orderId,
