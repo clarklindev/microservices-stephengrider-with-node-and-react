@@ -21664,7 +21664,7 @@ export default OrderShow;
 
 ### 494. The Expiration Timer
 - this is part2 -timer
-- `client/pages/orders/[orderId]` 
+- `client/pages/orders/[orderId].js` 
 - after fetching order...gives an `expiresAt` property (string)
 - and has timer which counts down how much time left to pay for order
 - timer counts down from eg. 60seconds 
@@ -21680,10 +21680,12 @@ width=600
 />
 
 ```ts
+//client/pages/orders/[orderId].js
+
 import {useEffect, useState} from 'react';
 
 const OrderShow = ({order}) => {
-  const [timeLeft, setTimeLeft] = useEffect('');
+  const [timeLeft, setTimeLeft] = useEffect(0);
 
   useEffect(()=>{
     const findTimeLeft = () => {
@@ -21699,6 +21701,10 @@ const OrderShow = ({order}) => {
     }
   }, [order]);
 
+  if( timeLeft < 0 ){
+    return <div>Order expired</div>
+  }
+
   return <div>Time left to pay: {timeLeft} seconds</div>;
 }
 
@@ -21713,7 +21719,22 @@ export default OrderShow;
 ```
 
 ### 495. Displaying the Expiration
+- TODO: make sure that if timeLeft is 0 or less stop timer
+- update intial `timeLeft` value to 0: `const [timeLeft, setTimeLeft] = useState(0);`
+- the expiry time comes from: `orders/src/routes/new.ts` -> `const EXPIRATION_WINDOW_SECONDS = 1 * 60;`
 
+```js
+//client/pages/orders/[orderId].js
+
+  //...
+  const [timeLeft, setTimeLeft] = useState(0);
+  //...
+  if( timeLeft < 0 ){
+    return <div>Order expired</div>
+  }
+  //...
+
+```
 ### 496. Showing a Stripe Payment Formt
 
 ### 497. Module not found: Can't resolve 'prop-types'
