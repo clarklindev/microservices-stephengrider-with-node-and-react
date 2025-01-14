@@ -21766,6 +21766,14 @@ return (
 ```
 
 ### 497. Module not found: Can't resolve 'prop-types'
+- error thrown by react-stripe-checkout
+
+```console
+[client] - error ./node_modules/react-stripe-checkout/dist/main.js:15:0
+[client] Module not found: Can't resolve 'prop-types'
+```
+
+- FIX: client folder: `pnpm install prop-types`
 
 ### 498. Configuring Stripe
 
