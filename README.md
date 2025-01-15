@@ -21957,8 +21957,31 @@ const OrderShow = ({order, currentUser}) => {
 
 
 ### 501. Filtering Reserved Tickets
+- filter so only showing tickets still available
+- `tickets/src/routes/index.ts`
+- TicketsDoc monoose model has an optional `orderId` which makes it `reserved`
+- filter tickets without orderId
+- if you order a ticket and then payment elapses and order expires then it lands back as not reserved on the tickets landing page list
+
+```ts
+//tickets/src/routes/index.ts
+
+import express, { Request, Response } from 'express';
+import { Ticket } from '../models/ticket';
+
+const router = express.Router();
+
+router.get('/api/tickets', async (req: Request, res: Response) => {
+  const tickets = await Ticket.find({
+    orderId: undefined
+  });
+  res.send(tickets);
+});
+export { router as indexTicketRouter };
+```
 
 ### 502. Header Links
+- TODO: header links (`sell ticket`, `My orders`)
 
 ### 503. Rendering a List of Orders
 
