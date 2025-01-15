@@ -21982,10 +21982,85 @@ export { router as indexTicketRouter };
 
 ### 502. Header Links
 - TODO: header links (`sell ticket`, `My orders`)
-- clients/components/header.js
+- `clients/components/header.js`
 
 ### 503. Rendering a List of Orders
+- TODO: show list of orders belonging to a user
+- `client/pages/orders/src/index.js`
 
+```ts
+//client/pages/orders/src/index.js
+const OrderIndex = ({orders}) => {
+  return <ul>
+    {
+      orders.map(order => {
+        return <li key={order.id}>
+          {order.ticket.title} - {order.status}
+        </li>
+      })
+    }
+    </ul>
+
+}
+
+OrderIndex.getInitialProps = async (context, client) => {
+  const {data} = await client.get('/api/orders');
+
+  return {orders: data};
+}
+
+export default OrderIndex;
+```
+
+- note: it tries to reach backend `/api/orders` 
+- note the search filter: should only return orders belonging to user making request `userId: req.currentUser!.id`
+  - `orders/src/routes/index.ts`
+
+```ts
+//orders/src/routes/index.ts
+import express, { Request, Response } from 'express';
+import { requireAuth } from '@clarklindev/common';
+import { Order } from '../models/order';
+
+const router = express.Router();
+
+router.get('/api/orders', requireAuth, async (req:Request, res:Response) => {
+
+  const orders = await Order.find({ 
+    userId: req.currentUser!.id
+  }).populate('ticket');
+
+  res.send(orders);
+});
+
+export { router as indexOrderRouter };
+  
+```
+
+- after order has been paid for - `client/pages/orders/[orderId].js`
+- redirect to order list (`ticketing.dev/orders`)
+- `useRequest()` -> onSuccess() redirect to `/orders`
+
+```ts
+//client/pages/orders/[orderId].js
+import useRequest from '../../hooks/use-request';
+
+const OrderShow = ({order, currentUser}) => {
+  const router = useRouter();
+  //...
+  const { doRequest, errors } = useRequest({
+  url: '/api/payments',
+  method: 'post',
+  body: {
+    orderId: order.id
+  },
+  onSuccess: () => {
+    return router.push('/orders')
+  }
+});
+
+}
+```
 ---
 
 ## section 23 - CI/CD (2hr17min)
