@@ -21982,6 +21982,7 @@ export { router as indexTicketRouter };
 
 ### 502. Header Links
 - TODO: header links (`sell ticket`, `My orders`)
+- clients/components/header.js
 
 ### 503. Rendering a List of Orders
 
