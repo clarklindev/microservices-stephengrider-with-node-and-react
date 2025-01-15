@@ -15,7 +15,8 @@ interface PaymentModel extends mongoose.Model<PaymentDoc> {
   build(attrs: PaymentAttrs) : PaymentDoc;
 }
 
-const paymentSchema = new mongoose.Schema({
+const paymentSchema = new mongoose.Schema(
+{
   orderId:{
     required: true,
     type: String
@@ -23,7 +24,8 @@ const paymentSchema = new mongoose.Schema({
   stripeId:{
     required: true,
     type: String
-  },
+  }, 
+}, {
   toJSON:{
     transform(doc, ret){
       ret.id = ret._id; //create id property
