@@ -22305,6 +22305,21 @@ width=600
 - only after you merge changes on github will you need to create another pull request
 
 ### 511. Running Tests in Parallel
+- NOTE: in the tutorial stephen uses .yml but .yaml is more widely adopted convention
+
+#### running tests in series
+- /.github/workflow/tests.yaml
+- you could add more test to the workflow/test.yaml `run: cd auth && pnpm i && pnpm run test:ci`
+  - but this runs tests in series
+  
+#### running tests in parallel
+- running tests for other services...in parallel
+- you could create additional workflows for each service
+  - `.github/workflows/tests-auth.yaml`
+  - `.github/workflows/tests-orders.yaml`
+  - `.github/workflows/tests-payments.yaml`
+  - `.github/workflows/tests-tickets.yaml`
+- NOTE: you need to update package.json and add command `"test:ci": "jest"`
 
 ### 512. Verifying a Test Run
 
