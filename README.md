@@ -12473,8 +12473,8 @@ width='600'
 
 ### 315. Reusable NATS Listeners
 
-<img src='exercise_files/udemy-microservices-section16-315-reusable-nats-listener.png'
-alt='udemy-microservices-section16-315-reusable-nats-listener.png'
+<img src='exercise_files/udemy-microservices-section15-315-reusable-nats-listener.png'
+alt='udemy-microservices-section15-315-reusable-nats-listener.png'
 width='600'
 />
 
@@ -12493,8 +12493,8 @@ width='600'
   - `listen` -> function -> code to set up the subscription
   - `parseMessage` -> function -> helper to parse a message
 
-<img src='exercise_files/udemy-microservices-section16-315-reusable-nats-listener-abstract-subclasses.png'
-alt='udemy-microservices-section16-315-reusable-nats-listener-abstract-subclasses.png'
+<img src='exercise_files/udemy-microservices-section15-315-reusable-nats-listener-abstract-subclasses.png'
+alt='udemy-microservices-section15-315-reusable-nats-listener-abstract-subclasses.png'
 width='600'
 />
 
@@ -12639,8 +12639,8 @@ class TicketCreatedListener extends Listener {
 - the services will import this Listener
 - each service will then define a subclass of Listener and have its own custom logic
 
-<img src='exercise_files/udemy-microservices-section16-318-quick-refactor-listeners-defined-in-services.png'
-alt='udemy-microservices-section16-318-quick-refactor-listeners-defined-in-services.png'
+<img src='exercise_files/udemy-microservices-section15-318-quick-refactor-listeners-defined-in-services.png'
+alt='udemy-microservices-section15-318-quick-refactor-listeners-defined-in-services.png'
 width='600'
 />
 
@@ -12671,13 +12671,13 @@ stan.on('connect', () => {
   - remembering properties of events
   - remembering names of the events / spelling errors
 
-<img src='exercise_files/udemy-microservices-section16-319-mapping-between-subject-names-and-event-data.png'
-alt='udemy-microservices-section16-319-mapping-between-subject-names-and-event-data.png'
+<img src='exercise_files/udemy-microservices-section15-319-mapping-between-subject-names-and-event-data.png'
+alt='udemy-microservices-section15-319-mapping-between-subject-names-and-event-data.png'
 width='600'
 />
 
-<img src='exercise_files/udemy-microservices-section16-319-mapping-subject-data-relationship.png'
-alt='udemy-microservices-section16-319-mapping-subject-data-relationship.png'
+<img src='exercise_files/udemy-microservices-section15-319-mapping-subject-data-relationship.png'
+alt='udemy-microservices-section15-319-mapping-subject-data-relationship.png'
 width='600'
 />
 
@@ -12705,8 +12705,8 @@ export enum Subjects {
 - TODO: create a new file `nats-test/src/events/ticket-created-event.ts`
 - we set up tight-coupling between the subject and its data.
 
-<img src='exercise_files/udemy-microservices-section16-319-mapping-subject-data-relationship.png'
-alt='udemy-microservices-section16-319-mapping-subject-data-relationship.png'
+<img src='exercise_files/udemy-microservices-section15-319-mapping-subject-data-relationship.png'
+alt='udemy-microservices-section15-319-mapping-subject-data-relationship.png'
 width='600'
 />
 
@@ -12729,8 +12729,8 @@ export interface TicketCreatedEvent {
 
 - typscript needs to check that the `subject` matches up with type of data provided to `onMessage(data)`
 
-<img src='exercise_files/udemy-microservices-section16-322-enforcing-listener-subjects.png'
-alt='udemy-microservices-section16-322-enforcing-listener-subjects.png'
+<img src='exercise_files/udemy-microservices-section15-322-enforcing-listener-subjects.png'
+alt='udemy-microservices-section15-322-enforcing-listener-subjects.png'
 width='600'
 />
 
@@ -12773,8 +12773,8 @@ export abstract class Listener<T extends Event> {
 - when using Listener (generic class) -> need to provide an argument for type T
 - provide Listener with a type (... eg. TicketCreatedEvent) - that describes the event we expect to receive inside this listener
 
-<img src='exercise_files/udemy-microservices-section16-319-generic-listener-class-warning.png'
-alt='udemy-microservices-section16-319-generic-listener-class-warning.png'
+<img src='exercise_files/udemy-microservices-section15-319-generic-listener-class-warning.png'
+alt='udemy-microservices-section15-319-generic-listener-class-warning.png'
 width='600'
 />
 
@@ -12853,8 +12853,8 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
 
 - understanding what code goes into Common module (when refactoring)
 
-<img src='exercise_files/udemy-microservices-section16-325-what-goes-into-common-module.png'
-alt='udemy-microservices-section16-325-what-goes-into-common-module.png'
+<img src='exercise_files/udemy-microservices-section15-325-what-goes-into-common-module.png'
+alt='udemy-microservices-section15-325-what-goes-into-common-module.png'
 width='600'
 />
 
@@ -12927,8 +12927,8 @@ export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent> {
 - using `TicketCreatedPublisher`
 
 - we receive warning when using TicketCreatedPublisher
-  <img src='exercise_files/udemy-microservices-section16-327-using-the-custom-publisher-TicketCreatedPublisher.png'
-  alt='udemy-microservices-section16-327-using-the-custom-publisher-TicketCreatedPublisher.png'
+  <img src='exercise_files/udemy-microservices-section15-327-using-the-custom-publisher-TicketCreatedPublisher.png'
+  alt='udemy-microservices-section15-327-using-the-custom-publisher-TicketCreatedPublisher.png'
   width='600'
   />
 
@@ -13042,8 +13042,8 @@ stan.on('connect', async () => {
 - CONS -> the common module is written in typescript -> only works if all our services are written with Typescript
   - ie. if there are multi-languages services
 
-<img src='exercise_files/udemy-microservices-section16-329-common-event-definitions-summary.png'
-alt='udemy-microservices-section16-329-common-event-definitions-summary.png'
+<img src='exercise_files/udemy-microservices-section15-329-common-event-definitions-summary.png'
+alt='udemy-microservices-section15-329-common-event-definitions-summary.png'
 width='600'
 />
 
