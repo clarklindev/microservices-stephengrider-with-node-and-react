@@ -22233,6 +22233,14 @@ jobs:
 
 
 ### 508. Tests in GitHub Actions> Hang - Jest did not exit
+- If, over the next few lectures, you find that your tests are hanging in the GitHub Actions environment and you also see the following message in the logs:
+- `Jest did not exit one second after the test run has completed`
+
+- Then, you'll need to find the src/test/setup.ts file for each service and update the following line from this:
+- `const  mongo = await MongoMemoryServer.create();`
+
+- to this:
+- `mongo = await MongoMemoryServer.create();`
 
 ### 509. Running Tests on PR Creation
 
