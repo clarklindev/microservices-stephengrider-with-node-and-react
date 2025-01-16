@@ -22129,10 +22129,93 @@ width=600
   - git push origin master
 
 ### 506. Creating a GitHub Action
+- TODO: add code to repo to run test anytime we do a pull request to merge into master branch
+- actions trigger event (github event) which run an github action (script)
+  - code push
+  - pull request created
+    - [help.github.com/en/actions](help.github.com/en/actions)
+  - pull request closed 
+  - repository is forked
+
+<img
+src='exercise_files/udemy-microservices-section23-506-creating-a-github-action.png'
+alt='udemy-microservices-section23-506-creating-a-github-action.png'
+width=600
+/>
+
+- workflows
+
+<img
+src='exercise_files/udemy-microservices-section23-506-workflows.png'
+alt='udemy-microservices-section23-506-workflows.png'
+width=600
+/>
+
+- there are pre-set workflows for popular: [git repo]`/actions/new`
+
+### create a github actions workflow
+
+<img
+src='exercise_files/udemy-microservices-section23-506-repo-options-tab.png'
+alt='udemy-microservices-section23-506-repo-options-tab.png'
+width=600
+/>
+
+- we will select our repo [https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-ticketing](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-ticketing)
+
+
+
+- we create out own workflows: [github repo]`/new/master?filename=.github%2Fworkflows%2Fmain.yml&workflow_template=blank`
+
+### using pnpm in workflows
+- NOTE: Install pnpm in your GitHub Actions workflow before running your commands.
+
+- NOTE: step name -> The name for individual steps is optional. If omitted, the step will still execute, but it won’t have a user-friendly label in the GitHub Actions UI. Instead, GitHub will display the run command or uses action as the label.
+
+```
+```
+
+### creating the workflow...
+- rename file as `test.yaml`
+- `on`: 
+  - with just `pull_request` 
+  - this will run for created `opened`, updated `synchronize`, r-opened `reopened`
+- `build`
+  - start up a container that runs on ubuntu
+- `users`
+  - take code out project
+- `run`
+  - run a specific service (eg. auth service)
+
+```yaml
+name: tests
+
+on: 
+  pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: checkout code
+        uses: actions/checkout/@v2
+      
+      - name: install and run auth tests
+        run: cd auth && pnpm i && pnpm run test:ci
+
+```
+
+#### commit actions
+- github select `commit changes`
+  - commit directly to `master` branch
+- NOTE: it actually saves it to: `/.github/workflows/test.yaml`
 
 ### 507. Adding a CI Test Script
 
-### 508. Tests in GitHub Actions Hang - Jest did not exit
+### 508. Tests in GitHub Actions> Hang - Jest did not exit
 
 ### 509. Running Tests on PR Creation
 
