@@ -22066,6 +22066,33 @@ const OrderShow = ({order, currentUser}) => {
 ## section 23 - CI/CD (2hr17min)
 
 ### 504. Development Workflow
+- creating a production style deployment pipeline
+  - deployment
+  - workflow (includes making changes and redeployment)
+
+<img
+src='exercise_files/udemy-microservices-section22-504-development-workflow.png'
+alt='udemy-microservices-section22-504-development-workflow.png'
+width=600
+/>
+
+- teams working on different services -> make updates to service -> deploys to kubernetes cluster
+- TODO: create workflow that multiple teams can work on same project and merge changes
+
+### Bulletproof workflow
+
+<img
+src='exercise_files/udemy-microservices-section22-504-bulletproof-workflow.png'
+alt='udemy-microservices-section22-504-bulletproof-workflow.png'
+width=600
+/>
+
+- commit changes to a 'branch' (any except `master` branch)
+- push to github
+- MANUAL -> create a `pull request` (via github) todo: `merge branch into 'master'`
+- configure github to run tests inside project
+- when tests pass...  `merge branch into 'master'`
+- the master branch -> (is a special branch) -> when there are changes, github builds and deploys
 
 ### 505. Git Repository Approaches
 
