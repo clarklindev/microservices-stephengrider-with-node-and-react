@@ -22096,6 +22096,38 @@ width=600
 
 ### 505. Git Repository Approaches
 
+### separate repository for each service
+- separate repository for each service approach
+<img
+src='exercise_files/udemy-microservices-section23-505-git-repository-separate-repository-for-each-service.png'
+alt='udemy-microservices-section23-505-git-repository-separate-repository-for-each-service.png'
+width=600
+/>
+- microservices overhead (when using separate repositories)
+  - separate authentication keys
+  - separate ci/cd pipelines
+
+### monorepo approach
+- monorepo approach
+<img
+src='exercise_files/udemy-microservices-section23-505-git-repository-monorepo.png'
+alt='udemy-microservices-section23-505-git-repository-monorepo.png'
+width=600
+/>
+
+- large companies sometimes use `monorepos` because there is overhead that comes with creating separate git repositories
+- we will use monorepo approach (picked)  
+
+#### make main project a git repository
+  - NOTE: currently the parent course repository is: https://github.com/clarklindev/microservices-stephengrider-with-node-and-react.git
+  - we want to make `/section05-23-ticketing/` its own repository
+  - inside `/section05-23-ticketing/` -> `git init`
+  - .gitignore
+- make repo in github (will use github actions)
+  - `https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-ticketing.git`
+  - `git remote add origin https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-ticketing.git`
+  - git push origin master
+
 ### 506. Creating a GitHub Action
 
 ### 507. Adding a CI Test Script
