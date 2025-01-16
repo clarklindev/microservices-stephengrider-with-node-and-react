@@ -22176,7 +22176,7 @@ width=600
 ```
 
 ### creating the workflow...
-- rename file as `test.yaml`
+- rename file as `tests.yaml`
 - `on`: 
   - with just `pull_request` 
   - this will run for created `opened`, updated `synchronize`, r-opened `reopened`
@@ -22211,7 +22211,7 @@ jobs:
 #### commit actions
 - github select `commit changes`
   - commit directly to `master` branch
-- NOTE: it actually saves it to: `/.github/workflows/test.yaml`
+- NOTE: it actually saves it to: `/.github/workflows/tests.yaml`
 
 ### 507. Adding a CI Test Script
 - so our tests current are run in watch-mode (continuously watch for changes)
