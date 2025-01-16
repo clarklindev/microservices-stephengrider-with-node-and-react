@@ -22244,6 +22244,55 @@ jobs:
 
 ### 509. Running Tests on PR Creation
 
+### step 1 - make a change
+
+<img
+src='exercise_files/udemy-microservices-section23-509-running-tests-on-pull-request-creation-1.png'
+alt='udemy-microservices-section23-509-running-tests-on-pull-request-creation-1.png'
+width=600
+/>
+
+- make a change to code 
+  - `auth/src/index.ts`
+
+### step 2 - commit code to new branch
+- commit code to a new branch (not master)
+- section05-23-ticketing/ `git checkout -b dev`
+- console output: `Switched to a new branch 'dev'`
+
+### step 3 - push to github
+
+<img
+src='exercise_files/udemy-microservices-section23-509-running-tests-on-pull-request-creation-2.png'
+alt='udemy-microservices-section23-509-running-tests-on-pull-request-creation-2.png'
+width=600
+/>
+
+- `git push --set-upstream origin dev`
+
+### step 4 - github
+- login to github
+- go to the new repo we created ([project folder]/section05-23-ticketing)
+- its github repo is [github-repository](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-ticketing) 
+  - click `new pull request` 
+  - create a pull request `manually` to merge branch into master
+
+<img
+src='exercise_files/udemy-microservices-section23-509-running-tests-on-pull-request-creation-3.png'
+alt='udemy-microservices-section23-509-running-tests-on-pull-request-creation-3.png'
+width=600
+/>
+
+- pull request `where you want to take code from` and `where you want to merge it to`
+- create pull request -> should trigger an event on github (github action)
+
+- passing tests..
+<img
+src='exercise_files/udemy-microservices-section23-509-running-tests-on-pull-request-creation-4-passing-tests.png'
+alt='udemy-microservices-section23-509-running-tests-on-pull-request-creation-4-passing-tests.png'
+width=600
+/>
+
 ### 510. Output of Failing Tests
 
 ### 511. Running Tests in Parallel
