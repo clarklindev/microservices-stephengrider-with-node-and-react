@@ -22071,8 +22071,8 @@ const OrderShow = ({order, currentUser}) => {
   - workflow (includes making changes and redeployment)
 
 <img
-src='exercise_files/udemy-microservices-section22-504-development-workflow.png'
-alt='udemy-microservices-section22-504-development-workflow.png'
+src='exercise_files/udemy-microservices-section23-504-development-workflow.png'
+alt='udemy-microservices-section23-504-development-workflow.png'
 width=600
 />
 
@@ -22082,8 +22082,8 @@ width=600
 ### Bulletproof workflow
 
 <img
-src='exercise_files/udemy-microservices-section22-504-bulletproof-workflow.png'
-alt='udemy-microservices-section22-504-bulletproof-workflow.png'
+src='exercise_files/udemy-microservices-section23-504-bulletproof-workflow.png'
+alt='udemy-microservices-section23-504-bulletproof-workflow.png'
 width=600
 />
 
@@ -22098,17 +22098,20 @@ width=600
 
 ### separate repository for each service
 - separate repository for each service approach
+
 <img
 src='exercise_files/udemy-microservices-section23-505-git-repository-separate-repository-for-each-service.png'
 alt='udemy-microservices-section23-505-git-repository-separate-repository-for-each-service.png'
 width=600
 />
+
 - microservices overhead (when using separate repositories)
   - separate authentication keys
   - separate ci/cd pipelines
 
 ### monorepo approach
 - monorepo approach
+
 <img
 src='exercise_files/udemy-microservices-section23-505-git-repository-monorepo.png'
 alt='udemy-microservices-section23-505-git-repository-monorepo.png'
@@ -22171,9 +22174,6 @@ width=600
 - NOTE: Install pnpm in your GitHub Actions workflow before running your commands.
 
 - NOTE: step name -> The name for individual steps is optional. If omitted, the step will still execute, but it won’t have a user-friendly label in the GitHub Actions UI. Instead, GitHub will display the run command or uses action as the label.
-
-```
-```
 
 ### creating the workflow...
 - rename file as `tests.yaml`
