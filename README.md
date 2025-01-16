@@ -22299,6 +22299,10 @@ width=600
   - `it responds with details about current user` test - change to status `.expect(400)`
 - if you already made a pull request (to the same branch), you do not have to make another pull request..
   - it will be added as additional changes to the pull request
+- github tell you test has failed
+- revert the change
+- commit change and push to origin:dev
+- only after you merge changes on github will you need to create another pull request
 
 ### 511. Running Tests in Parallel
 
