@@ -22214,6 +22214,23 @@ jobs:
 - NOTE: it actually saves it to: `/.github/workflows/test.yaml`
 
 ### 507. Adding a CI Test Script
+- so our tests current are run in watch-mode (continuously watch for changes)
+- we want to run tests once and then exit
+- TODO: add a test command to just run and exit tests
+- `auth/package.json`
+
+```json
+//auth/package.json
+//...
+  "scripts": {
+    "start": "ts-node-dev --poll src/index.ts",
+    "test": "jest --watchAll --no-cache",
+    "test:ci": "jest"
+  },
+//...
+```
+- push to main project (`section05-23-ticketing/`) repo
+
 
 ### 508. Tests in GitHub Actions> Hang - Jest did not exit
 
