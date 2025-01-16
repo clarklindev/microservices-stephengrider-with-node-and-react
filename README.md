@@ -22294,6 +22294,11 @@ width=600
 />
 
 ### 510. Output of Failing Tests
+- showing what happens when making breaking changes to tests
+- breaking a test: `auth/src/routes/__test__/current-user.test.ts`
+  - `it responds with details about current user` test - change to status `.expect(400)`
+- if you already made a pull request (to the same branch), you do not have to make another pull request..
+  - it will be added as additional changes to the pull request
 
 ### 511. Running Tests in Parallel
 
