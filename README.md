@@ -22863,6 +22863,26 @@ width=600
 
 
 ### 528. A Successful Deploy!
+- TODO: making a change in all the services and you should see theses changes get deployed inside the cluster
+- make changes to respective services eg. index.ts -> at start add a console.log() 
+- create a pull request
+- wait for tests to complete
+- merge pull request
+
+<img
+src='exercise_files/udemy-microservices-section23-528-after-pull-request-merge.png'
+alt='udemy-microservices-section23-528-after-pull-request-merge.png'
+width=600
+/>
+
+- `kubectl get pods` -> a sucessful deploy
+
+<img
+src='exercise_files/udemy-microservices-section23-528-a-successful-deploy-kubectl-get-pods.png'
+alt='udemy-microservices-section23-528-a-successful-deploy-kubectl-get-pods.png'
+width=600
+/>
+
 
 ### 529. Buying a Domain Name
 
