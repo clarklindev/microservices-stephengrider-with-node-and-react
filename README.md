@@ -22450,21 +22450,55 @@ width=600
 />
 
 - TODO: connect to cluster from local machine using `kubectl`
-
-### digitalocean
-- [digitalocean](github.com/digitalocean/doctl) 
-  - install and run in terminal
-  - generate digitalocean accounts - generate token (digital token)
-  - authenticate with digital ocean account -> `doctl auth init [token]`
-
 ### gcloud
 - we have done something similar with gcloud
 - see `section05-23-ticketing/README.md`
-
-### TROUBLESHOOT
+#### TROUBLESHOOT
 - gcloud free tier only one IP (delete our deployment `ticketing-dev`)
 
+### digitalocean
+
+<img
+src='exercise_files/udemy-microservices-section23-517-digitalocean-steps-1.png'
+alt='udemy-microservices-section23-517-digitalocean-steps-1.png'
+width=600
+/>
+<img
+src='exercise_files/udemy-microservices-section23-517-digitalocean-steps-2.png'
+alt='udemy-microservices-section23-517-digitalocean-steps-2.png'
+width=600
+/>
+
+### step1 - initiate docl
+
+  #### digitalocean - install doctl (cli for digitalocean)
+    - install and run in terminal [doctl](github.com/digitalocean/doctl) 
+      - can download [installer](https://docs.digitalocean.com/reference/doctl/how-to/install/)
+  #### digitalocean - access token
+    - generate digitalocean accounts - generate token (digital token)
+
 ### 517. Reminder on Swapping Contexts
+- ..continued
+  #### digitalocean - authenticate
+    - authenticate with digital ocean account -> `doctl auth init [token]`
+
+### step2 - get connection info for our new cluster
+  - `doctl kubernetes cluster kubeconfig save <cluster_name>`
+    - automatically sets context to cluster
+    - `kubectl get pods`
+    - `kubectl get nodes`
+
+### step3 - list all contexts
+  - `kubectl config view`
+  - look for `contexts` in results -> context -> `name` 
+
+  #### switching back to desktop context
+  - `contexts` -> use name `docker-desktop` or `docker-for-desktop`
+
+### step4 - use a different context
+  - with step3 (getting the context name)
+  - `kubectl config use-context <context-name>` -> eg. `kubectl config use-context docker-desktop`
+  - other option is to use docker desktop -> rightclick -> select `kubernetes context` and change the context
 
 ### 518. The Deployment Plan
 
