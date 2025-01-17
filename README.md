@@ -22574,6 +22574,109 @@ jobs:
 - TODO: merge the pull request we did earlier...should trigger deploy-auth.yaml to rebuild and deploy auth/ to dockerhub
  
 ### 521. Restarting the Deployment
+- TODO: figure out how to tell deployment inside kubernetes cluster responsible for auth pod - to use this new image we just built
+  - need to reach kubernetes cluster running inside digitalocean
+- TODO: redeploy infra/ deployments 
+
+<img
+src='exercise_files/udemy-microservices-section23-521-doctl-deployment.png'
+alt='udemy-microservices-section23-521-doctl-deployment.png'
+width=600
+/>
+
+- our workflow is running inside a github container
+- inside container:
+
+### install doctl
+install doctl (`- uses: digitalocean/action-doctl@v2`)
+- initiate doctl using api key (digitalocean)
+  - apply key same way using github secrets - `DIGITALOCEAN_ACCESS_TOKEN`
+
+### get digitalocean credentials
+  - get api token from `https://cloud.digitalocean.com/account/api/tokens/` -> `github access token` -> generate token
+- use doctl to fetch context that describes how we can connect to the cluster inside digitalocean:
+  `- run: doctl kubernetes cluster kubeconfig save ticketing`
+  - it also makes it the active context
+- we feed that context into kubectl 
+- kubectl comes with github container
+
+### restarting the deployment
+- TODO: tell deployment to update itself and use latest image we just pushed to dockerhub
+  - `run: kubectl rollout restart deployment auth-depl`
+- `auth-depl` is the name of the deployment which comes from `infra/k8s/auth-depl.yaml` -> metadata: -> name: `auth-depl`
+- commit changes to github
+
+### digitalocean 
+
+```yaml
+# .github/workflows/deploy-auth.yaml
+name: deploy-auth
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'auth/**'  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      #step - build image
+      - run: cd auth && docker build -t clarklindev/auth . 
+
+      #step - login to docker
+      - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+        env:
+          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+
+      #step - push image to dockerhub + provide access token
+      - run: docker push clarklindev/auth
+
+      #step -get doctl + authenticate
+      - uses: digitalocean/action-doctl@v2
+        with: 
+          token: ${{secrets.DIGITALOCEAN_ACCESS_TOKEN}}
+
+      #step - get kubernetes config and save it inside container
+      # doctl kubernetes cluster kubeconfig save <name of kubernetes cluster>
+      - run: doctl kubernetes cluster kubeconfig save ticketing
+            
+      #step - reach in cluster and tell deployment that it must update itself + use latest image from dockerhub
+      - run: kubectl rollout restart deployment auth-depl
+
+```
+
+### gcloud workflow
+-NOTE: gcloud is not used as part of this tutorial section - but here's a sample usage in a GitHub Actions workflow:
+
+```yaml
+# .github/workflows/deploy-auth.yaml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Google Cloud authentication
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+    - name: Install gcloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        version: 'latest'
+
+    - name: Deploy to Google Cloud
+      run: |
+        gcloud config set project $GCP_PROJECT_ID
+        gcloud app deploy
+
+```
 
 ### 522. Applying Kubernetes Manifests
 
