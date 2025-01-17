@@ -22430,9 +22430,17 @@ width=600
   - does require credit card
 - NOTE: i will continue with google cloud because i already have an account and there was complications with sign up to digital ocean
 
-
-
 ### 515. Creating a Hosted Cluster
+### create kubernetes cluster
+- region
+- cluster capacity ( digital ocean $10 - 1vCPU, 2gb memory)
+  - 3 nodes
+- load balancer
+- choose cluster name
+- create cluster
+
+
+
 
 ### 516. Reminder on Kubernetes Context
 
