@@ -22679,6 +22679,48 @@ jobs:
 ```
 
 ### 522. Applying Kubernetes Manifests
+- infra/k8s/ workflow - deploying the infra/ deployment configuration files to kubernetes cluster
+- copy contents of section05-23-ticketing: `/.github/workflow/deploy-auth.yaml`
+- create section05-23-ticketing: `/.github/workflow/deploy-manifest.yaml`
+- NOTE: the config files are actually called `manifest` thats why we name them so
+- commit .github/workflows/deploy-manifest.yaml
+
+```yaml
+#/.github/workflows/deploy-manifest.yaml
+name: deploy-manifests
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'infra/**'  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      #step -get doctl + authenticate
+      - uses: digitalocean/action-doctl@v2
+        with: 
+          token: ${{secrets.DIGITALOCEAN_ACCESS_TOKEN}}
+
+      #step - get kubernetes config context and save it inside container
+      # doctl kubernetes cluster kubeconfig save <name of kubernetes cluster>
+      - run: doctl kubernetes cluster kubeconfig save ticketing
+            
+      #step - apply the configuration files from infra/k8s to cluster
+      - run: kubectl apply -f infra/k8s
+
+```
+
+### ingress-srv.yaml
+- `infra/k8s/ingress-srv.yaml`
+- routing file with host: `ticketing.dev`
+- when we deploy, our domain name will be different from `ticketing.dev`
+- ie. this value is different depending if we are running ingress-service in `development-cluster` or `production-cluster`
+- and ticketing.dev will always point to local cluster NEVER the deploy cluster
 
 ### 523. Prod vs Dev Manifest Files
 
