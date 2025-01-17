@@ -22899,8 +22899,137 @@ width=600
   - eg. [namecheap.com](http://namecheap.com)
 
 ### 530. Three Important Changes Needed to Deploy - Do Not Skip!
+- In the upcoming lecture, we will be configuring our project to use the new domain name that was purchased. There are 3 major things that need to be addressed in order for the deployment to work.
 
+1. Update the baseURL in client service's build-client file:
+
+- In api/build-client.js, change the baseURL to your purchased domain:
+- eg. `baseURL: 'http://www.ticketing-app-prod.xyz/'`
+
+```ts
+  // OLD 
+  // We are on the server
+    // return axios.create({
+    //   baseURL: 'http://ingress-nginx-controller.ingress-nginx.svc.cluster.local',
+    //   headers: req.headers,
+    // });
+
+  //UPDATED
+  // We are on the server
+    return axios.create({
+      baseURL: 'Whatever_your_purchased_domain_is',
+      headers: req.headers,
+    });
+```
+
+2. Disable HTTPS Checking
+- You may recall that we configured all of our services to only use cookies when the user is on an HTTPS connection.  This will cause auth to fail while we do the initial deployment of our app since we don't have HTTPS set up right now.
+- To disable the HTTPS checking, go to the app.ts file in the auth, orders, tickets, and payments services. 
+
+- At the cookie-session middleware, change the following:
+
+```ts
+//OLD
+  // cookieSession({
+  //   signed: false,
+  //   secure: process.env.NODE_ENV !== 'test',
+  // })
+
+//UPDATED
+  cookieSession({
+    signed: false,
+    secure: false,
+  })
+```
+
+3. Add Load Balancer
+- There is currently a bug with ingress-nginx on Digital Ocean.  You can read more about this bug:
+
+[here:](https://github.com/digitalocean/digitalocean-cloud-controller-manager/blob/master/docs/controllers/services/examples/README.md#accessing-pods-over-a-managed-load-balancer-from-inside-the-cluster)
+
+- To fix it, add the following to the bottom of your ingress-srv.yaml manifest. 
+- Also, update the URL on this line in the annotations to the domain name you're using: 
+  - `service.beta.kubernetes.io/do-loadbalancer-hostname: 'www.ticketing-app-prod.xyz'`
+
+```yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: 'true'
+    service.beta.kubernetes.io/do-loadbalancer-hostname: 'www.ticketing-app-prod.xyz'
+  labels:
+    helm.sh/chart: ingress-nginx-2.0.3
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/version: 0.32.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: https
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/component: controller
+```
 ### 531. Configuring the Domain Name
+- wherever you purchased domain from...
+
+<img
+src='exercise_files/udemy-microservices-section23-531-domain-custom-dns-nameservers-configuration.png'
+alt='udemy-microservices-section23-531-domain-custom-dns-nameservers-configuration.png'
+width=600
+/>
+
+- nameserver -> set `Custom DNS`
+  - nameserver 1 -> ns1.digitalocean.com
+  - nameserver 2 -> ns2.digitalocean.com
+  - nameserver 3 -> ns3.digitalocean.com
+
+- digital ocean -> add domain
+
+<img
+src='exercise_files/udemy-microservices-section23-531-digitalocean-add-domain.png'
+alt='udemy-microservices-section23-531-digitalocean-add-domain.png'
+width=600
+/>
+
+- create a record to customize how domain behaves
+- `A`
+  -> hostname: `@` 
+  -> will direct to: <select load balancer> ( networking-> loadbalancers)
+  -> TTL (time to live ) -> 30
+  - create record
+
+- `CNAME`
+  -> hostname: `www`
+  -> is an alias of: `@`
+  -> TTL -> 30
+  - create record
+
+### update ingress-nginx file
+- when in production mode -> watch for request coming to domain: `ticketing-app-prod.xyz`
+- `infra/k8s-prod/ingress-srv.yaml` -> update host -> `www.ticketing-app-prod.xyz`
+- save
+- commit 
+- push to dev
+- create pull request
+- approve pull request
+
+
 
 ### 532. I Really Hope This Works
 
