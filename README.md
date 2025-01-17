@@ -22433,16 +22433,36 @@ width=600
 ### 515. Creating a Hosted Cluster
 ### create kubernetes cluster
 - region
-- cluster capacity ( digital ocean $10 - 1vCPU, 2gb memory)
+- cluster capacity 
   - 3 nodes
+  - digital ocean $10 - 1vCPU, 2gb memory 
+  - google cloud n1-standard-1 1vCPU, 3.75gb memory
 - load balancer
 - choose cluster name
 - create cluster
 
-
-
-
 ### 516. Reminder on Kubernetes Context
+
+<img
+src='exercise_files/udemy-microservices-section23-516-kubectl-kubernetes-context.png'
+alt='udemy-microservices-section23-516-kubectl-kubernetes-context.png'
+width=600
+/>
+
+- TODO: connect to cluster from local machine using `kubectl`
+
+### digitalocean
+- [digitalocean](github.com/digitalocean/doctl) 
+  - install and run in terminal
+  - generate digitalocean accounts - generate token (digital token)
+  - authenticate with digital ocean account -> `doctl auth init [token]`
+
+### gcloud
+- we have done something similar with gcloud
+- see `section05-23-ticketing/README.md`
+
+### TROUBLESHOOT
+- gcloud free tier only one IP (delete our deployment `ticketing-dev`)
 
 ### 517. Reminder on Swapping Contexts
 
