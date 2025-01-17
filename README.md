@@ -23032,9 +23032,18 @@ width=600
 
 
 ### 532. I Really Hope This Works
+- testing the domain -> visiting `ticketing-app-prod.xyz`
 
 ### 533. Next Steps
+- how to shutdown load balancers
+  - select load balancers -> destroy
 
+<img
+src='exercise_files/udemy-microservices-section23-533-next-steps-expanding-the-app.png'
+alt='udemy-microservices-section23-533-next-steps-expanding-the-app.png'
+width=600
+/>
+  
 ---
 
 ## section 24 - basics of Docker (3hr3min)
