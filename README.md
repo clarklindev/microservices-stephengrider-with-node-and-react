@@ -22322,8 +22322,87 @@ width=600
 - NOTE: you need to update package.json and add command `"test:ci": "jest"`
 
 ### 512. Verifying a Test Run
+- so we added the other workflows and now we test it.
+
+- `section05-23-ticketing/` repository
+  - update code in eg. `orders/src/index.ts`
+  - commit and push to github new branch `git checkout dev`
+  - expect ALL workflows to execute
+    - [[github repository]/pull/1/commits](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-ticketing/pull/1/commits)
+- TODO: if the tests of pull request have no errors can merge pull request into master branch
+
+### TROUBLESHOOT cant access stripe environment variable
+- [udemy Q&A](https://www.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19989386#questions/20030578)
+- NOTE: 
+  - the master branch (has workflow files) - added the  payments workflow secret for STRIPE_KEY
+  - the dev branch does NOT have the workflow files (behind master)
+  - so after the secret added to master, you commit and push master
+  - need to trigger github actions to rerun (ticketing repo)
+
+- tickets project repo -> payments tests actions file, add env
+- so this update is on branch `master` and the pull request is `dev`
+  - (master) -> tests-payments.yaml 
+  - after the update push...
+  - but what triggers github actions rerun is if `dev` updates
+
+```yaml
+# .github/workflows/tests-payments.yaml
+
+name: payments-tests
+ 
+on: pull_request
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: cd payments && npm install && npm run test:ci
+ 
+```
+### github repository secrets
+- Define environment variables in your GitHub repository settings:
+  - Click on the "Settings" tab.
+  - In the sidebar, click on "Secrets".
+  - Click on "New repository secret" to create a new environment variable.
+  - Enter a name for the variable (e.g., MY_VARIABLE) and its corresponding value.
+  - eg. add `STRIPE_KEY`
+
+### TROUBLESHOOT pull request test stuck
+- if `github actions` tests gets stuck, click details -> cancel workflow and restart it
 
 ### 513. Selective Test Execution
+
+### service specific tests
+- only running tests related to specific service (github actions workflow)
+
+```yaml
+name: tests-auth
+
+on: 
+  pull_request:
+    paths: 
+      - 'auth/**'
+
+#...
+```
+
+- do the same update pattern for 
+  - `tests-auth.yaml`
+  - `tests-orders.yaml`
+  - `tests-payments.yaml`
+  - `tests-tickets.yaml`
+
+#### testing
+- to test
+  - checkout dev branch
+  - make a change to just one of the services 
+    - eg. `orders/src/index.ts`
+  - `git commit -m "update start message"`
+- expect just affected services of `pull request` to run
+  
 
 ### 514. Deployment Options
 
