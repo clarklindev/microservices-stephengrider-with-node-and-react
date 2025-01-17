@@ -22681,12 +22681,12 @@ jobs:
 ### 522. Applying Kubernetes Manifests
 - infra/k8s/ workflow - deploying the infra/ deployment configuration files to kubernetes cluster
 - copy contents of section05-23-ticketing: `/.github/workflow/deploy-auth.yaml`
-- create section05-23-ticketing: `/.github/workflow/deploy-manifest.yaml`
+- create section05-23-ticketing: `/.github/workflow/deploy-manifests.yaml`
 - NOTE: the config files are actually called `manifest` thats why we name them so
 - commit .github/workflows/deploy-manifest.yaml
 
 ```yaml
-#/.github/workflows/deploy-manifest.yaml
+#/.github/workflows/deploy-manifests.yaml
 name: deploy-manifests
 on:
   push:
@@ -22723,6 +22723,41 @@ jobs:
 - and ticketing.dev will always point to local cluster NEVER the deploy cluster
 
 ### 523. Prod vs Dev Manifest Files
+- UPDATE -> NEW folder structure
+- `infra/k8s/` (manifest files for development OR production)
+
+- `infra/k8s-prod/` (manifest files for production ONLY)
+  - `ingress-srv.yaml`
+  - TODO: set host -> will have a domain name/url of whatever/whereever of domain name we purchase and deploy to..
+
+- `infra/k8s-dev/` (manifest files for development ONLY)
+  - `ingress-srv.yaml`
+  - will have host of `ticketing.dev`
+
+### adjust /skaffold.yaml
+- `section05-23-ticketing/skaffold.yaml`
+- adjust skaffold.yaml to include k8s-dev: `./infra/k8s-dev/*`
+
+```yaml
+# /section05-23-ticketing/skaffold.yaml
+apiVersion: skaffold/v4beta3
+kind: Config
+manifests:
+  rawYaml:
+    - ./infra/k8s/*
+    - ./infra/k8s-dev/*
+```
+
+### adjust /.github/workflows/deploy-manifests.yaml
+- `.github/workflows/deploy-manifests.yaml`
+- adjust deploy-manifests.yaml (github)
+
+```yaml
+#.github/workflows/deploy-manifests.yaml
+#step - apply the configuration files from infra/k8s AND infra-k8s-prod to cluster
+      - run: kubectl apply -f infra/k8s && kubectl apply -f infra-k8s-prod
+```
+
 
 ### 524. Manual Secret Creation
 
