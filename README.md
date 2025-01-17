@@ -22792,6 +22792,43 @@ kubectl create secret generic stripe-secret --from-literal=STRIPE_KEY=sk_test_..
 
 
 ### 525. Don't Forget Ingress-Nginx!
+- TODO: for Ingress-Nginx -> execute a command against the digitalocean cluster
+- [kubernetes docs](https://kubernetes.github.io/ingress-nginx/deploy/)
+
+... Docker Desktop
+... Rancher Desktop
+... minikube
+... MicroK8s
+... AWS
+... GCE - GKE
+... Azure
+... Digital Ocean 
+... Scaleway
+... Exoscale
+... Oracle Cloud Infrastructure
+... OVHcloud
+... Bare-metal
+
+- select [digital ocean](https://kubernetes.github.io/ingress-nginx/deploy/#digital-ocean)
+
+### confirm you are connected to correct context
+- confirm you are connected to digital ocean context
+- `kubectl config use-context <context name>`
+  - eg. `kubectl config use-context do-sfo2-ticketing`
+
+### run ingress-nginx command
+- `kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0/deploy/static/provider/do/deploy.yaml`
+- this deploys the infra/k8s/ configuration files
+- open up github -> actions
+
+<img
+src='exercise_files/udemy-microservices-section23-525-manual-secret-creation-tests-should-succeed.png'
+alt='udemy-microservices-section23-525-manual-secret-creation-tests-should-succeed.png'
+width=600
+/>
+
+### get pods running on digitalocean cluster
+- `kubectl get pods` and notice that some pods were created
 
 ### 526. Testing Automated Deployment
 
