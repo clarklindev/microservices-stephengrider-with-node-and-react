@@ -22842,6 +22842,25 @@ width=600
 - update `auth/src/index.ts`
 
 ### 527. Additional Deploy Files
+- currently we just created auth -> `deploy-auth.yaml`
+- section05-23-ticketing/ `kubectl get pods`
+
+<img
+src='exercise_files/udemy-microservices-section23-527-kubectl-get-pods.png'
+alt='udemy-microservices-section23-527-kubectl-get-pods.png'
+width=600
+/>
+
+- eg. `auth-depl-5d9b46c4cb-x5sft` pod 
+- try pull logs from pod `kubectl logs auth-depl-5d9b46c4cb-x5sft`
+
+- create deployments for the other services: `.github/workflows/deploy- .yaml`
+  - client -> `deploy-client.yaml`
+  - expiration -> `deploy-expiration.yaml`
+  - orders -> `deploy-orders.yaml`
+  - payments -> `deploy-payments.yaml`
+  - tickets -> `deploy-tickets.yaml`
+
 
 ### 528. A Successful Deploy!
 
