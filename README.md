@@ -22570,7 +22570,9 @@ jobs:
 ```
 
 ### 520. Testing the Image Build
-
+- so now when we merge the pull request into master, the deploy-auth.yaml should run
+- TODO: merge the pull request we did earlier...should trigger deploy-auth.yaml to rebuild and deploy auth/ to dockerhub
+ 
 ### 521. Restarting the Deployment
 
 ### 522. Applying Kubernetes Manifests
