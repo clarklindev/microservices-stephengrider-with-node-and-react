@@ -22525,6 +22525,50 @@ width=600
 
 ### 519. Building an Image in an Action
 
+### create a workflow
+- building the workflow -> github -> actions -> new workflow
+  - section05-23-ticketing/.github/workflows/`deploy-auth.yaml`
+- NOTE: it filters out the correct workflows by what is specified `on:` eg `pull_request` or `push` etc
+- NOTE: its a `push` because when we close or merge a pull request, it counts as a `push into master`
+  - and it will run if there is change to something inside `auth/` directory
+- `runs-on: ubuntu-latest` - this image comes with docker pre-installed
+
+### prep for pushing to dockerhub
+- to push to dockerhub, need to be logged in docker-cli
+- TODO: add dockerhub credentials as secret for github repository 
+  - create a secret -> name: `DOCKER_USERNAME` value: ``
+  - create a secret -> name: `DOCKER_PASSWORD` value: ``
+
+### pushing to dockerhub: using github secrets in workflow yaml
+- NOTE: environment variables (eg. github secrets) do not automatically get added to the workflow scripts
+- add them (see below) so they can be read by the workflow yaml
+
+```yaml
+# /.github/workflows/deploy-auth.yaml
+
+name: deploy-auth
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'auth/**'  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: cd auth && docker build -t clarklindev/auth .
+      - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+        env:
+          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+      - run: docker push clarklindev/auth
+    
+
+```
+
 ### 520. Testing the Image Build
 
 ### 521. Restarting the Deployment
