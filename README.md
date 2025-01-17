@@ -22831,6 +22831,15 @@ width=600
 - `kubectl get pods` and notice that some pods were created
 
 ### 526. Testing Automated Deployment
+- NOTE: at this point, we have not set up the networking aroud the cluster so our application wont work yet
+- we are trying to show that making a change to a service will get deployed to the cluster
+
+- TODO: 
+  - make changes to a service (auth)
+  - commit change to dev
+  - create pull request and merge into master
+  - github should build image and tell kubernetes (auth deployment) to use latest image
+- update `auth/src/index.ts`
 
 ### 527. Additional Deploy Files
 
