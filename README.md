@@ -22328,7 +22328,15 @@ width=600
   - update code in eg. `orders/src/index.ts`
   - commit and push to github new branch `git checkout dev`
   - expect ALL workflows to execute
+
     - [[github repository]/pull/1/commits](https://github.com/clarklindev/microservices-stephengrider-with-node-and-react-ticketing/pull/1/commits)
+
+<img
+src='exercise_files/udemy-microservices-section23-512-verifying-a-test-run- expect-all-workflows-to-run-and-pass.png'
+alt='udemy-microservices-section23-512-verifying-a-test-run- expect-all-workflows-to-run-and-pass.png'
+width=600
+/>
+
 - TODO: if the tests of pull request have no errors can merge pull request into master branch
 
 ### TROUBLESHOOT cant access stripe environment variable
@@ -22405,6 +22413,24 @@ on:
   
 
 ### 514. Deployment Options
+- TODO: deploy application
+- choose hosting provider
+- create kubernetes cluster
+
+<img
+src='exercise_files/udemy-microservices-section23-514-deployment-options.png'
+alt='udemy-microservices-section23-514-deployment-options.png'
+width=600
+/>
+
+- TODO: deploying with [DigitalOcean](https://www.digitalocean.com/)
+  - easier to use than AWS
+  - cheaper
+  - [sign up](https://cloud.digitalocean.com/registrations/new?refcode=f6fcd01aaffb) and get 200 dollars in credit
+  - does require credit card
+- NOTE: i will continue with google cloud because i already have an account and there was complications with sign up to digital ocean
+
+
 
 ### 515. Creating a Hosted Cluster
 
