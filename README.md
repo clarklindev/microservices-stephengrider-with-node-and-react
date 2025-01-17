@@ -22501,6 +22501,27 @@ width=600
   - other option is to use docker desktop -> rightclick -> select `kubernetes context` and change the context
 
 ### 518. The Deployment Plan
+- STATUS: connected to digital ocean cluster is running
+### using github actions workflow to deploy services
+
+<img
+src='exercise_files/udemy-microservices-section23-518-the-deployment-plan-deploy-yaml-files.png'
+alt='udemy-microservices-section23-518-the-deployment-plan-deploy-yaml-files.png'
+width=600
+/>
+
+- each row represents a deployment (github action workflow)
+- inspect for changes 
+
+### if changes (merge/pull requests into master branch)
+- if there are changes (merge/pull requests into master branch) in any of the deployments
+  - build new image
+  - push to docker hub
+  - update deployment
+
+### infra/ workflow
+- this workflow will always be executed
+- the yaml configs will be applied to cluster
 
 ### 519. Building an Image in an Action
 
