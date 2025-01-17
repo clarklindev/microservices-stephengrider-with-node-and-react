@@ -22760,6 +22760,36 @@ manifests:
 
 
 ### 524. Manual Secret Creation
+- creating secrets inside digitalocean cluster (required for application to run)
+- secrets: `infra/k8s/auth-depl.yaml`
+  - stripe-secret -> `STRIPE_KEY` (stripe dashboard -> api key)
+  - jwt-secret -> `JWT_KEY`
+
+### view contexts
+- folder `section05-23-ticketing/`
+- `kubectl config view` -> view all contexts
+- contexts -> context -> (search for context of digital ocean) `do-sfo2-ticketing`
+
+### kubectl select a context 
+- `kubectl config use-context do-sfo2-ticketing`
+- STATUS: `switched to context "do-sfo2-ticketing"`
+
+### create secrets from the command line
+- use kubectl to access digitalocean cluster
+
+#### JWT secret
+- jwt token (key should be characters to use for signing json web token)
+- folder `section05-23-ticketing/`
+```bash
+kubectl create secret generic jwt-secret --from-literal=JWT_KEY=sdfds3242347fghfghd
+```
+
+#### stripe secret
+- get strip secret from stripe dashboard
+```bash
+kubectl create secret generic stripe-secret --from-literal=STRIPE_KEY=sk_test_...
+```
+
 
 ### 525. Don't Forget Ingress-Nginx!
 
