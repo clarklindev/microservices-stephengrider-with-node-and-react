@@ -22886,6 +22886,18 @@ width=600
 
 ### 529. Buying a Domain Name
 
+- load balancer with external ip / cluster with 3 nodes
+- get a `domain name` and point it at the `load balancer` (kubernetes application on digitalocean)
+
+<img
+src='exercise_files/udemy-microservices-section23-529-buying-a-domain-name-and-pointing-at-load-balancer-external-ip.png'
+alt='udemy-microservices-section23-529-buying-a-domain-name-and-pointing-at-load-balancer-external-ip.png'
+width=600
+/>
+
+### purchase a domain name
+  - eg. [namecheap.com](http://namecheap.com)
+
 ### 530. Three Important Changes Needed to Deploy - Do Not Skip!
 
 ### 531. Configuring the Domain Name
