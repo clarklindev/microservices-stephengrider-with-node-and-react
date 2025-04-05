@@ -8,6 +8,20 @@
 - NOTE: `section01-04-blog` is for sections 1-4
 - NOTE: `section05-ticketing` is for section05 and all sections that continue building on the project
 
+## installation 
+- [install docker](https://github.com/clarklindev/docker-stephen-grider-basics-of-docker)
+
+- install wsl (ubuntu)
+
+```sh
+wsl --install
+```
+<img
+src='exercise_files/udemy-docker-section00-wsl-install.png'
+alt='udemy-docker-section00-wsl-install.png'
+width=600
+/>
+
 ## Table of contents
 
 ### Microservices and Docker/Kubernetes/Skaffold
