@@ -223,13 +223,15 @@ app.listen(4000, () => {
 ```
 
 ### 14. testing post service
+- using the code above...
+- NOTE: code will not work directly from repository as you have to comment out the eventbus code (as it is further along that this lesson)
 
 - using POSTMAN
-- POST -> `http://localhost:4000/`
+- POST -> `http://localhost:4000/posts`
   -> body -> RAW -> JSON -> {"title":string}
   -> Headers -> Content-Type -> application/json
 
-- GET -> `http://localhost:4000/`
+- GET -> `http://localhost:4000/posts`
   -> Headers -> Content-Type -> application/json
 
 ### 15. express-based project for `Comments` service
