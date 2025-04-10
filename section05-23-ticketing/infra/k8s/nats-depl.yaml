@@ -28,7 +28,7 @@ spec:
             '2',
             '-SD',
             '-cid',
-            'ticketing',
+            'cluster-1',
           ]
 ---
 apiVersion: v1

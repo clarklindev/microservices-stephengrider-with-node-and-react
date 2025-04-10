@@ -15,7 +15,7 @@ spec:
       containers:
         - name: auth
           # image: clarklindev/auth:latest/auth
-          image: asia.gcr.io/elite-advice-447211-j0/auth:latest
+          image: asia.gcr.io/microservices-71864/auth:latest
           env:
             - name: MONGO_URI
               value: 'mongodb://auth-mongo-srv:27017/auth'

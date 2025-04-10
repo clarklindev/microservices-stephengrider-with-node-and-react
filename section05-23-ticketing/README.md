@@ -22,13 +22,14 @@ gcloud auth application-default login
 
 - NOTE: gcloud project has already been created
 - NOTE: gcloud kubernetes context already created (see readme)
-- NOTE: you already have a gcloud project id (configured in infra/k8s/ yaml files)
+- NOTE: you already have a gcloud project id AND renamed cluster name (configured in infra/k8s/ yaml files)
 
 ### NB: Set glcloud project
 
 - NOTE: you set the project id in gcloud cli
 - eg: `gcloud config set project golden-index-441407-u9`
 - eg: `gcloud config set project elite-advice-447211-j0`
+- eg: `gcloud config set project microservices-71864`
 
 ### 122. kubernetes cluster creation
 
@@ -56,9 +57,10 @@ NOTE: you have downloaded gcloud and installed gcloud cli -> `GoogleCloudSDKInst
 
 - ensure this is the correct google account...
 - usage: `gcloud container clusters get-credentials [cluster-name]`
-
+ 
 ```bash
 gcloud container clusters get-credentials ticketing-dev
+gcloud container clusters get-credentials cluster-1 --zone asia-east1-a
 ```
 
 ### gcloud project quota
@@ -78,7 +80,7 @@ disabled on this system. For more information, see about_Execution_Policies at h
 
 - Install required plugins:
 
-`gcloud components install gke-gcloud-auth-plugin gke-gcloud-auth-plugin --version`
+`gcloud components install gke-gcloud-auth-plugin gke-gcloud-auth-plugin`
 
 ---
 
@@ -161,6 +163,12 @@ kubectl create secret generic jwt-secret --from-literal=JWT_KEY=asdf
 11. start skaffold
 
 - from project folder: `section05-ticketing/`
+- update /skaffold.yaml with project id
+- enable cloudbuild or you will get an error:
+
+```error
+build [asia.gcr.io/microservices-71864/expiration] failed: error creating build: googleapi: Error 403: Access Not Configured. Cloud Build has not been used in project 753076220047 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudbuild.googleapis.com/overview?project=753076220047 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+```
 
 ```cmd
 skaffold dev

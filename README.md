@@ -276,16 +276,21 @@ app.listen(4001, () => {
 ```
 
 ### 16. testing comments
+- NOTE: 123 is the id: of the post (from our created POST /posts)
 
 - POSTMAN
-- POST -> `http://localhost:4001/123/comments`
+- POST -> `http://localhost:4001/posts/123/comments`
   -> Headers -> Content-Type -> application/json
   -> body -> RAW -> JSON -> {"content":"I am a comment"}
 
-- GET -> `http://localhost:4001/`
+- GET -> `http://localhost:4001/posts/123/comments`
   -> Headers -> Content-Type -> application/json
 
 ### 17-25. react app
+- section01-04-blog/client/
+  - NOTE: posts/ should be running
+  - NOTE: comments/ should be running
+  - NOTE: client/ (this)
 
 - react app to use the microservices
 - App -> PostCreate
@@ -438,6 +443,12 @@ export default CommentList;
 - there are different implementations of event bus: RabbitMQ, Kafka, NATS
 - what they do? they receive events then publishes them to listeners
 - these implementations have subtle differences that make async communication easier or harder
+
+- NOTE: posts/ should be running
+- NOTE: comments/ should be running
+- NOTE: client/ should be running
+- NOTE: event-bus/ (this)
+
 - TODO: express based event bus
   - Post service -> POST /events ( localhost:4000/events)
   - Comments service -> POST /events ( localhost:4001/events)

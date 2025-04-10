@@ -8,10 +8,10 @@ build:
   # local:
   #   push: false
   googleCloudBuild:
-    projectId: elite-advice-447211-j0
+    projectId: microservices-71864
   artifacts:
     # - image: clarklindev/auth
-    - image: asia.gcr.io/elite-advice-447211-j0/auth
+    - image: asia.gcr.io/microservices-71864/auth
       context: auth
       docker:
         dockerfile: Dockerfile
@@ -19,7 +19,7 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-    - image: asia.gcr.io/elite-advice-447211-j0/client
+    - image: asia.gcr.io/microservices-71864/client
       context: client
       docker:
         dockerfile: Dockerfile
@@ -27,7 +27,7 @@ build:
         manual:
           - src: '**/*.js'
             dest: .
-    - image: asia.gcr.io/elite-advice-447211-j0/tickets
+    - image: asia.gcr.io/microservices-71864/tickets
       context: tickets
       docker:
         dockerfile: Dockerfile
@@ -35,7 +35,7 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-    - image: asia.gcr.io/elite-advice-447211-j0/orders
+    - image: asia.gcr.io/microservices-71864/orders
       context: orders
       docker:
         dockerfile: Dockerfile
@@ -43,7 +43,7 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-    - image: asia.gcr.io/elite-advice-447211-j0/expiration
+    - image: asia.gcr.io/microservices-71864/expiration
       context: expiration
       docker:
         dockerfile: Dockerfile
@@ -51,7 +51,7 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-    - image: asia.gcr.io/elite-advice-447211-j0/payments
+    - image: asia.gcr.io/microservices-71864/payments
       context: payments
       docker:
         dockerfile: Dockerfile

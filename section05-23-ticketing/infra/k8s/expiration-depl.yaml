@@ -15,12 +15,12 @@ spec:
       containers:
         - name: expiration
           # image: clarklindev/expiration:latest/expiration
-          image: asia.gcr.io/elite-advice-447211-j0/expiration:latest
+          image: asia.gcr.io/microservices-71864/expiration:latest
           env:
             - name: NATS_URL
               value: 'http://nats-srv:4222'
             - name: NATS_CLUSTER_ID
-              value: ticketing
+              value: cluster-1
             - name: NATS_CLIENT_ID
               valueFrom:
                 fieldRef:
