@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { OrderStatus } from '@clarklindev/common';
+import { OrderStatus } from '@fightclub/common';
 import { TicketDoc } from './ticket';
 import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
 

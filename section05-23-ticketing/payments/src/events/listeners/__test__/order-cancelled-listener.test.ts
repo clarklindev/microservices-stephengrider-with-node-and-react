@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { OrderStatus, OrderCancelledEvent } from "@clarklindev/common";
+import { OrderStatus, OrderCancelledEvent } from "@fightclub/common";
 import { Message } from "node-nats-streaming";
 
 import { OrderCancelledListener } from "../order-cancelled-listener";

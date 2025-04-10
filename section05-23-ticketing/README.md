@@ -13,6 +13,12 @@
 2. ensure correct kubernetes context selected
    - right click docker-desktop app, select kubernetes context
 
+### check if logged in
+```bash
+gcloud auth list
+gcloud config set account `ACCOUNT`
+```
+
 ### Login with google cloud cli
 
 ```bash
@@ -22,7 +28,7 @@ gcloud auth application-default login
 
 - NOTE: gcloud project has already been created
 - NOTE: gcloud kubernetes context already created (see readme)
-- NOTE: you already have a gcloud project id AND renamed cluster name (configured in infra/k8s/ yaml files)
+- NOTE: you already have a gcloud project id AND renamed cluster name for (configured in infra/k8s/ yaml files)
 
 ### NB: Set glcloud project
 
@@ -67,6 +73,7 @@ gcloud container clusters get-credentials cluster-1 --zone asia-east1-a
 
 usage: `gcloud auth application-default set-quota-project QUOTA_PROJECT_ID`
 example:`gcloud auth application-default set-quota-project elite-advice-447211-j0`
+        `gcloud auth application-default set-quota-project microservices-71864`
 
 ### TROUBLESHOOT gcloud
 

@@ -8,7 +8,7 @@ import { currentUserRouter } from './routes/current-user';
 import { signinRouter } from './routes/signin';
 import { signoutRouter } from './routes/signout';
 import { signupRouter } from './routes/signup';
-import { errorHandler, NotFoundError } from '@clarklindev/common';
+import { errorHandler, NotFoundError } from '@fightclub/common';
 
 
 const app = express();

@@ -1,4 +1,4 @@
-import { OrderStatus } from '@clarklindev/common';
+import { OrderStatus } from '@fightclub/common';
 import mongoose from 'mongoose';
 import {updateIfCurrentPlugin } from 'mongoose-update-if-current';
 

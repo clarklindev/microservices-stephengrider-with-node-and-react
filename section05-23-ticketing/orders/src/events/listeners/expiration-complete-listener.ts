@@ -1,4 +1,4 @@
-import {ExpirationCompleteEvent, Listener, OrderStatus, Subjects} from '@clarklindev/common';
+import {ExpirationCompleteEvent, Listener, OrderStatus, Subjects} from '@fightclub/common';
 import { queueGroupName } from './queue-group-name';
 import { Message } from 'node-nats-streaming';
 import {Order} from '../../models/order';

@@ -7,7 +7,7 @@ import {
   requireAuth,
   NotAuthorizedError,
   BadRequestError
-} from '@clarklindev/common';
+} from '@fightclub/common';
 
 import { Ticket } from '../models/ticket';
 import { TicketUpdatedPublisher } from '../events/publishers/ticket-updated-publisher';

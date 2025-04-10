@@ -1,4 +1,4 @@
-import { OrderStatus } from '@clarklindev/common';
+import { OrderStatus } from '@fightclub/common';
 import request from 'supertest';
 import mongoose from 'mongoose';
 

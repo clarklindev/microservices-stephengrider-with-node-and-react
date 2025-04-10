@@ -1,4 +1,4 @@
-import { Publisher, OrderCreatedEvent, Subjects } from "@clarklindev/common";
+import { Publisher, OrderCreatedEvent, Subjects } from "@fightclub/common";
 
 /*
 // USAGE:

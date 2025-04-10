@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { NotAuthorizedError, NotFoundError, requireAuth } from '@clarklindev/common';
+import { NotAuthorizedError, NotFoundError, requireAuth } from '@fightclub/common';
 import { Order } from '../models/order';
 
 const router = express.Router();

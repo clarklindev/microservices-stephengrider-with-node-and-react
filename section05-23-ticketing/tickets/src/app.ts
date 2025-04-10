@@ -4,7 +4,7 @@ import "express-async-errors";
 import { json } from 'body-parser';
 import cookieSession from 'cookie-session';
 
-import { currentUser, errorHandler, NotFoundError } from '@clarklindev/common';
+import { currentUser, errorHandler, NotFoundError } from '@fightclub/common';
 
 import { createTicketRouter } from './routes/new';
 import { showTicketRouter } from './routes/show';

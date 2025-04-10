@@ -1,4 +1,4 @@
-import { OrderCreatedEvent, OrderStatus } from "@clarklindev/common";
+import { OrderCreatedEvent, OrderStatus } from "@fightclub/common";
 import mongoose from 'mongoose';
 
 import { OrderCreatedListener } from "../order-created-listener";

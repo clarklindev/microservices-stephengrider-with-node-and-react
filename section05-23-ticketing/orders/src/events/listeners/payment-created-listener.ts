@@ -1,5 +1,5 @@
 import { Message } from 'node-nats-streaming';
-import {Subjects, Listener, PaymentCreatedEvent, OrderStatus} from '@clarklindev/common';
+import {Subjects, Listener, PaymentCreatedEvent, OrderStatus} from '@fightclub/common';
 
 import { Order } from '../../models/order';
 import { queueGroupName } from './queue-group-name';

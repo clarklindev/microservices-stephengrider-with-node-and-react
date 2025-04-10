@@ -6,7 +6,7 @@ import {
   NotFoundError,
   NotAuthorizedError,
   OrderStatus,
-} from '@clarklindev/common';
+} from '@fightclub/common';
 import { body } from 'express-validator';
 
 import {stripe } from '../stripe';

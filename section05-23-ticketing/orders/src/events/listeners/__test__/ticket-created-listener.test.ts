@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { TicketCreatedListener } from "../ticket-created-listener";
 import { natsWrapper } from "../../../nats-wrapper";
-import { TicketCreatedEvent } from "@clarklindev/common";
+import { TicketCreatedEvent } from "@fightclub/common";
 import { Message } from "node-nats-streaming";
 import { Ticket } from "../../../models/ticket";
 

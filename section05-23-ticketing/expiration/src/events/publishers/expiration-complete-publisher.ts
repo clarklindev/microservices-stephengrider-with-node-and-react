@@ -1,4 +1,4 @@
-import { Publisher, Subjects, ExpirationCompleteEvent } from "@clarklindev/common";
+import { Publisher, Subjects, ExpirationCompleteEvent } from "@fightclub/common";
 
 export class ExpirationCompletePublisher extends Publisher<ExpirationCompleteEvent>{
   readonly subject = Subjects.ExpirationComplete;

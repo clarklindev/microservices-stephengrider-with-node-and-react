@@ -1,4 +1,4 @@
-import { OrderCancelledEvent, Subjects, Listener, OrderStatus } from "@clarklindev/common";
+import { OrderCancelledEvent, Subjects, Listener, OrderStatus } from "@fightclub/common";
 import { Message } from "node-nats-streaming";
 
 import { queueGroupName } from "./queue-group-name";

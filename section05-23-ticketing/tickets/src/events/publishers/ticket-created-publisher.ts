@@ -1,4 +1,4 @@
-import { Publisher, Subjects, TicketCreatedEvent } from '@clarklindev/common';
+import { Publisher, Subjects, TicketCreatedEvent } from '@fightclub/common';
 
 export class TicketCreatedPublisher extends Publisher<TicketCreatedEvent>{
   readonly subject = Subjects.TicketCreated;
