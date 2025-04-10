@@ -1,5 +1,9 @@
 # how to start this project: section05-ticketing
 
+NOTE: you need to set this:
+- `kubectl create secret generic jwt-secret --from-literal=JWT_KEY=asdf`
+- `kubectl create secret generic stripe-secret --from-literal STRIPE_KEY=` - get from [stripe](https://dashboard.stripe.com/test/apikeys) 
+
 ### TODO:
 
 0. make sure docker is loggedin
@@ -267,6 +271,13 @@ kubectl delete service ingress-nginx-controller --namespace=ingress-nginx
 
 ### payments service
 - get stripe api key from [stripe](https://dashboard.stripe.com/test/apikeys)
+
+<img
+src='exercise_files/udemy-docker-section21-469-creating-a-stripe-secret.png'
+alt='udemy-docker-section21-469-creating-a-stripe-secret.png'
+width=600
+/>
+
 - `payments/` add secret:
 
 ```bash
